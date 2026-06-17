@@ -65,20 +65,20 @@ add_custom_command(
 add_library(openwnn_std STATIC
     src/openwnn_std.cpp
     "${GENERATED_WNN_JPN_DIC}"
-    src/wnnDictionary/engine/ndapi.c
-    src/wnnDictionary/engine/ndbdic.c
-    src/wnnDictionary/engine/ndcommon.c
-    src/wnnDictionary/engine/ndfdic.c
-    src/wnnDictionary/engine/ndldic.c
-    src/wnnDictionary/engine/ndrdic.c
-    src/wnnDictionary/engine/neapi.c
-    src/wnnDictionary/engine/necode.c
-    src/wnnDictionary/engine/nj_str.c
+    src/ndapi.c
+    src/ndbdic.c
+    src/ndcommon.c
+    src/ndfdic.c
+    src/ndldic.c
+    src/ndrdic.c
+    src/neapi.c
+    src/necode.c
+    src/nj_str.c
 )
 
 target_include_directories(openwnn_std
     PUBLIC include
-    PRIVATE src/wnnDictionary/include
+    PRIVATE src
 )
 
 if (MSVC)
@@ -90,7 +90,7 @@ target_link_libraries(openwnn_smoke PRIVATE openwnn_std)
 
 add_executable(openwnn_dump_dictionary tools/dump_dictionary.cpp)
 target_link_libraries(openwnn_dump_dictionary PRIVATE openwnn_std)
-target_include_directories(openwnn_dump_dictionary PRIVATE src/wnnDictionary/include)
+target_include_directories(openwnn_dump_dictionary PRIVATE src)
 
 if (MSVC)
     target_compile_options(openwnn_smoke PRIVATE /utf-8)
