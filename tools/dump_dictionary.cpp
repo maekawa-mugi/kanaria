@@ -123,7 +123,7 @@ const char* dic_type_name(uint32_t type)
     case NJ_DIC_TYPE_CUSTOM_COMPRESS: return "圧縮カスタム辞書";
     case NJ_DIC_TYPE_STDFORE: return "予測辞書";
     case NJ_DIC_TYPE_FORECONV: return "予測変換辞書";
-    case NJ_DIC_TYPE_YOMINASHI: return "読みなし辞書";
+    case NJ_DIC_TYPE_YOMINASHI: return "接尾語辞書";
     case NJ_DIC_TYPE_CUSTOM_INCOMPRESS: return "未圧縮辞書";
     case NJ_DIC_TYPE_USER: return "ユーザー辞書";
     default: return "不明な辞書";
@@ -139,7 +139,7 @@ const char* dic_type_file_name(uint32_t type)
     case NJ_DIC_TYPE_CUSTOM_COMPRESS: return "compressed_custom";
     case NJ_DIC_TYPE_STDFORE: return "prediction";
     case NJ_DIC_TYPE_FORECONV: return "predictive_conversion";
-    case NJ_DIC_TYPE_YOMINASHI: return "no_reading";
+    case NJ_DIC_TYPE_YOMINASHI: return "suffix_words";
     case NJ_DIC_TYPE_CUSTOM_INCOMPRESS: return "uncompressed";
     case NJ_DIC_TYPE_USER: return "user";
     default: return "unknown";

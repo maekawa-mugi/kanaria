@@ -15,7 +15,7 @@ Human-readable dictionary dumps live in `dict/`, split by dictionary role:
 - `dict/prediction.tsv` - 予測辞書
 - `dict/independent_words.tsv` - 自立語辞書
 - `dict/single_kanji.tsv` - 単漢字辞書
-- `dict/no_reading.tsv` - 読みなし辞書
+- `dict/suffix_words.tsv` - 接尾語辞書
 - `dict/ancillary_words.tsv` - 付属語辞書
 - `dict/uncompressed.tsv` - 未圧縮辞書
 
