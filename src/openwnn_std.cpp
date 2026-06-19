@@ -177,13 +177,19 @@ static NJ_CHAR convert_utf16be_char_to_nj_char(const NJ_UINT8* src)
     return ret;
 }
 
-static void convert_string_to_nj_char(NJ_CHAR* dst, const std::string& src_string, int max_chars)
+static void convert_string_to_nj_char(NJ_CHAR* dst, const std::string& src_string,
+                                      int max_chars, int capacity_chars)
 {
     const auto* src = reinterpret_cast<const unsigned char*>(src_string.c_str());
     int i = 0;
     int o = 0;
 
-    while (src[i] != 0x00 && o < max_chars) {
+    if (capacity_chars <= 0) {
+        return;
+    }
+
+    const int max_output_chars = std::min(max_chars, capacity_chars - 1);
+    while (src[i] != 0x00 && o < max_output_chars) {
         auto* dst_tmp = reinterpret_cast<NJ_UINT8*>(&dst[o]);
 
         if ((src[i] & 0x80) == 0x00) {
@@ -208,7 +214,7 @@ static void convert_string_to_nj_char(NJ_CHAR* dst, const std::string& src_strin
             i += 3;
             o++;
         } else if ((src[i] & 0xf8) == 0xf0) {
-            if (!(o < max_chars - 1)) {
+            if (!(o < max_output_chars - 1)) {
                 break;
             }
             if (src[i + 1] == 0x00 || src[i + 2] == 0x00 || src[i + 3] == 0x00) {
@@ -228,11 +234,7 @@ static void convert_string_to_nj_char(NJ_CHAR* dst, const std::string& src_strin
         }
     }
 
-    if (o < max_chars) {
-        dst[o] = NJ_CHAR_NUL;
-    } else if (max_chars > 0) {
-        dst[max_chars - 1] = NJ_CHAR_NUL;
-    }
+    dst[o] = NJ_CHAR_NUL;
 }
 
 static std::string convert_nj_char_to_string(const NJ_CHAR* src, int max_chars)
@@ -353,7 +355,7 @@ static int dictionary_search(dictionary_work& d, search_operation operation, sea
     }
 
     dictionary_clear_result(d);
-    convert_string_to_nj_char(d.work.key_string, key, NJ_MAX_LEN);
+    convert_string_to_nj_char(d.work.key_string, key, NJ_MAX_LEN, NJ_MAX_LEN + NJ_TERM_LEN);
     std::memset(&d.work.cursor, 0, sizeof(NJ_CURSOR));
     d.work.cursor.cond.operation = operation;
     d.work.cursor.cond.mode = order;
@@ -462,7 +464,7 @@ static int dictionary_set_stroke(dictionary_work& d, const std::string& stroke)
     if (stroke.empty()) {
         return NJ_SET_ERR_VAL(nj_func_set_stroke, nj_err_invalid_param);
     }
-    convert_string_to_nj_char(d.work.previous_stroke, stroke, NJ_MAX_LEN);
+    convert_string_to_nj_char(d.work.previous_stroke, stroke, NJ_MAX_LEN, NJ_MAX_LEN + NJ_TERM_LEN);
     return 0;
 }
 
@@ -471,7 +473,8 @@ static int dictionary_set_candidate(dictionary_work& d, const std::string& candi
     if (candidate_text.empty()) {
         return NJ_SET_ERR_VAL(nj_func_set_candidate, nj_err_invalid_param);
     }
-    convert_string_to_nj_char(d.work.previous_candidate, candidate_text, NJ_MAX_RESULT_LEN);
+    convert_string_to_nj_char(d.work.previous_candidate, candidate_text,
+                              NJ_MAX_RESULT_LEN, NJ_MAX_RESULT_LEN + NJ_TERM_LEN);
     return 0;
 }
 
