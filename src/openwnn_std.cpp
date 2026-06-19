@@ -1039,7 +1039,13 @@ std::vector<candidate> engine_predict(engine& e, const std::string& utf8_hiragan
     dictionary_search(e.dictionary, search_prefix, order_by_frequency, utf8_hiragana);
 
     std::vector<word> words;
+    std::unordered_set<std::string> seen;
     while (auto w = dictionary_get_next(e.dictionary)) {
+        if (w->candidate.empty()
+            || utf8_codepoint_count(w->candidate) > max_output_length
+            || !seen.insert(w->candidate).second) {
+            continue;
+        }
         words.push_back(*w);
         if (words.size() >= limit) {
             break;
