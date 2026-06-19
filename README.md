@@ -6,9 +6,9 @@ The original dictionary engine remains C. The new public API is intentionally
 function-oriented and uses only standard C++ types such as `std::string`,
 `std::vector`, and `std::unique_ptr`.
 
-The bundled Japanese dictionary source remains in OpenWnn's original binary C
-array format at `src/wnnEngine/WnnJpnDic.c`. CMake extracts that into generated
-intermediate files under the build directory before compiling the library.
+The bundled Japanese dictionary source lives in human-readable TSV files under
+`dict/`. CMake packs those TSV files into a generated `WnnJpnDic.c` under the
+build directory before compiling the library.
 
 Human-readable dictionary dumps live in `dict/`, split by dictionary role:
 
@@ -18,8 +18,14 @@ Human-readable dictionary dumps live in `dict/`, split by dictionary role:
 - `dict/suffix_words.tsv` - 接尾語辞書
 - `dict/ancillary_words.tsv` - 付属語辞書
 - `dict/uncompressed.tsv` - 未圧縮辞書
+- other `dict/*.tsv` files - 自立語の追加辞書として取り込まれます。既存辞書へ追加したい場合は
+  `independent_words_extra.tsv` や `ancillary_words_extra.tsv` のように既存辞書名を
+  prefix にしてください。
 
-The dump tool can regenerate the split TSV files:
+The first `stem_offset` column is ignored while packing from TSV. It is kept only
+for compatibility with dictionary dumps.
+
+The dump tool can regenerate split TSV files from a compiled dictionary:
 
 ```sh
 ./build/openwnn_dump_dictionary --split-dir dict

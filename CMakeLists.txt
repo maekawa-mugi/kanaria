@@ -9,8 +9,8 @@ find_program(PYTHON3_EXECUTABLE NAMES python3 python py REQUIRED)
 
 set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
 set(GENERATED_WNN_JPN_DIC "${GENERATED_DIR}/WnnJpnDic.c")
-set(GENERATED_WNN_JPN_DIC_BLOBS "${GENERATED_DIR}/wnn_jpn_dic_blobs.tsv")
 set(GENERATED_READABLE_WNN_JPN_DIC "${GENERATED_DIR}/readable_dictionary.tsv")
+set(RULE_CONNECTION_BLOB_TSV "${CMAKE_CURRENT_SOURCE_DIR}/data/rule_connection_blob.tsv")
 
 file(GLOB READABLE_DICTIONARY_TSV CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/dict/*.tsv"
@@ -35,30 +35,18 @@ add_custom_target(openwnn_readable_dictionary ALL
 )
 
 add_custom_command(
-    OUTPUT "${GENERATED_WNN_JPN_DIC_BLOBS}"
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${GENERATED_DIR}"
-    COMMAND "${PYTHON3_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/extract_wnn_jpn_dic.py"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/wnnEngine/WnnJpnDic.c"
-            "${GENERATED_WNN_JPN_DIC_BLOBS}"
-    DEPENDS
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/wnnEngine/WnnJpnDic.c"
-            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/extract_wnn_jpn_dic.py"
-    COMMENT "Extracting WnnJpnDic binary blobs"
-    VERBATIM
-)
-
-add_custom_command(
     OUTPUT "${GENERATED_WNN_JPN_DIC}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${GENERATED_DIR}"
     COMMAND "${PYTHON3_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_wnn_jpn_dic.py"
-            "${GENERATED_WNN_JPN_DIC_BLOBS}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_wnn_jpn_dic_from_tsv.py"
+            "${CMAKE_CURRENT_SOURCE_DIR}/dict"
+            "${RULE_CONNECTION_BLOB_TSV}"
             "${GENERATED_WNN_JPN_DIC}"
     DEPENDS
-            "${GENERATED_WNN_JPN_DIC_BLOBS}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_wnn_jpn_dic.py"
-    COMMENT "Generating WnnJpnDic.c from extracted binary blobs"
+            ${READABLE_DICTIONARY_TSV}
+            "${RULE_CONNECTION_BLOB_TSV}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_wnn_jpn_dic_from_tsv.py"
+    COMMENT "Generating WnnJpnDic.c from dictionary TSV files"
     VERBATIM
 )
 
