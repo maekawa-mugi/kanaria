@@ -898,13 +898,18 @@ static std::optional<sentence> consecutive_clause_convert(clause_converter& c, c
     return sentences[input_len - 1].front();
 }
 
+static void clear_clause_caches(clause_converter& c)
+{
+    c.indep_word_bag.clear();
+    c.all_indep_word_bag.clear();
+    c.fzk_patterns.clear();
+}
+
 static void clause_converter_init(clause_converter& c, dictionary_work& dict)
 {
     c.dictionary = &dict;
     c.connect_matrix = dictionary_get_connect_matrix(dict);
-    c.indep_word_bag.clear();
-    c.all_indep_word_bag.clear();
-    c.fzk_patterns.clear();
+    clear_clause_caches(c);
     c.pos_default = dictionary_get_pos(dict, pos_type_meisi);
     c.pos_end_clause_1 = dictionary_get_pos(dict, pos_type_v1);
     c.pos_end_clause_2 = dictionary_get_pos(dict, pos_type_v2);
@@ -1049,6 +1054,8 @@ std::vector<candidate> engine_convert(engine& e, const std::string& utf8_hiragan
     if (!input_len || *input_len == 0 || limit == 0 || *input_len > max_input_length) {
         return {};
     }
+
+    clear_clause_caches(e.converter);
 
     std::vector<word> words;
     if (auto s = consecutive_clause_convert(e.converter, utf8_hiragana)) {
