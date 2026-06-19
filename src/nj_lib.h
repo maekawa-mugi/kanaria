@@ -101,7 +101,7 @@ typedef int16_t NJ_HINDO;
 #define NJ_USER_QUE_SIZE        (((NJ_MAX_USER_LEN + NJ_MAX_USER_KOUHO_LEN) * sizeof(NJ_CHAR)) + 5)
 #define NJ_USER_DIC_SIZE        ((NJ_USER_QUE_SIZE + NJ_INDEX_SIZE + NJ_INDEX_SIZE) * NJ_MAX_USER_COUNT + NJ_INDEX_SIZE  + NJ_INDEX_SIZE + NJ_LEARN_DIC_HEADER_SIZE + 4)
 
-typedef uint8_t * NJ_DIC_HANDLE;
+typedef const uint8_t *NJ_DIC_HANDLE;
 
 typedef struct {
     uint16_t base;
@@ -344,9 +344,6 @@ NJ_EXTERN int16_t njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR  
 NJ_EXTERN int16_t njx_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor);
 NJ_EXTERN int16_t njx_get_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *result);
 NJ_EXTERN int16_t njx_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t restore, uint32_t size);
-NJ_EXTERN int16_t njx_add_word(NJ_CLASS *iwnn, NJ_WORD_INFO *word, uint8_t type, uint8_t connect);
-NJ_EXTERN int16_t njx_delete_word(NJ_CLASS *iwnn, NJ_RESULT *result);
-NJ_EXTERN int16_t njx_create_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, int8_t type, uint32_t size);
 
 NJ_EXTERN int16_t njx_init(NJ_CLASS *iwnn);
 NJ_EXTERN int16_t njx_select(NJ_CLASS *iwnn, NJ_RESULT *r_result);

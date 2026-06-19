@@ -54,9 +54,7 @@ add_library(openwnn_std STATIC
     src/openwnn_std.cpp
     "${GENERATED_WNN_JPN_DIC}"
     src/ndapi.c
-    src/ndbdic.c
     src/ndcommon.c
-    src/ndfdic.c
     src/ndldic.c
     src/ndrdic.c
     src/neapi.c

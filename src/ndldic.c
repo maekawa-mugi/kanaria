@@ -126,7 +126,7 @@ static NJ_WQUE *get_que_allHinsi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t 
 static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
 static int16_t continue_cnt(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
 
-static uint8_t *get_search_index_address(NJ_DIC_HANDLE handle, uint8_t search_pattern);
+static const uint8_t *get_search_index_address(NJ_DIC_HANDLE handle, uint8_t search_pattern);
 
 static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern);
 
@@ -147,7 +147,7 @@ static int16_t que_strcmp_include(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t
 
 #define COPY_UINT16(dst,src)    (*(uint16_t *)(dst) = *(uint16_t *)(src))
 
-static uint8_t *get_search_index_address(NJ_DIC_HANDLE handle, uint8_t search_pattern) {
+static const uint8_t *get_search_index_address(NJ_DIC_HANDLE handle, uint8_t search_pattern) {
 
 
     
@@ -262,7 +262,7 @@ int16_t njd_l_search_word(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *con,
 
 static NJ_WQUE *get_que_type_and_next(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
                                       uint16_t que_id) {
-    uint8_t *ptr;
+    const uint8_t *ptr;
     NJ_WQUE *que = &(iwnn->que_tmp);
 
 
@@ -291,7 +291,7 @@ static NJ_WQUE *get_que_type_and_next(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
 
 static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
                                               uint16_t que_id) {
-    uint8_t *ptr;
+    const uint8_t *ptr;
     NJ_WQUE *que = &(iwnn->que_tmp);
 
 
@@ -322,7 +322,7 @@ static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *iwnn, NJ_DIC_HANDLE hand
 
 static NJ_WQUE *get_que_allHinsi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
                                  uint16_t que_id) {
-    uint8_t *ptr;
+    const uint8_t *ptr;
     NJ_WQUE *que = &(iwnn->que_tmp);
 
 
@@ -350,7 +350,7 @@ static NJ_WQUE *get_que_allHinsi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
 }
 
 static NJ_WQUE *get_que(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id) {
-    uint8_t *ptr;
+    const uint8_t *ptr;
     NJ_WQUE *que = &(iwnn->que_tmp);
 
 
@@ -679,11 +679,12 @@ static int16_t que_strcmp_include(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
 
 static NJ_CHAR *get_string(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
                            uint16_t que_id, uint8_t *slen) {
-    uint8_t *src, *dst;
+    const uint8_t *src;
+    uint8_t *dst;
     uint8_t copy_size, size;
     uint8_t i;
-    uint8_t *top_addr;
-    uint8_t *bottom_addr;
+    const uint8_t *top_addr;
+    const uint8_t *bottom_addr;
     uint16_t que_size;
 
 
@@ -765,12 +766,13 @@ static NJ_CHAR *get_string(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
 
 static NJ_CHAR *get_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
                            uint16_t que_id, uint8_t *slen) {
-    uint8_t *src, *dst;
+    const uint8_t *src;
+    uint8_t *dst;
     NJ_WQUE *que;
     uint8_t copy_size, size;
     uint8_t i;
-    uint8_t *top_addr;
-    uint8_t *bottom_addr;
+    const uint8_t *top_addr;
+    const uint8_t *bottom_addr;
     NJ_CHAR  *hira;
     uint16_t que_size;
     uint32_t dictype;
@@ -926,7 +928,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                                        uint8_t comp_flg) {
     uint16_t current, from, to;
     uint16_t que_id;
-    uint8_t  *ptr, *p;
+    const uint8_t *ptr, *p;
     int16_t ret, num_count;
     NJ_CHAR  *yomi;
     NJ_WQUE  *que;
@@ -1059,7 +1061,7 @@ static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
     uint16_t from, to, i;
     uint16_t que_id, oldest;
     uint32_t max_value, eval, current;
-    uint8_t  *ptr, *p;
+    const uint8_t *ptr, *p;
     NJ_WQUE  *que;
     int16_t ret, num_count;
     int32_t found = 0;
@@ -1198,7 +1200,7 @@ static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_
                                      uint8_t *forward_flag) {
     uint16_t right, mid = 0, left, max;
     uint16_t que_id;
-    uint8_t  *ptr, *p;
+    const uint8_t *ptr, *p;
     NJ_CHAR  *str;
     int16_t ret = 0;
     int32_t found = 0;
@@ -1396,7 +1398,7 @@ static int16_t search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
                                            NJ_CHAR *yomi, uint16_t len, uint16_t *from, uint16_t *to) {
     uint16_t right, mid = 0, left, max = 0;
     uint16_t que_id;
-    uint8_t  *ptr, *p;
+    const uint8_t *ptr, *p;
     int16_t ret = 0;
     uint16_t comp_len;
     uint16_t i, char_len;
@@ -1611,7 +1613,7 @@ static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset,
     uint8_t  offset;
     int32_t  dic_freq;
     uint16_t max;
-    uint8_t  *learn_index_top_addr;
+    const uint8_t *learn_index_top_addr;
 
 
     
@@ -1646,7 +1648,7 @@ int16_t njd_l_get_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD 
     NJ_WQUE *que;
     uint16_t que_id;
     uint8_t offset;
-    uint8_t *learn_index_top_addr;
+    const uint8_t *learn_index_top_addr;
 
 
     
@@ -1763,7 +1765,7 @@ int16_t njd_l_get_candidate(NJ_CLASS *iwnn, NJ_WORD *word,
 int16_t njd_l_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle) {
     uint16_t flg;
     uint16_t word_cnt, max;
-    uint8_t *ptr;
+    const uint8_t *ptr;
     uint16_t target_id;
     uint16_t i;
     uint16_t id1 = 0;
@@ -1861,7 +1863,7 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
     uint16_t from, to, i;
     uint16_t que_id, oldest;
     uint32_t max_value, eval, current;
-    uint8_t  *ptr, *p;
+    const uint8_t *ptr, *p;
     NJ_WQUE *que;
     int16_t ret = 0;
     int32_t found = 0;
@@ -2236,7 +2238,7 @@ static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8
                                       uint8_t *forward_flag) {
     uint16_t right, mid = 0, left, max;
     uint16_t que_id;
-    uint8_t  *ptr, *p;
+    const uint8_t *ptr, *p;
     NJ_CHAR  *str;
     int16_t ret = 0;
     int32_t found = 0;

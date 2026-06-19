@@ -22,8 +22,8 @@
 #include "njd.h"
 
 
-#define F_HINSI_TOP_ADDR(h) ((uint8_t*)((h)+nj_read_le32((h)+0x20)))
-#define B_HINSI_TOP_ADDR(h) ((uint8_t*)((h)+nj_read_le32((h)+0x24)))
+#define F_HINSI_TOP_ADDR(h) ((h)+nj_read_le32((h)+0x20))
+#define B_HINSI_TOP_ADDR(h) ((h)+nj_read_le32((h)+0x24))
 #define V2_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x28)))
 #define BUN_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x2A)))
 #define TAN_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x30)))
@@ -83,7 +83,7 @@ int16_t njd_r_get_hinsi(NJ_DIC_HANDLE rule, uint8_t type) {
     }
 }
 
-int16_t njd_r_get_connect(NJ_DIC_HANDLE rule, uint16_t hinsi, uint8_t type, uint8_t **connect) {
+int16_t njd_r_get_connect(NJ_DIC_HANDLE rule, uint16_t hinsi, uint8_t type, const uint8_t **connect) {
     uint16_t i, rec_len;
 
     
@@ -98,12 +98,12 @@ int16_t njd_r_get_connect(NJ_DIC_HANDLE rule, uint16_t hinsi, uint8_t type, uint
         i = F_HINSI_SET_CNT(rule);      
         rec_len = (uint16_t)((i + 7) / 8);
                                         
-        *connect = (uint8_t*)(F_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len));
+        *connect = F_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len);
     } else {                            
         i = B_HINSI_SET_CNT(rule);      
         rec_len = (uint16_t)((i + 7) / 8);
                                         
-        *connect = (uint8_t*)(B_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len));
+        *connect = B_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len);
     }
     return 0;
 }

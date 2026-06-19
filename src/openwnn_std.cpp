@@ -14,10 +14,10 @@ extern "C" {
 #include "nj_ext.h"
 #include "nj_dic.h"
 
-extern uint32_t dic_size[];
-extern uint8_t dic_type[];
-extern uint8_t *dic_data[];
-extern uint8_t *con_data[];
+extern const uint32_t dic_size[];
+extern const uint8_t dic_type[];
+extern const uint8_t *const dic_data[];
+extern const uint8_t *const con_data[];
 }
 
 #include <algorithm>
@@ -548,7 +548,7 @@ static std::vector<unsigned char> dictionary_get_connect_array(dictionary_work& 
     }
 
     std::vector<unsigned char> result(static_cast<std::size_t>(rcount) + 1, 0);
-    uint8_t* connect = nullptr;
+    const uint8_t* connect = nullptr;
     if (left_pos > 0) {
         njd_r_get_connect(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], left_pos, NJ_RULE_TYPE_FTOB, &connect);
         for (int i = 0; i < rcount; i++) {

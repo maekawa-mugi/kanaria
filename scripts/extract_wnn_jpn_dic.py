@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 
 
-ARRAY_RE = re.compile(r"static\s+uint8_t\s+(\w+)\[\]\s*=\s*\{(.*?)\};", re.S)
+ARRAY_RE = re.compile(r"static\s+(?:const\s+)?uint8_t\s+(\w+)\[\]\s*=\s*\{(.*?)\};", re.S)
 HEX_RE = re.compile(r"0x([0-9a-fA-F]{1,2})")
 
 

@@ -144,21 +144,9 @@ static int16_t search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, uint8_t comp_flg,
         }
 #endif 
         switch (dic_type) {
-        case NJ_DIC_TYPE_JIRITSU:                       
-        case NJ_DIC_TYPE_FZK:                           
-        case NJ_DIC_TYPE_TANKANJI:                      
-        case NJ_DIC_TYPE_STDFORE:                       
-        case NJ_DIC_TYPE_CUSTOM_COMPRESS:               
-        case NJ_DIC_TYPE_FORECONV:                      
-            ret = njd_b_search_word(&cursor->cond, loctset);
-            break;
-        case NJ_DIC_TYPE_USER:                          
-        case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:             
+        case NJ_DIC_TYPE_USER:
+        case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
             ret = njd_l_search_word(iwnn, &cursor->cond, loctset, comp_flg);
-            break;
-
-        case NJ_DIC_TYPE_YOMINASHI:                     
-            ret = njd_f_search_word(&cursor->cond, loctset);
             break;
 
         default:
@@ -214,22 +202,6 @@ static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, 
 
         dic_type = NJ_GET_DIC_TYPE_EX(loctset->loct.type, loctset->loct.handle);
 
-        switch (dic_type) {
-        case NJ_DIC_TYPE_JIRITSU:               
-        case NJ_DIC_TYPE_FZK:                   
-        case NJ_DIC_TYPE_TANKANJI:              
-        case NJ_DIC_TYPE_STDFORE:               
-        case NJ_DIC_TYPE_CUSTOM_COMPRESS:       
-        case NJ_DIC_TYPE_FORECONV:              
-            tmp_word.yomi = cursor->cond.yomi;
-            tmp_word.stem.info1 = cursor->cond.ylen;
-            tmp_result.word.yomi = cursor->cond.yomi;
-            tmp_result.word.stem.info1 = cursor->cond.ylen;
-            break;
-        default:
-            break;
-        }
-
         loctset->loct.status |= SET_LOCATION_OPERATION(cursor->cond.operation);
         if (cursor->cond.mode == NJ_CUR_MODE_FREQ) {
             if ((cursor->cond.ds->mode & (NJ_CACHE_MODE_VALID)) &&
@@ -258,17 +230,8 @@ static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, 
                 }
 
                 switch (dic_type) {
-                case NJ_DIC_TYPE_JIRITSU:                       
-                case NJ_DIC_TYPE_FZK:                           
-                case NJ_DIC_TYPE_TANKANJI:                      
-                case NJ_DIC_TYPE_STDFORE:                       
-                case NJ_DIC_TYPE_CUSTOM_COMPRESS:               
-                case NJ_DIC_TYPE_FORECONV:                      
-                    ret = njd_b_search_word(&cursor->cond, loctset);
-                    break;
-
-                case NJ_DIC_TYPE_USER:                          
-                case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:             
+                case NJ_DIC_TYPE_USER:
+                case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
                     ret = njd_l_search_word(iwnn, &cursor->cond, loctset, comp_flg);
                     break;
 
@@ -340,22 +303,9 @@ static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, 
 
         
         switch (dic_type) {
-        case NJ_DIC_TYPE_JIRITSU:                       
-        case NJ_DIC_TYPE_FZK:                           
-        case NJ_DIC_TYPE_TANKANJI:                      
-        case NJ_DIC_TYPE_STDFORE:                       
-        case NJ_DIC_TYPE_CUSTOM_COMPRESS:               
-        case NJ_DIC_TYPE_FORECONV:                      
-            ret = njd_b_search_word(&cursor->cond, loctset);
-            break;
-
-        case NJ_DIC_TYPE_USER:                          
-        case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:             
+        case NJ_DIC_TYPE_USER:
+        case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
             ret = njd_l_search_word(iwnn, &cursor->cond, loctset, comp_flg);
-            break;
-
-        case NJ_DIC_TYPE_YOMINASHI:                     
-            ret = njd_f_search_word(&cursor->cond, loctset);
             break;
 
         default:
@@ -386,22 +336,9 @@ int16_t njd_get_word_data(NJ_CLASS *iwnn, NJ_DIC_SET *dicset, NJ_SEARCH_LOCATION
     dic_type = NJ_GET_DIC_TYPE_EX(loctset->loct.type, loctset->loct.handle);
 
     switch (dic_type) {
-    case NJ_DIC_TYPE_JIRITSU:                   
-    case NJ_DIC_TYPE_FZK:                       
-    case NJ_DIC_TYPE_TANKANJI:                  
-    case NJ_DIC_TYPE_STDFORE:                   
-    case NJ_DIC_TYPE_CUSTOM_COMPRESS:           
-    case NJ_DIC_TYPE_FORECONV:                  
-        ret = njd_b_get_word(loctset, word);
-        break;
-
-    case NJ_DIC_TYPE_USER:                      
-    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:         
+    case NJ_DIC_TYPE_USER:
+    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
         ret = njd_l_get_word(iwnn, loctset, word);
-        break;
-
-    case NJ_DIC_TYPE_YOMINASHI:                 
-        ret = njd_f_get_word(loctset, word);
         break;
 
     default:
@@ -424,18 +361,7 @@ static void set_operation_id(NJ_SEARCH_LOCATION *dicinfo, uint8_t reverse, NJ_RE
 
     
     switch (type) {
-    case NJ_DIC_TYPE_JIRITSU:                   
-    case NJ_DIC_TYPE_FZK:                       
-    case NJ_DIC_TYPE_TANKANJI:                  
-    case NJ_DIC_TYPE_STDFORE:                   
-    case NJ_DIC_TYPE_YOMINASHI:                 
-
-    case NJ_DIC_TYPE_FORECONV:                  
-        dictype = NJ_DIC_STATIC;
-        break;
-
-    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:         
-    case NJ_DIC_TYPE_CUSTOM_COMPRESS:           
+    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
         dictype = NJ_DIC_CUSTOMIZE;
         break;
 
@@ -479,7 +405,6 @@ static int16_t njd_get_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *result
 
 int16_t njd_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *stroke, uint16_t size) {
     int16_t ret = 0;
-    uint16_t len;
     uint32_t dictype;
 
 
@@ -490,38 +415,9 @@ int16_t njd_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *stroke, uint1
     dictype = NJ_GET_DIC_TYPE_EX(result->word.stem.loc.type, result->word.stem.loc.handle);
 
     switch (dictype) {
-    case NJ_DIC_TYPE_JIRITSU:                   
-    case NJ_DIC_TYPE_FZK:                       
-    case NJ_DIC_TYPE_TANKANJI:                  
-    case NJ_DIC_TYPE_STDFORE:                   
-    case NJ_DIC_TYPE_CUSTOM_COMPRESS:           
-    case NJ_DIC_TYPE_FORECONV:                  
-        if (GET_LOCATION_OPERATION(result->word.stem.loc.status) != NJ_CUR_OP_COMP) {
-            ret = njd_b_get_stroke(&result->word, stroke, size);
-        } else {
-            len = NJ_GET_YLEN_FROM_STEM(&result->word);
-
-            if (size < ((len + NJ_TERM_LEN) * sizeof(NJ_CHAR))) {
-                return NJ_SET_ERR_VAL(NJ_FUNC_NJD_GET_STROKE,
-                                      NJ_ERR_BUFFER_NOT_ENOUGH);
-            }
-            if (len == 0) {
-                return NJ_SET_ERR_VAL(NJ_FUNC_NJD_GET_STROKE, 
-                                      NJ_ERR_INVALID_RESULT);
-            }
-            nj_strncpy(stroke, result->word.yomi, len);
-            *(stroke + len) = NJ_CHAR_NUL;
-            return len;
-        }
-        break;
-
-    case NJ_DIC_TYPE_USER:                      
-    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:         
+    case NJ_DIC_TYPE_USER:
+    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
         ret = njd_l_get_stroke(iwnn, &result->word, stroke, size);
-        break;
-
-    case NJ_DIC_TYPE_YOMINASHI:                 
-        ret = njd_f_get_stroke(&result->word, stroke, size);
         break;
 
     default:
@@ -548,22 +444,9 @@ int16_t njd_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result,
     dictype = NJ_GET_DIC_TYPE_EX(result->word.stem.loc.type, result->word.stem.loc.handle);
 
     switch (dictype) {
-    case NJ_DIC_TYPE_JIRITSU:                   
-    case NJ_DIC_TYPE_FZK:                       
-    case NJ_DIC_TYPE_TANKANJI:                  
-    case NJ_DIC_TYPE_STDFORE:                   
-    case NJ_DIC_TYPE_CUSTOM_COMPRESS:           
-    case NJ_DIC_TYPE_FORECONV:                  
-        ret = njd_b_get_candidate(&result->word, candidate, size);
-        break;
-
-    case NJ_DIC_TYPE_USER:                      
-    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:         
+    case NJ_DIC_TYPE_USER:
+    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
         ret = njd_l_get_candidate(iwnn, &result->word, candidate, size);
-        break;
-
-    case NJ_DIC_TYPE_YOMINASHI:                 
-        ret = njd_f_get_candidate(&result->word, candidate, size);
         break;
 
     default:
@@ -578,7 +461,7 @@ int16_t njd_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result,
 
 
 static int16_t njd_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle) {
-    uint8_t *addr;
+    const uint8_t *addr;
     uint32_t datasize, extsize;
     uint32_t version;
     uint32_t type;
@@ -632,32 +515,15 @@ static int16_t njd_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle) {
     
     switch (type) {
 
-    case NJ_DIC_TYPE_JIRITSU:                   
-    case NJ_DIC_TYPE_FZK:                       
-    case NJ_DIC_TYPE_TANKANJI:                  
-    case NJ_DIC_TYPE_CUSTOM_COMPRESS:           
-    case NJ_DIC_TYPE_STDFORE:                   
-        
-        if (version != (uint32_t)NJ_DIC_VERSION2) {
-            return NJ_SET_ERR_VAL(NJ_FUNC_NJD_CHECK_DIC, NJ_ERR_FORMAT_INVALID);
-        }
-        break;
-
-    case NJ_DIC_TYPE_RULE:                      
+    case NJ_DIC_TYPE_RULE:
         
         if (version != (uint32_t)NJ_DIC_VERSION2_1) {
             return NJ_SET_ERR_VAL(NJ_FUNC_NJD_CHECK_DIC, NJ_ERR_FORMAT_INVALID);
         }
         break;
 
-    case NJ_DIC_TYPE_YOMINASHI:                 
-        
-        if (version != (uint32_t)NJ_DIC_VERSION1) {
-            return NJ_SET_ERR_VAL(NJ_FUNC_NJD_CHECK_DIC, NJ_ERR_FORMAT_INVALID);
-        }
-        break;
-
-    case NJ_DIC_TYPE_USER:                      
+    case NJ_DIC_TYPE_USER:
+    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
         
         if (version != (uint32_t)NJ_DIC_VERSION2) {
             return NJ_SET_ERR_VAL(NJ_FUNC_NJD_CHECK_DIC, NJ_ERR_FORMAT_INVALID);

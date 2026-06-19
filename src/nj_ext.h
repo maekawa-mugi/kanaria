@@ -82,50 +82,19 @@ extern int16_t njd_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result,
 extern int16_t njd_init_search_location_set(NJ_SEARCH_LOCATION_SET* loctset);
 extern int16_t njd_init_word(NJ_WORD* word);
 
-extern int16_t njd_b_search_word(NJ_SEARCH_CONDITION *con,
-                                  NJ_SEARCH_LOCATION_SET *loctset);
-extern int16_t njd_b_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word);
-extern int16_t njd_b_get_candidate(NJ_WORD *word, NJ_CHAR *candidate,
-                                    uint16_t size);
-extern int16_t njd_b_get_stroke(NJ_WORD *word, NJ_CHAR *stroke, uint16_t size);
-
-extern int16_t njd_f_search_word(NJ_SEARCH_CONDITION *con,
-                                  NJ_SEARCH_LOCATION_SET *loctset);
-extern int16_t njd_f_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word);
-extern int16_t njd_f_get_stroke(NJ_WORD *word, NJ_CHAR *stroke,
-                                 uint16_t size);
-extern int16_t njd_f_get_candidate(NJ_WORD *word, NJ_CHAR *candidate,
-                                    uint16_t size);
-
 extern int16_t njd_l_search_word(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *con,
                                   NJ_SEARCH_LOCATION_SET *loctset, uint8_t comp_flg);
-extern int16_t njd_l_add_word(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *word,
-                                uint8_t connect, uint8_t type,
-                                uint8_t undo, uint8_t dictype);
-
-extern int16_t njd_l_delete_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION *loc);
 extern int16_t njd_l_get_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word);
 extern int16_t njd_l_get_stroke(NJ_CLASS *iwnn, NJ_WORD *word,
                                  NJ_CHAR *stroke, uint16_t size);
 extern int16_t njd_l_get_candidate(NJ_CLASS *iwnn, NJ_WORD *word,
                                  NJ_CHAR *candidate, uint16_t size);
-extern int16_t njd_l_undo_learn(NJ_CLASS *iwnn, uint16_t undo_count);
 extern int16_t njd_l_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle);
-extern int16_t njd_l_init_area(NJ_DIC_HANDLE handle);
-extern int16_t njd_l_make_space(NJ_CLASS *iwnn, uint16_t count, uint8_t mode);
-extern int16_t njd_l_get_relational_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION *loc,
-                                 NJ_WORD *word, NJ_DIC_FREQ *mdic_freq);
-extern int16_t njd_l_check_word_connect(NJ_CLASS *iwnn, NJ_WORD *word);
-extern int16_t njd_l_get_ext_word_data(NJ_CLASS *iwnn, NJ_WORD *word, uint16_t *hinsi, uint8_t *len);
-extern int16_t njd_l_mld_op_commit(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle);
-extern int16_t njd_l_mld_op_commit_to_top(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle);
-extern int16_t njd_l_mld_op_commit_cancel(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle);
-extern int16_t njd_l_mld_op_get_space(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle);
 
 extern int16_t njd_r_get_hinsi(NJ_DIC_HANDLE rule, uint8_t type);
 extern int16_t njd_r_get_connect(NJ_DIC_HANDLE rule,
                                   uint16_t hinsi, uint8_t type,
-                                  uint8_t **connect);
+                                  const uint8_t **connect);
 extern int16_t njd_r_get_count(NJ_DIC_HANDLE rule,
                                 uint16_t *fcount, uint16_t *rcount);
 
