@@ -747,16 +747,6 @@ static std::vector<word> get_ancillary_pattern(clause_converter& c, const std::s
     return c.fzk_patterns[input];
 }
 
-static void add_auto_generated_candidates(clause_converter& c, const std::string& input, std::vector<word>& words)
-{
-    word generated;
-    generated.candidate = input;
-    generated.stroke = input;
-    generated.part_of_speech = c.pos_default;
-    generated.frequency = (clause_cost - 1) * static_cast<int>(utf8_codepoint_count(input));
-    words.push_back(generated);
-}
-
 static std::vector<word> get_independent_words(clause_converter& c, const std::string& input, bool all)
 {
     if (input.empty()) {
@@ -800,7 +790,6 @@ static std::vector<word> get_independent_words(clause_converter& c, const std::s
         }
     }
 
-    add_auto_generated_candidates(c, input, words);
     bag[input] = words;
     return words;
 }
@@ -1064,9 +1053,6 @@ std::vector<candidate> engine_convert(engine& e, const std::string& utf8_hiragan
     std::vector<word> words;
     if (auto s = consecutive_clause_convert(e.converter, utf8_hiragana)) {
         words.push_back(s->value);
-        for (const auto& cl : s->elements) {
-            words.push_back(cl.value);
-        }
     }
 
     std::vector<clause> single_clauses;
@@ -1079,7 +1065,12 @@ std::vector<candidate> engine_convert(engine& e, const std::string& utf8_hiragan
     raw.candidate = utf8_hiragana;
     raw.stroke = utf8_hiragana;
     raw.part_of_speech = e.converter.pos_default;
+    raw.frequency = (clause_cost - 1) * static_cast<int>(*input_len);
     words.push_back(raw);
+
+    std::stable_sort(words.begin(), words.end(), [](const word& lhs, const word& rhs) {
+        return lhs.frequency > rhs.frequency;
+    });
 
     return words_to_candidates(words, limit);
 }

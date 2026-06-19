@@ -1,6 +1,7 @@
 #include "openwnn_std.h"
 
 #include <iostream>
+#include <algorithm>
 #include <string>
 
 namespace {
@@ -25,6 +26,16 @@ int main()
 
     const auto prediction5 = openwnn::engine_predict(*engine, "きょう", 5);
     ok &= expect(prediction5.size() == 5, "prediction limit 5 was not filled");
+
+    const auto today = openwnn::engine_convert(*engine, "きょう", 20);
+    ok &= expect(!today.empty() && today.front().candidate == "今日",
+                 "dictionary candidate did not rank ahead of raw hiragana");
+
+    const std::string sentence = "きょうはいいてんき";
+    const auto converted_sentence = openwnn::engine_convert(*engine, sentence, 20);
+    ok &= expect(std::all_of(converted_sentence.begin(), converted_sentence.end(), [&](const auto& item) {
+        return item.stroke == sentence;
+    }), "clause fragments leaked into full-sentence candidates");
 
     return ok ? 0 : 1;
 }
