@@ -50,6 +50,7 @@ static int16_t check_search_cursor(NJ_CLASS *iwnn, NJ_CURSOR *cursor) {
     NJ_DIC_INFO *dicinfo;
     NJ_SEARCH_LOCATION_SET *loctset;
 
+    (void)iwnn;
 
     if (cursor->cond.ds == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_CHECK_SEARCH_CURSOR, NJ_ERR_PARAM_DIC_NULL);
@@ -323,6 +324,8 @@ int16_t njd_get_word_data(NJ_CLASS *iwnn, NJ_DIC_SET *dicset, NJ_SEARCH_LOCATION
     int16_t ret = 0;
     uint32_t dic_type;
 
+    (void)dicset;
+    (void)dic_idx;
 
     
     if (GET_LOCATION_STATUS(loctset->loct.status) == NJ_ST_SEARCH_END) {
@@ -351,6 +354,7 @@ static void set_operation_id(NJ_SEARCH_LOCATION *dicinfo, uint8_t reverse, NJ_RE
     uint16_t dictype;
     uint32_t type;
 
+    (void)reverse;
     if (dicinfo->handle == NULL) {
         
         dictype = NJ_DIC_STATIC; 
@@ -701,6 +705,7 @@ NJ_EXTERN int16_t njx_get_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *res
 
 NJ_EXTERN int16_t njx_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t restore, uint32_t size) {
 
+    (void)restore;
 
     if (iwnn == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_CHECK_DIC, NJ_ERR_PARAM_ENV_NULL);

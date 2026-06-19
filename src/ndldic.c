@@ -117,7 +117,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
 static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern);
 static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern, uint16_t hIdx);
 static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t op, NJ_CHAR *yomi, uint16_t ylen, uint16_t *from, uint16_t *to, uint8_t *forward_flag);
-static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t op, NJ_CHAR *yomi, uint16_t ylen, uint16_t sfrom, uint16_t sto, uint16_t *from, uint16_t *to,
+static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t ylen, uint16_t sfrom, uint16_t sto, uint16_t *from, uint16_t *to,
                                       uint8_t *forward_flag);
 static int16_t search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t ylen, uint16_t *from, uint16_t *to);
 static int16_t str_que_cmp(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t yomiLen, uint16_t que_id, uint8_t mode);
@@ -126,9 +126,9 @@ static NJ_WQUE *get_que_allHinsi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t 
 static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
 static int16_t continue_cnt(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
 
-static const uint8_t *get_search_index_address(NJ_DIC_HANDLE handle, uint8_t search_pattern);
+static const uint8_t *get_search_index_address(NJ_DIC_HANDLE handle);
 
-static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern);
+static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset);
 
 static NJ_HINDO calculate_hindo(NJ_DIC_HANDLE handle, int32_t freq, NJ_DIC_FREQ *dic_freq, int16_t freq_max, int16_t freq_min);
 static int16_t que_strcmp_include(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id, NJ_CHAR *yomi);
@@ -147,7 +147,7 @@ static int16_t que_strcmp_include(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t
 
 #define COPY_UINT16(dst,src)    (*(uint16_t *)(dst) = *(uint16_t *)(src))
 
-static const uint8_t *get_search_index_address(NJ_DIC_HANDLE handle, uint8_t search_pattern) {
+static const uint8_t *get_search_index_address(NJ_DIC_HANDLE handle) {
 
 
     
@@ -963,7 +963,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
     }
 
     
-    ptr = get_search_index_address(loctset->loct.handle, cond->operation);
+    ptr = get_search_index_address(loctset->loct.handle);
     p = ptr + (current * NJ_INDEX_SIZE);
 
     while (current <= loctset->loct.bottom) {
@@ -1011,7 +1011,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                     loctset->loct.current_info = (uint8_t)(((num_count + 1) << 4) | ret);
                     loctset->loct.current = current;
                     loctset->loct.status = NJ_ST_SEARCH_READY;
-                    loctset->cache_freq = get_hindo(iwnn, loctset, search_pattern);
+                    loctset->cache_freq = get_hindo(iwnn, loctset);
                     return 1;
                 }
             } else {
@@ -1042,7 +1042,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                     loctset->loct.status = NJ_ST_SEARCH_READY;
                     
                     loctset->loct.current_info = (ret & 0x0f) << 4;
-                    loctset->cache_freq = get_hindo(iwnn, loctset, search_pattern);
+                    loctset->cache_freq = get_hindo(iwnn, loctset);
                     return 1;
                 }
             }
@@ -1070,7 +1070,7 @@ static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
 
 
     
-    ptr = get_search_index_address(loctset->loct.handle, cond->operation);
+    ptr = get_search_index_address(loctset->loct.handle);
 
     
     oldest = GET_LEARN_NEXT_WORD_POS(loctset->loct.handle);
@@ -1189,7 +1189,7 @@ static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
         return 0;
     } else {
         loctset->loct.status = NJ_ST_SEARCH_READY;
-        loctset->cache_freq = get_hindo(iwnn, loctset, search_pattern);
+        loctset->cache_freq = get_hindo(iwnn, loctset);
         return 1;
     }
 
@@ -1209,7 +1209,7 @@ static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_
 
 
     
-    ptr = get_search_index_address(handle, op);
+    ptr = get_search_index_address(handle);
     
     max = GET_LEARN_WORD_COUNT(handle);
 
@@ -1606,8 +1606,7 @@ static NJ_HINDO calculate_hindo(NJ_DIC_HANDLE handle, int32_t freq, NJ_DIC_FREQ 
     return NORMALIZE_HINDO(hindo, freq_max, freq_min);
 }
 
-static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset,
-                          uint8_t search_pattern) {
+static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset) {
     NJ_WQUE   *que;
     uint16_t que_id, oldest;
     uint8_t  offset;
@@ -1617,7 +1616,7 @@ static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset,
 
 
     
-    learn_index_top_addr = get_search_index_address(loctset->loct.handle, search_pattern);
+    learn_index_top_addr = get_search_index_address(loctset->loct.handle);
 
     que_id = (uint16_t)GET_UINT16(learn_index_top_addr +
                                    ((loctset->loct.current & 0xffffU) * NJ_INDEX_SIZE));
@@ -1652,7 +1651,7 @@ int16_t njd_l_get_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD 
 
 
     
-    learn_index_top_addr = get_search_index_address(loctset->loct.handle, GET_LOCATION_OPERATION(loctset->loct.status));
+    learn_index_top_addr = get_search_index_address(loctset->loct.handle);
 
     que_id = (uint16_t)GET_UINT16(learn_index_top_addr +
                                    ((loctset->loct.current & 0xffff) * NJ_INDEX_SIZE));
@@ -1878,7 +1877,6 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
     uint8_t                cmpflg;
     uint8_t                endflg = 0;
     NJ_CHAR                 *str;
-    NJ_CHAR                 *key;
     NJ_CHAR                 char_tmp[NJ_MAX_LEN + NJ_TERM_LEN];
     NJ_CHAR                 *pchar_tmp;
     NJ_SEARCH_CACHE         *psrhCache = cond->ds->dic[idx].srhCache;
@@ -1895,7 +1893,7 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
     }
 
     
-    ptr = get_search_index_address(loctset->loct.handle, cond->operation);
+    ptr = get_search_index_address(loctset->loct.handle);
 
     
     oldest = GET_LEARN_NEXT_WORD_POS(loctset->loct.handle);
@@ -1906,7 +1904,6 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
     if (GET_LOCATION_STATUS(loctset->loct.status) == NJ_ST_SEARCH_NO_INIT) {
         
         
-        key       = cond->ds->keyword;
         yomi      = cond->yomi;
         yomi_clen = cond->yclen;
         
@@ -2046,7 +2043,7 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                             tmp_len = nj_strlen(char_tmp);
                             
                             
-                            ret = search_range_by_yomi2(iwnn, loctset->loct.handle, search_pattern,
+                            ret = search_range_by_yomi2(iwnn, loctset->loct.handle,
                                                         char_tmp, tmp_len, 
                                                         (uint16_t)(psrhCache->storebuff[m].top),
                                                         (uint16_t)(psrhCache->storebuff[m].bottom),
@@ -2088,7 +2085,7 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                                         nj_strncpy(pchar_tmp, pCharset->to[l], tmp_len);
                                         *(pchar_tmp + tmp_len) = NJ_CHAR_NUL;
                                         tmp_len = nj_strlen(char_tmp);
-                                        ret = search_range_by_yomi2(iwnn, loctset->loct.handle, search_pattern,
+                                        ret = search_range_by_yomi2(iwnn, loctset->loct.handle,
                                                                     char_tmp, tmp_len,
                                                                     (uint16_t)(psrhCache->storebuff[m].top),
                                                                     (uint16_t)(psrhCache->storebuff[m].bottom),
@@ -2123,7 +2120,6 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                 }
             }
             yomi += UTL_CHAR(yomi);
-            key  += UTL_CHAR(key);
         }
 
         
@@ -2226,12 +2222,12 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
         return 0;
     } else {
         loctset->loct.status = NJ_ST_SEARCH_READY;
-        loctset->cache_freq = get_hindo(iwnn, loctset, search_pattern);
+        loctset->cache_freq = get_hindo(iwnn, loctset);
         return 1;
     }
 }
 
-static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t op,
+static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
                                       NJ_CHAR  *yomi, uint16_t len,
                                       uint16_t sfrom, uint16_t sto,
                                       uint16_t *from, uint16_t *to,
@@ -2247,7 +2243,7 @@ static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8
 
 
     
-    ptr = get_search_index_address(handle, op);
+    ptr = get_search_index_address(handle);
     
     max = GET_LEARN_WORD_COUNT(handle);
 
