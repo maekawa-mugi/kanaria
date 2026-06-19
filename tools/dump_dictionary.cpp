@@ -51,19 +51,17 @@ const char* dic_type_name(uint32_t type)
     }
 }
 
-const char* dic_type_file_name(uint32_t type)
+const char* dictionary_file_name(int dic_index, uint32_t type)
 {
-    switch (type) {
-    case NJ_DIC_TYPE_JIRITSU: return "independent_words";
-    case NJ_DIC_TYPE_FZK: return "ancillary_words";
-    case NJ_DIC_TYPE_TANKANJI: return "single_kanji";
-    case NJ_DIC_TYPE_CUSTOM_COMPRESS: return "compressed_custom";
-    case NJ_DIC_TYPE_STDFORE: return "prediction";
-    case NJ_DIC_TYPE_FORECONV: return "predictive_conversion";
-    case NJ_DIC_TYPE_YOMINASHI: return "suffix_words";
-    case NJ_DIC_TYPE_CUSTOM_INCOMPRESS: return "uncompressed";
-    case NJ_DIC_TYPE_USER: return "user";
-    default: return "unknown";
+    switch (dic_index) {
+    case 0:
+    case 1: return "prediction";
+    case 2: return "uncompressed";
+    case 3: return "suffix_words";
+    case 4: return "single_kanji";
+    case 5: return "independent_words";
+    case 6: return "ancillary_words";
+    default: return type == NJ_DIC_TYPE_USER ? "user" : "unknown";
     }
 }
 
@@ -238,7 +236,7 @@ private:
 
         std::ostream* out = &std::cout;
         if (!split_dir_.empty()) {
-            out = &split_stream(type);
+            out = &split_stream(dic_index, type);
         } else {
             *out << dic_type_name(type) << "\t";
         }
@@ -254,16 +252,17 @@ private:
             << utf8_codepoint_count(candidate) << "\n";
     }
 
-    std::ofstream& split_stream(uint32_t type)
+    std::ofstream& split_stream(int dic_index, uint32_t type)
     {
-        auto it = split_streams_.find(type);
+        const std::string name = dictionary_file_name(dic_index, type);
+        auto it = split_streams_.find(name);
         if (it != split_streams_.end()) {
             return it->second;
         }
 
         std::filesystem::create_directories(split_dir_);
-        auto path = split_dir_ / (std::string(dic_type_file_name(type)) + ".tsv");
-        auto [inserted, _] = split_streams_.try_emplace(type, path, std::ios::binary);
+        auto path = split_dir_ / (name + ".tsv");
+        auto [inserted, _] = split_streams_.try_emplace(name, path, std::ios::binary);
         inserted->second << "\xef\xbb\xbf";
         inserted->second
             << "stem_offset\tyomi\tcandidate\tfreq\t"
@@ -274,7 +273,7 @@ private:
     bool dedupe_ = false;
     std::filesystem::path split_dir_;
     std::set<row_key> seen_;
-    std::map<uint32_t, std::ofstream> split_streams_;
+    std::map<std::string, std::ofstream> split_streams_;
 };
 
 } // namespace
