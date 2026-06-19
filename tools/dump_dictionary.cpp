@@ -38,15 +38,15 @@ constexpr int fdic_data_size = 10;
 
 uint16_t rd16(const NJ_UINT8* p)
 {
-    return static_cast<uint16_t>((static_cast<uint16_t>(p[0]) << 8) | p[1]);
+    return static_cast<uint16_t>((static_cast<uint16_t>(p[1]) << 8) | p[0]);
 }
 
 uint32_t rd32(const NJ_UINT8* p)
 {
-    return (static_cast<uint32_t>(p[0]) << 24)
-        | (static_cast<uint32_t>(p[1]) << 16)
-        | (static_cast<uint32_t>(p[2]) << 8)
-        | p[3];
+    return (static_cast<uint32_t>(p[3]) << 24)
+        | (static_cast<uint32_t>(p[2]) << 16)
+        | (static_cast<uint32_t>(p[1]) << 8)
+        | p[0];
 }
 
 uint16_t bitfield16(uint16_t data, uint16_t pos, uint16_t width)
@@ -157,41 +157,46 @@ std::size_t utf8_codepoint_count(const std::string& s)
     return n;
 }
 
+void append_codepoint_as_utf8(std::string& dst, char32_t codepoint)
+{
+    if (codepoint <= 0x7F) {
+        dst.push_back(static_cast<char>(codepoint));
+    } else if (codepoint <= 0x7FF) {
+        dst.push_back(static_cast<char>(0xC0 | (codepoint >> 6)));
+        dst.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+    } else if (codepoint <= 0xFFFF) {
+        dst.push_back(static_cast<char>(0xE0 | (codepoint >> 12)));
+        dst.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+        dst.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+    } else {
+        dst.push_back(static_cast<char>(0xF0 | (codepoint >> 18)));
+        dst.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F)));
+        dst.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+        dst.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+    }
+}
+
 std::string nj_to_utf8(const NJ_CHAR* src, int max_chars)
 {
     std::string dst;
-    dst.resize((NJ_MAX_LEN + NJ_MAX_RESULT_LEN + NJ_TERM_LEN) * 4 + 1);
-    int i = 0;
-    int o = 0;
-    while (src[i] != 0x0000 && i < max_chars) {
-        auto* s = reinterpret_cast<const NJ_UINT8*>(&src[i]);
-        if (s[0] == 0x00 && s[1] <= 0x7f) {
-            dst[o++] = static_cast<char>(s[1] & 0x7f);
-            i++;
-        } else if (s[0] <= 0x07) {
-            dst[o++] = static_cast<char>(0xc0 | ((s[0] & 0x07) << 2) | ((s[1] & 0xc0) >> 6));
-            dst[o++] = static_cast<char>(0x80 | (s[1] & 0x3f));
-            i++;
-        } else if (s[0] >= 0xd8 && s[0] <= 0xdb) {
-            if (!(i < max_chars - 1) || s[2] < 0xdc || s[2] > 0xdf) {
+    dst.reserve((NJ_MAX_LEN + NJ_MAX_RESULT_LEN + NJ_TERM_LEN) * 4 + 1);
+
+    for (int i = 0; src[i] != NJ_CHAR_NUL && i < max_chars;) {
+        char32_t codepoint = src[i];
+        if (codepoint >= 0xD800 && codepoint <= 0xDBFF) {
+            if (!(i < max_chars - 1) || src[i + 1] < 0xDC00 || src[i + 1] > 0xDFFF) {
                 break;
             }
-            NJ_UINT8 s1 = static_cast<NJ_UINT8>((((s[0] & 0x03) << 2) | ((s[1] & 0xc0) >> 6)) + 1);
-            NJ_UINT8 s2 = static_cast<NJ_UINT8>(((s[1] & 0x3f) << 2) | (s[2] & 0x03));
-            NJ_UINT8 s3 = s[3];
-            dst[o++] = static_cast<char>(0xf0 | ((s1 & 0x1c) >> 2));
-            dst[o++] = static_cast<char>(0x80 | ((s1 & 0x03) << 4) | ((s2 & 0xf0) >> 4));
-            dst[o++] = static_cast<char>(0x80 | ((s2 & 0x0f) << 2) | ((s3 & 0xc0) >> 6));
-            dst[o++] = static_cast<char>(0x80 | (s3 & 0x3f));
+            codepoint = 0x10000 + ((codepoint - 0xD800) << 10) + (src[i + 1] - 0xDC00);
+            append_codepoint_as_utf8(dst, codepoint);
             i += 2;
+        } else if (codepoint >= 0xDC00 && codepoint <= 0xDFFF) {
+            break;
         } else {
-            dst[o++] = static_cast<char>(0xe0 | ((s[0] & 0xf0) >> 4));
-            dst[o++] = static_cast<char>(0x80 | ((s[0] & 0x0f) << 2) | ((s[1] & 0xc0) >> 6));
-            dst[o++] = static_cast<char>(0x80 | (s[1] & 0x3f));
+            append_codepoint_as_utf8(dst, codepoint);
             i++;
         }
     }
-    dst.resize(static_cast<std::size_t>(o));
     return dst;
 }
 
@@ -452,9 +457,8 @@ private:
     {
         const std::size_t copy_len = std::min<std::size_t>(yomi.size() / sizeof(NJ_CHAR), NJ_MAX_LEN);
         for (std::size_t i = 0; i < copy_len; ++i) {
-            auto* dst = reinterpret_cast<NJ_UINT8*>(&yomi_buf[i]);
-            dst[0] = yomi[i * 2];
-            dst[1] = yomi[i * 2 + 1];
+            yomi_buf[i] = static_cast<NJ_CHAR>(
+                (static_cast<NJ_UINT16>(yomi[i * 2 + 1]) << 8) | yomi[i * 2]);
         }
         yomi_buf[copy_len] = NJ_CHAR_NUL;
         return copy_len;

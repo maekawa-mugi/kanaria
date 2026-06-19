@@ -49,27 +49,27 @@
 #define NJD_SAME_INDEX_LIMIT    50
 
 #define NJ_INT16_READ(in)                                               \
-    (((((NJ_INT16)((in)[0])) << 8) & 0xff00U) + ((in)[1] & 0xffU))
+    (((((NJ_INT16)((in)[1])) << 8) & 0xff00U) + ((in)[0] & 0xffU))
 
 #define NJ_INT32_READ(in)                                               \
-    (((((NJ_INT32)((in)[0])) << 24) & 0xff000000) |                     \
-     ((((NJ_INT32)((in)[1])) << 16) &   0xff0000) |                     \
-     ((((NJ_INT32)((in)[2])) <<  8) &     0xff00) |                     \
-     ((((NJ_INT32)((in)[3]))      ) &       0xff))
+    (((((NJ_INT32)((in)[3])) << 24) & 0xff000000) |                     \
+     ((((NJ_INT32)((in)[2])) << 16) &   0xff0000) |                     \
+     ((((NJ_INT32)((in)[1])) <<  8) &     0xff00) |                     \
+     ((((NJ_INT32)((in)[0]))      ) &       0xff))
 
 #define NJ_INT32_WRITE(to, from)\
-        {(to)[0]=(NJ_UINT8)(((from)>>24) & 0x000000ff);\
-         (to)[1]=(NJ_UINT8)(((from)>>16) & 0x000000ff);\
-         (to)[2]=(NJ_UINT8)(((from)>>8) & 0x000000ff);\
-         (to)[3]=(NJ_UINT8)((from) & 0x000000ff);}
+        {(to)[0]=(NJ_UINT8)((from) & 0x000000ff);\
+         (to)[1]=(NJ_UINT8)(((from)>>8) & 0x000000ff);\
+         (to)[2]=(NJ_UINT8)(((from)>>16) & 0x000000ff);\
+         (to)[3]=(NJ_UINT8)(((from)>>24) & 0x000000ff);}
 
 #define NJ_INT16_WRITE(to, from)\
-        {(to)[0]=(NJ_UINT8)(((from)>>8) & 0x00ff);\
-         (to)[1]=(NJ_UINT8)((from) & 0x00ff);}
+        {(to)[0]=(NJ_UINT8)((from) & 0x00ff);\
+         (to)[1]=(NJ_UINT8)(((from)>>8) & 0x00ff);}
 
-#define NJ_GET_MAX_YLEN(h) ((NJ_INT16)(NJ_INT16_READ((h)+0x16)/sizeof(NJ_CHAR)))
+#define NJ_GET_MAX_YLEN(h) ((NJ_INT16)(NJ_INT32_READ((h)+0x14)/sizeof(NJ_CHAR)))
 
-#define NJ_GET_MAX_KLEN(h) ((NJ_INT16)(NJ_INT16_READ((h)+0x1A)/sizeof(NJ_CHAR)))
+#define NJ_GET_MAX_KLEN(h) ((NJ_INT16)(NJ_INT32_READ((h)+0x18)/sizeof(NJ_CHAR)))
 
 #define NJ_GET_DIC_TYPE(h) ((NJ_UINT32)(NJ_INT32_READ((h)+8)))
 

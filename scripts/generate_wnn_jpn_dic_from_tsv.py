@@ -80,15 +80,15 @@ class Entry:
 
 
 def u32(value: int) -> bytes:
-    return value.to_bytes(4, "big")
+    return value.to_bytes(4, "little")
 
 
 def u16(value: int) -> bytes:
-    return value.to_bytes(2, "big")
+    return value.to_bytes(2, "little")
 
 
 def nj_chars(text: str) -> bytes:
-    data = text.encode("utf-16-be")
+    data = text.encode("utf-16-le")
     if len(data) > NJ_MAX_LEN * 2 and text:
         raise SystemExit(f"entry is too long for OpenWnn NJ_CHAR storage: {text!r}")
     return data
@@ -179,8 +179,8 @@ def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
     learn[POS_INDEX_OFFSET - 28 : POS_INDEX_OFFSET - 24] = u32(index_offset)
     learn[POS_INDEX_OFFSET2 - 28 : POS_INDEX_OFFSET2 - 24] = u32(index_offset2)
 
-    yomi_order = sorted(range(word_count), key=lambda i: (encoded[i][1], encoded[i][0].candidate))
-    candidate_order = sorted(range(word_count), key=lambda i: (encoded[i][2], encoded[i][0].yomi))
+    yomi_order = sorted(range(word_count), key=lambda i: (encoded[i][0].yomi, encoded[i][0].candidate))
+    candidate_order = sorted(range(word_count), key=lambda i: (encoded[i][0].candidate, encoded[i][0].yomi))
 
     body = bytearray()
     body += learn
@@ -243,6 +243,26 @@ def read_blob_tsv(path: Path) -> dict[str, bytes]:
     return {name: bytes(value) for name, value in blobs.items()}
 
 
+def convert_rule_blob_to_le(values: bytes) -> bytes:
+    out = bytearray(values)
+
+    def convert_u16(offset: int) -> None:
+        out[offset : offset + 2] = int.from_bytes(values[offset : offset + 2], "big").to_bytes(2, "little")
+
+    def convert_u32(offset: int) -> None:
+        out[offset : offset + 4] = int.from_bytes(values[offset : offset + 4], "big").to_bytes(4, "little")
+
+    for offset in (0x00, 0x04, 0x08, 0x0C, 0x10, 0x14, 0x18):
+        convert_u32(offset)
+    for offset in (0x1C, 0x1E, 0x28, 0x2A, 0x30, 0x32, 0x34, 0x36,
+                   0x38, 0x3A, 0x3C, 0x3E, 0x40, 0x42, 0x44, 0x52, 0x54):
+        convert_u16(offset)
+    for offset in (0x20, 0x24):
+        convert_u32(offset)
+    convert_u32(len(out) - 4)
+    return bytes(out)
+
+
 def write_array(f, name: str, values: bytes) -> None:
     f.write(f"static NJ_UINT8 {name}[] = {{\n")
     for offset in range(0, len(values), 16):
@@ -302,7 +322,10 @@ def main() -> int:
         entries = grouped_entries.get(name, [])
         dictionaries.append(build_word_dictionary(entries, que_type))
 
-    connections = read_blob_tsv(args.rule_blob_tsv)
+    connections = {
+        name: convert_rule_blob_to_le(values)
+        for name, values in read_blob_tsv(args.rule_blob_tsv).items()
+    }
     write_c(args.output, dictionaries, connections)
     return 0
 

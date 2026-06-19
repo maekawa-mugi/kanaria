@@ -52,7 +52,7 @@
 #define ADDRESS_TO_POS(x,adr)   (((adr) - LEARN_DATA_TOP_ADDR(x)) / QUE_SIZE(x))
 #define POS_TO_ADDRESS(x,pos)   (LEARN_DATA_TOP_ADDR(x) + QUE_SIZE(x) * (pos))
 
-#define GET_UINT16(ptr) ((((NJ_UINT16)(*(ptr))) << 8) | (*((ptr) + 1) & 0x00ff))
+#define GET_UINT16(ptr) ((((NJ_UINT16)(*((ptr) + 1))) << 8) | (*(ptr) & 0x00ff))
 
 #define GET_FPOS_FROM_DATA(x) ((NJ_UINT16)NJ_INT16_READ((x)+1) >> 7)
 #define GET_YSIZE_FROM_DATA(x) ((NJ_UINT8)((NJ_UINT16)NJ_INT16_READ((x)+1) & 0x7F))
@@ -1530,16 +1530,9 @@ static NJ_INT16 search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
 
 static NJ_INT16 str_que_cmp(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi,
                             NJ_UINT16 yomiLen, NJ_UINT16 que_id, NJ_UINT8 mode) {
-    NJ_UINT8  *queYomi;
-    NJ_UINT8  *yomiPtr;                 
-    NJ_UINT16 yomiByte;
-    NJ_UINT16 yomiPos;
-    NJ_UINT8  queYomiByte, queKouhoByte;
-    NJ_UINT8  queYomiPos, queYomiSearchArea;
-    NJ_INT16  complete;
-    NJ_UINT8  *top_addr;
-    NJ_UINT8  *bottom_addr;
-    NJ_UINT16 que_size;
+    NJ_CHAR   *queYomi;
+    NJ_UINT8  queYomiLen;
+    NJ_UINT16 i;
 
 
 #ifdef IWNN_ERR_CHECK
@@ -1552,19 +1545,13 @@ static NJ_INT16 str_que_cmp(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi,
         return NJ_SET_ERR_VAL(NJ_FUNC_STR_QUE_CMP, NJ_ERR_DIC_BROKEN);
     }
 
-    queYomi = POS_TO_ADDRESS(handle, que_id);
+    queYomi = get_string(iwnn, handle, que_id, &queYomiLen);
 #ifdef IWNN_ERR_CHECK
     if (iwnn->err_check_flg == 7) {
-        *queYomi = 0x03;
+        return NJ_SET_ERR_VAL(NJ_FUNC_STR_QUE_CMP, NJ_ERR_DIC_BROKEN);
     }
 #endif 
-    switch (GET_TYPE_FROM_DATA(queYomi)) {
-    case QUE_TYPE_EMPTY:
-    case QUE_TYPE_JIRI:
-    case QUE_TYPE_FZK:
-        break;
-    default:
-        
+    if (queYomi == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_STR_QUE_CMP, NJ_ERR_DIC_BROKEN);
     }
 
@@ -1573,84 +1560,22 @@ static NJ_INT16 str_que_cmp(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi,
         return 1;
     }
 
-    
-    queYomiByte = GET_YSIZE_FROM_DATA(queYomi);
-    queKouhoByte= GET_KSIZE_FROM_DATA(queYomi);
-
-    top_addr = LEARN_DATA_TOP_ADDR(handle);
-    que_size = QUE_SIZE(handle);
-
-    
-    queYomi += LEARN_QUE_STRING_OFFSET;                 
-    queYomiSearchArea = (NJ_UINT8)(QUE_SIZE(handle) - LEARN_QUE_STRING_OFFSET);
-
-    complete = 0;
-    yomiPos = 0; queYomiPos = 0;
-    yomiPtr  = (NJ_UINT8*)yomi;
-    yomiByte = yomiLen * sizeof(NJ_CHAR);
-
-    
-    while ((complete = (*yomiPtr - *queYomi)) == 0) {
-        yomiPos++; queYomiPos++;
-        
-        if (queYomiPos >= queYomiByte) {
-            if (queYomiByte == yomiByte) {
-                
-                return 1;
-            } else if (mode == 2) {
-                
-                return 2; 
-            } else {
-                
-                return (mode + 1);
-            }
-        }
-        if (yomiPos >= yomiByte) {
-            
-            break;
-        } else {
-            yomiPtr++; queYomi++;
-#ifdef IWNN_ERR_CHECK
-            if (iwnn->err_check_flg == 8) {
-                queYomiPos = queYomiSearchArea;
-            }
-#endif 
-            if (queYomiPos >= queYomiSearchArea) {
-                
-                bottom_addr = top_addr;
-                bottom_addr += que_size * GET_LEARN_MAX_WORD_COUNT(handle) - 1;
-                if (queYomi >= bottom_addr) {
-                    queYomi = top_addr;
-                }
-                
-                
-                if (*queYomi++ != QUE_TYPE_NEXT) {
-                    
-                    return NJ_SET_ERR_VAL(NJ_FUNC_STR_QUE_CMP, NJ_ERR_DIC_BROKEN);
-                }
-                queYomiSearchArea += (NJ_UINT8)(que_size - 1);
-            }
-        }
-    }
-    if (complete == 0) {
-        if (yomiByte < queYomiByte) {
-            
-            if (mode == 2) {
-                return 1;
-            } 
-            
+    for (i = 0; i < yomiLen && i < queYomiLen; i++) {
+        if (yomi[i] < queYomi[i]) {
             return 0;
-        } else {
-            
+        }
+        if (yomi[i] > queYomi[i]) {
             return 2;
         }
-    } else if (complete < 0) {
-        
-        return 0;
-    } else {
-        
-        return 2;
     }
+
+    if (yomiLen == queYomiLen) {
+        return 1;
+    }
+    if (yomiLen < queYomiLen) {
+        return (mode == 2) ? 1 : 0;
+    }
+    return (mode == 2) ? 2 : (mode + 1);
 }
 
 static NJ_HINDO calculate_hindo(NJ_DIC_HANDLE handle, NJ_INT32 freq, NJ_DIC_FREQ *dic_freq, NJ_INT16 freq_max, NJ_INT16 freq_min) {
@@ -2425,4 +2350,3 @@ static NJ_INT16 search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_U
 #endif 
     return 1;
 }
-

@@ -21,27 +21,20 @@
 #define NJ_MAX_CHAR_LEN  2
 
 #define NJ_CHAR_IS_EQUAL(a, b) \
-    ( (((NJ_UINT8*)(a))[0] == ((NJ_UINT8*)(b))[0]) && (((NJ_UINT8*)(a))[1] == ((NJ_UINT8*)(b))[1]) )
+    (*(a) == *(b))
 
 #define NJ_CHAR_IS_LESSEQ(a, b)                                         \
-    ( (((NJ_UINT8*)(a))[0] < ((NJ_UINT8*)(b))[0]) ||                    \
-      ((((NJ_UINT8*)(a))[0] == ((NJ_UINT8*)(b))[0]) && (((NJ_UINT8*)(a))[1] <= ((NJ_UINT8*)(b))[1])) )
+    (*(a) <= *(b))
 
 #define NJ_CHAR_IS_MOREEQ(a, b)                                         \
-    (  (((NJ_UINT8*)(a))[0] >  ((NJ_UINT8*)(b))[0]) ||                  \
-      ((((NJ_UINT8*)(a))[0] == ((NJ_UINT8*)(b))[0]) && (((NJ_UINT8*)(a))[1] >= ((NJ_UINT8*)(b))[1])) )
+    (*(a) >= *(b))
 
 #define NJ_CHAR_DIFF(a, b)                                              \
-    ((NJ_INT16)                                                         \
-     ( (((NJ_UINT8*)(a))[0] == ((NJ_UINT8*)(b))[0])                     \
-       ? (((NJ_UINT8*)(a))[1] - ((NJ_UINT8*)(b))[1])                    \
-       : (((NJ_UINT8*)(a))[0] - ((NJ_UINT8*)(b))[0]) )                  \
-     )
+    ((NJ_INT16)(*(a) - *(b)))
 
 #define NJ_CHAR_COPY(dst, src)                                          \
     {                                                                   \
-        ((NJ_UINT8*)(dst))[0] = ((NJ_UINT8*)(src))[0];                  \
-        ((NJ_UINT8*)(dst))[1] = ((NJ_UINT8*)(src))[1];                  \
+        *(dst) = *(src);                                                \
     }
 
 #define NJ_CHAR_STRLEN_IS_0(c)   (*(c) == NJ_CHAR_NUL)
@@ -50,7 +43,7 @@
 
 
 #define NJ_CHAR_LEN(s)                                                  \
-    ( (NJ_CHAR_IS_MOREEQ((s), "\xD8\x00") && NJ_CHAR_IS_LESSEQ((s), "\xDB\xFF")) \
+    ( (*(s) >= 0xD800 && *(s) <= 0xDBFF)                                \
       ? ( (*((s)+1) == NJ_CHAR_NUL) ? 1 : 2)                            \
       : 1) 
 

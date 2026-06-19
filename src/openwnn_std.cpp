@@ -235,112 +235,109 @@ static std::string to_ascii_lower(std::string s)
     return s;
 }
 
-static NJ_CHAR convert_utf16be_char_to_nj_char(const NJ_UINT8* src)
+static std::u16string utf8_to_utf16(const std::string& src_string)
 {
-    NJ_CHAR ret;
-    auto* dst = reinterpret_cast<NJ_UINT8*>(&ret);
-    dst[0] = src[0];
-    dst[1] = src[1];
-    return ret;
+    std::u16string out;
+    out.reserve(src_string.size());
+
+    for (std::size_t i = 0; i < src_string.size();) {
+        unsigned char c = static_cast<unsigned char>(src_string[i]);
+        char32_t codepoint = 0;
+        std::size_t step = 0;
+
+        if (c <= 0x7F) {
+            codepoint = c;
+            step = 1;
+        } else if (c <= 0xDF) {
+            codepoint = ((c & 0x1F) << 6)
+                | (static_cast<unsigned char>(src_string[i + 1]) & 0x3F);
+            step = 2;
+        } else if (c <= 0xEF) {
+            codepoint = ((c & 0x0F) << 12)
+                | ((static_cast<unsigned char>(src_string[i + 1]) & 0x3F) << 6)
+                | (static_cast<unsigned char>(src_string[i + 2]) & 0x3F);
+            step = 3;
+        } else {
+            codepoint = ((c & 0x07) << 18)
+                | ((static_cast<unsigned char>(src_string[i + 1]) & 0x3F) << 12)
+                | ((static_cast<unsigned char>(src_string[i + 2]) & 0x3F) << 6)
+                | (static_cast<unsigned char>(src_string[i + 3]) & 0x3F);
+            step = 4;
+        }
+
+        if (codepoint <= 0xFFFF) {
+            out.push_back(static_cast<char16_t>(codepoint));
+        } else {
+            codepoint -= 0x10000;
+            out.push_back(static_cast<char16_t>(0xD800 + (codepoint >> 10)));
+            out.push_back(static_cast<char16_t>(0xDC00 + (codepoint & 0x3FF)));
+        }
+        i += step;
+    }
+    return out;
 }
 
 static void convert_string_to_nj_char(NJ_CHAR* dst, const std::string& src_string,
                                       int max_chars, int capacity_chars)
 {
-    const auto* src = reinterpret_cast<const unsigned char*>(src_string.c_str());
-    int i = 0;
-    int o = 0;
-
     if (capacity_chars <= 0) {
         return;
     }
 
     const int max_output_chars = std::min(max_chars, capacity_chars - 1);
-    while (src[i] != 0x00 && o < max_output_chars) {
-        auto* dst_tmp = reinterpret_cast<NJ_UINT8*>(&dst[o]);
-
-        if ((src[i] & 0x80) == 0x00) {
-            dst_tmp[0] = 0x00;
-            dst_tmp[1] = src[i] & 0x7f;
-            i++;
-            o++;
-        } else if ((src[i] & 0xe0) == 0xc0) {
-            if (src[i + 1] == 0x00) {
-                break;
-            }
-            dst_tmp[0] = ((src[i] & 0x1f) >> 2);
-            dst_tmp[1] = ((src[i] & 0x1f) << 6) | (src[i + 1] & 0x3f);
-            i += 2;
-            o++;
-        } else if ((src[i] & 0xf0) == 0xe0) {
-            if (src[i + 1] == 0x00 || src[i + 2] == 0x00) {
-                break;
-            }
-            dst_tmp[0] = ((src[i] & 0x0f) << 4) | ((src[i + 1] & 0x3f) >> 2);
-            dst_tmp[1] = ((src[i + 1] & 0x3f) << 6) | (src[i + 2] & 0x3f);
-            i += 3;
-            o++;
-        } else if ((src[i] & 0xf8) == 0xf0) {
-            if (!(o < max_output_chars - 1)) {
-                break;
-            }
-            if (src[i + 1] == 0x00 || src[i + 2] == 0x00 || src[i + 3] == 0x00) {
-                break;
-            }
-            NJ_UINT8 dst1 = static_cast<NJ_UINT8>((((src[i] & 0x07) << 2) | ((src[i + 1] & 0x3f) >> 4)) - 1);
-            NJ_UINT8 dst2 = static_cast<NJ_UINT8>(((src[i + 1] & 0x3f) << 4) | ((src[i + 2] & 0x3f) >> 2));
-            NJ_UINT8 dst3 = static_cast<NJ_UINT8>(((src[i + 2] & 0x3f) << 6) | (src[i + 3] & 0x3f));
-            dst_tmp[0] = static_cast<NJ_UINT8>(0xd8 | ((dst1 & 0x0c) >> 2));
-            dst_tmp[1] = static_cast<NJ_UINT8>(((dst1 & 0x03) << 6) | ((dst2 & 0xfc) >> 2));
-            dst_tmp[2] = static_cast<NJ_UINT8>(0xdc | (dst2 & 0x03));
-            dst_tmp[3] = dst3;
-            i += 4;
-            o += 2;
-        } else {
+    const std::u16string utf16 = utf8_to_utf16(src_string);
+    int o = 0;
+    for (char16_t code_unit : utf16) {
+        if (o >= max_output_chars) {
             break;
         }
+        dst[o++] = static_cast<NJ_CHAR>(code_unit);
     }
 
     dst[o] = NJ_CHAR_NUL;
 }
 
+static void append_codepoint_as_utf8(std::string& dst, char32_t codepoint)
+{
+    if (codepoint <= 0x7F) {
+        dst.push_back(static_cast<char>(codepoint));
+    } else if (codepoint <= 0x7FF) {
+        dst.push_back(static_cast<char>(0xC0 | (codepoint >> 6)));
+        dst.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+    } else if (codepoint <= 0xFFFF) {
+        dst.push_back(static_cast<char>(0xE0 | (codepoint >> 12)));
+        dst.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+        dst.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+    } else {
+        dst.push_back(static_cast<char>(0xF0 | (codepoint >> 18)));
+        dst.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F)));
+        dst.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+        dst.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+    }
+}
+
 static std::string convert_nj_char_to_string(const NJ_CHAR* src, int max_chars)
 {
     std::string dst;
-    dst.resize((NJ_MAX_LEN + NJ_MAX_RESULT_LEN + NJ_TERM_LEN) * 4 + 1);
-    int i = 0;
-    int o = 0;
+    dst.reserve((NJ_MAX_LEN + NJ_MAX_RESULT_LEN + NJ_TERM_LEN) * 4 + 1);
 
-    while (src[i] != 0x0000 && i < max_chars) {
-        auto* src_tmp = reinterpret_cast<const NJ_UINT8*>(&src[i]);
-        if (src_tmp[0] == 0x00 && src_tmp[1] <= 0x7f) {
-            dst[o++] = static_cast<char>(src_tmp[1] & 0x7f);
-            i++;
-        } else if (src_tmp[0] <= 0x07) {
-            dst[o++] = static_cast<char>(0xc0 | ((src_tmp[0] & 0x07) << 2) | ((src_tmp[1] & 0xc0) >> 6));
-            dst[o++] = static_cast<char>(0x80 | (src_tmp[1] & 0x3f));
-            i++;
-        } else if (src_tmp[0] >= 0xd8 && src_tmp[0] <= 0xdb) {
-            if (!(i < max_chars - 1) || src_tmp[2] < 0xdc || src_tmp[2] > 0xdf) {
+    for (int i = 0; src[i] != NJ_CHAR_NUL && i < max_chars;) {
+        char32_t codepoint = src[i];
+        if (codepoint >= 0xD800 && codepoint <= 0xDBFF) {
+            if (!(i < max_chars - 1) || src[i + 1] < 0xDC00 || src[i + 1] > 0xDFFF) {
                 break;
             }
-            NJ_UINT8 src1 = static_cast<NJ_UINT8>((((src_tmp[0] & 0x03) << 2) | ((src_tmp[1] & 0xc0) >> 6)) + 1);
-            NJ_UINT8 src2 = static_cast<NJ_UINT8>(((src_tmp[1] & 0x3f) << 2) | (src_tmp[2] & 0x03));
-            NJ_UINT8 src3 = src_tmp[3];
-            dst[o++] = static_cast<char>(0xf0 | ((src1 & 0x1c) >> 2));
-            dst[o++] = static_cast<char>(0x80 | ((src1 & 0x03) << 4) | ((src2 & 0xf0) >> 4));
-            dst[o++] = static_cast<char>(0x80 | ((src2 & 0x0f) << 2) | ((src3 & 0xc0) >> 6));
-            dst[o++] = static_cast<char>(0x80 | (src3 & 0x3f));
+            codepoint = 0x10000 + ((codepoint - 0xD800) << 10) + (src[i + 1] - 0xDC00);
+            append_codepoint_as_utf8(dst, codepoint);
             i += 2;
+        } else if (codepoint >= 0xDC00 && codepoint <= 0xDFFF) {
+            break;
         } else {
-            dst[o++] = static_cast<char>(0xe0 | ((src_tmp[0] & 0xf0) >> 4));
-            dst[o++] = static_cast<char>(0x80 | ((src_tmp[0] & 0x0f) << 2) | ((src_tmp[1] & 0xc0) >> 6));
-            dst[o++] = static_cast<char>(0x80 | (src_tmp[1] & 0x3f));
+            append_codepoint_as_utf8(dst, codepoint);
             i++;
         }
     }
 
-    dst.resize(static_cast<std::size_t>(o));
     return dst;
 }
 
