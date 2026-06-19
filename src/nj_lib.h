@@ -26,7 +26,7 @@ typedef unsigned short NJ_UINT16;
 typedef signed long    NJ_INT32;
 typedef unsigned long  NJ_UINT32;
 
-typedef unsigned short   NJ_CHAR;
+typedef unsigned int     NJ_CHAR;
 
 #define NJ_CHAR_NUL  0x0000
 

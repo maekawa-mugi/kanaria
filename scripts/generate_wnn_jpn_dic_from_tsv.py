@@ -88,8 +88,8 @@ def u16(value: int) -> bytes:
 
 
 def nj_chars(text: str) -> bytes:
-    data = text.encode("utf-16-le")
-    if len(data) > NJ_MAX_LEN * 2 and text:
+    data = text.encode("utf-32-le")
+    if len(data) > NJ_MAX_LEN * 4 and text:
         raise SystemExit(f"entry is too long for OpenWnn NJ_CHAR storage: {text!r}")
     return data
 
@@ -152,8 +152,8 @@ def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
         entries = entries[-NJ_MAX_CUSTOM_WORD_COUNT:]
 
     encoded: list[tuple[Entry, bytes, bytes]] = []
-    max_yomi_bytes = 2
-    max_candidate_bytes = 2
+    max_yomi_bytes = 4
+    max_candidate_bytes = 4
     for entry in entries:
         yomi = nj_chars(entry.yomi)
         candidate = nj_chars(entry.candidate)
@@ -210,8 +210,8 @@ def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
     common += u32(NJ_DIC_TYPE_CUSTOM_INCOMPRESS)
     common += u32(len(body))
     common += u32(len(footer))
-    common += u32(min(max_yomi_bytes, NJ_MAX_LEN * 2))
-    common += u32(min(max_candidate_bytes, NJ_MAX_RESULT_LEN * 2))
+    common += u32(min(max_yomi_bytes, NJ_MAX_LEN * 4))
+    common += u32(min(max_candidate_bytes, NJ_MAX_RESULT_LEN * 4))
     return bytes(common + body + footer)
 
 
@@ -241,26 +241,6 @@ def read_blob_tsv(path: Path) -> dict[str, bytes]:
         if actual != size:
             raise SystemExit(f"{path}: size mismatch for {name}: got {actual}, expected {size}")
     return {name: bytes(value) for name, value in blobs.items()}
-
-
-def convert_rule_blob_to_le(values: bytes) -> bytes:
-    out = bytearray(values)
-
-    def convert_u16(offset: int) -> None:
-        out[offset : offset + 2] = int.from_bytes(values[offset : offset + 2], "big").to_bytes(2, "little")
-
-    def convert_u32(offset: int) -> None:
-        out[offset : offset + 4] = int.from_bytes(values[offset : offset + 4], "big").to_bytes(4, "little")
-
-    for offset in (0x00, 0x04, 0x08, 0x0C, 0x10, 0x14, 0x18):
-        convert_u32(offset)
-    for offset in (0x1C, 0x1E, 0x28, 0x2A, 0x30, 0x32, 0x34, 0x36,
-                   0x38, 0x3A, 0x3C, 0x3E, 0x40, 0x42, 0x44, 0x52, 0x54):
-        convert_u16(offset)
-    for offset in (0x20, 0x24):
-        convert_u32(offset)
-    convert_u32(len(out) - 4)
-    return bytes(out)
 
 
 def write_array(f, name: str, values: bytes) -> None:
@@ -322,10 +302,7 @@ def main() -> int:
         entries = grouped_entries.get(name, [])
         dictionaries.append(build_word_dictionary(entries, que_type))
 
-    connections = {
-        name: convert_rule_blob_to_le(values)
-        for name, values in read_blob_tsv(args.rule_blob_tsv).items()
-    }
+    connections = read_blob_tsv(args.rule_blob_tsv)
     write_c(args.output, dictionaries, connections)
     return 0
 

@@ -1,12 +1,12 @@
-# OpenWnn rule connection blob extracted from the original WnnJpnDic.c
+# OpenWnn rule connection blob stored in little-endian dictionary format
 # Columns: record, name, offset_decimal, hex_bytes
 meta	con_01_data	size	18817
-data	con_01_data	0	4e 4a 44 43 00 02 00 01 00 0f 00 00 00 00 49 2b
-data	con_01_data	16	00 00 00 3a 00 00 00 00 00 00 00 00 00 fb 01 26
-data	con_01_data	32	00 00 00 56 00 00 25 16 00 02 00 01 00 b9 00 1f
-data	con_01_data	48	00 ba 00 20 00 02 00 c6 00 65 00 bf 00 2a 00 be
-data	con_01_data	64	00 25 00 ba 00 20 00 00 49 5d 00 0e 00 00 49 79
-data	con_01_data	80	00 02 00 01 00 03 00 0c 00 00 00 00 80 00 02 80
+data	con_01_data	0	43 44 4a 4e 01 00 02 00 00 00 0f 00 2b 49 00 00
+data	con_01_data	16	3a 00 00 00 00 00 00 00 00 00 00 00 fb 00 26 01
+data	con_01_data	32	56 00 00 00 16 25 00 00 02 00 01 00 00 b9 00 1f
+data	con_01_data	48	ba 00 20 00 02 00 c6 00 65 00 bf 00 2a 00 be 00
+data	con_01_data	64	25 00 ba 00 20 00 00 00 49 5d 00 0e 00 00 49 79
+data	con_01_data	80	00 02 01 00 03 00 00 0c 00 00 00 00 80 00 02 80
 data	con_01_data	96	00 00 00 80 10 20 00 00 00 80 00 05 f0 ff ff ff
 data	con_01_data	112	ff ff fb 80 00 20 e0 2e 10 00 1c 00 00 00 02 80
 data	con_01_data	128	00 3a 26 f6 55 63 d3 46 fb 71 b7 16 3f 00 00 00
@@ -1176,5 +1176,5 @@ data	con_01_data	18736	00 00 00 00 00 00 00 00 c0 3f f4 76 8f ff ff ff
 data	con_01_data	18752	e0 a1 40 07 df c0 03 fd bf df ff 7e c6 fe d2 b3
 data	con_01_data	18768	77 ff ff ff ff ff ff ff ff ff fe 7f b4 00 20 00
 data	con_01_data	18784	25 00 28 00 29 00 2a 00 2b 00 2c 00 2d 00 4b 00
-data	con_01_data	18800	64 00 65 00 66 00 67 00 68 00 1f 00 02 4e 4a 44
-data	con_01_data	18816	43
+data	con_01_data	18800	64 00 65 00 66 00 67 00 68 00 1f 00 02 43 44 4a
+data	con_01_data	18816	4e

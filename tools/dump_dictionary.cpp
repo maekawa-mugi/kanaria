@@ -181,21 +181,12 @@ std::string nj_to_utf8(const NJ_CHAR* src, int max_chars)
     std::string dst;
     dst.reserve((NJ_MAX_LEN + NJ_MAX_RESULT_LEN + NJ_TERM_LEN) * 4 + 1);
 
-    for (int i = 0; src[i] != NJ_CHAR_NUL && i < max_chars;) {
+    for (int i = 0; src[i] != NJ_CHAR_NUL && i < max_chars; i++) {
         char32_t codepoint = src[i];
-        if (codepoint >= 0xD800 && codepoint <= 0xDBFF) {
-            if (!(i < max_chars - 1) || src[i + 1] < 0xDC00 || src[i + 1] > 0xDFFF) {
-                break;
-            }
-            codepoint = 0x10000 + ((codepoint - 0xD800) << 10) + (src[i + 1] - 0xDC00);
-            append_codepoint_as_utf8(dst, codepoint);
-            i += 2;
-        } else if (codepoint >= 0xDC00 && codepoint <= 0xDFFF) {
+        if (codepoint > 0x10FFFF || (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
             break;
-        } else {
-            append_codepoint_as_utf8(dst, codepoint);
-            i++;
         }
+        append_codepoint_as_utf8(dst, codepoint);
     }
     return dst;
 }
@@ -458,7 +449,10 @@ private:
         const std::size_t copy_len = std::min<std::size_t>(yomi.size() / sizeof(NJ_CHAR), NJ_MAX_LEN);
         for (std::size_t i = 0; i < copy_len; ++i) {
             yomi_buf[i] = static_cast<NJ_CHAR>(
-                (static_cast<NJ_UINT16>(yomi[i * 2 + 1]) << 8) | yomi[i * 2]);
+                (static_cast<NJ_UINT32>(yomi[i * 4 + 3]) << 24)
+                | (static_cast<NJ_UINT32>(yomi[i * 4 + 2]) << 16)
+                | (static_cast<NJ_UINT32>(yomi[i * 4 + 1]) << 8)
+                | yomi[i * 4]);
         }
         yomi_buf[copy_len] = NJ_CHAR_NUL;
         return copy_len;

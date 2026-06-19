@@ -18,7 +18,7 @@
 #define _NJ_EXTERN_H_
 
 
-#define NJ_MAX_CHAR_LEN  2
+#define NJ_MAX_CHAR_LEN  1
 
 #define NJ_CHAR_IS_EQUAL(a, b) \
     (*(a) == *(b))
@@ -30,7 +30,7 @@
     (*(a) >= *(b))
 
 #define NJ_CHAR_DIFF(a, b)                                              \
-    ((NJ_INT16)(*(a) - *(b)))
+    ((NJ_INT16)((*(a) < *(b)) ? -1 : ((*(a) > *(b)) ? 1 : 0)))
 
 #define NJ_CHAR_COPY(dst, src)                                          \
     {                                                                   \
@@ -39,13 +39,11 @@
 
 #define NJ_CHAR_STRLEN_IS_0(c)   (*(c) == NJ_CHAR_NUL)
 
-#define NJ_CHAR_ILLEGAL_DIC_YINDEX(size)   ((size) != 2)
+#define NJ_CHAR_ILLEGAL_DIC_YINDEX(size)   ((size) != sizeof(NJ_CHAR))
 
 
 #define NJ_CHAR_LEN(s)                                                  \
-    ( (*(s) >= 0xD800 && *(s) <= 0xDBFF)                                \
-      ? ( (*((s)+1) == NJ_CHAR_NUL) ? 1 : 2)                            \
-      : 1) 
+    1
 
 #define UTL_CHAR(s)  1
 

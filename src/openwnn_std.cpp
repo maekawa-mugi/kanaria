@@ -31,6 +31,8 @@ extern NJ_UINT8 *con_data[];
 namespace openwnn {
 namespace {
 
+static_assert(sizeof(NJ_CHAR) == sizeof(char32_t));
+
 constexpr int nj_func_set_dictionary_parameters = 0x00FA;
 constexpr int nj_func_search_word = 0x003C;
 constexpr int nj_func_set_left_part_of_speech = 0x00F3;
@@ -235,9 +237,9 @@ static std::string to_ascii_lower(std::string s)
     return s;
 }
 
-static std::u16string utf8_to_utf16(const std::string& src_string)
+static std::u32string utf8_to_utf32(const std::string& src_string)
 {
-    std::u16string out;
+    std::u32string out;
     out.reserve(src_string.size());
 
     for (std::size_t i = 0; i < src_string.size();) {
@@ -265,13 +267,7 @@ static std::u16string utf8_to_utf16(const std::string& src_string)
             step = 4;
         }
 
-        if (codepoint <= 0xFFFF) {
-            out.push_back(static_cast<char16_t>(codepoint));
-        } else {
-            codepoint -= 0x10000;
-            out.push_back(static_cast<char16_t>(0xD800 + (codepoint >> 10)));
-            out.push_back(static_cast<char16_t>(0xDC00 + (codepoint & 0x3FF)));
-        }
+        out.push_back(codepoint);
         i += step;
     }
     return out;
@@ -285,13 +281,13 @@ static void convert_string_to_nj_char(NJ_CHAR* dst, const std::string& src_strin
     }
 
     const int max_output_chars = std::min(max_chars, capacity_chars - 1);
-    const std::u16string utf16 = utf8_to_utf16(src_string);
+    const std::u32string utf32 = utf8_to_utf32(src_string);
     int o = 0;
-    for (char16_t code_unit : utf16) {
+    for (char32_t codepoint : utf32) {
         if (o >= max_output_chars) {
             break;
         }
-        dst[o++] = static_cast<NJ_CHAR>(code_unit);
+        dst[o++] = static_cast<NJ_CHAR>(codepoint);
     }
 
     dst[o] = NJ_CHAR_NUL;
@@ -321,21 +317,12 @@ static std::string convert_nj_char_to_string(const NJ_CHAR* src, int max_chars)
     std::string dst;
     dst.reserve((NJ_MAX_LEN + NJ_MAX_RESULT_LEN + NJ_TERM_LEN) * 4 + 1);
 
-    for (int i = 0; src[i] != NJ_CHAR_NUL && i < max_chars;) {
+    for (int i = 0; src[i] != NJ_CHAR_NUL && i < max_chars; i++) {
         char32_t codepoint = src[i];
-        if (codepoint >= 0xD800 && codepoint <= 0xDBFF) {
-            if (!(i < max_chars - 1) || src[i + 1] < 0xDC00 || src[i + 1] > 0xDFFF) {
-                break;
-            }
-            codepoint = 0x10000 + ((codepoint - 0xD800) << 10) + (src[i + 1] - 0xDC00);
-            append_codepoint_as_utf8(dst, codepoint);
-            i += 2;
-        } else if (codepoint >= 0xDC00 && codepoint <= 0xDFFF) {
+        if (codepoint > 0x10FFFF || (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
             break;
-        } else {
-            append_codepoint_as_utf8(dst, codepoint);
-            i++;
         }
+        append_codepoint_as_utf8(dst, codepoint);
     }
 
     return dst;

@@ -23,12 +23,11 @@
 #define ZEN_CHAR_LEN  1  
 
 #define CHAR_TO_WCHAR(s)                                        \
-    ((NJ_UINT16)( (((NJ_UINT8*)(s))[0] << 8) | ((NJ_UINT8*)(s))[1] ))
+    (*(s))
 
 #define SET_WCHAR_TO_CHAR(s, c)                                \
     {                                                          \
-        ((NJ_UINT8*)(s))[0] = (NJ_UINT8)(((c) >> 8) & 0x00ff); \
-        ((NJ_UINT8*)(s))[1] = (NJ_UINT8)(((c))      & 0x00ff); \
+        *(s) = (NJ_CHAR)(c);                                   \
     }
 
 #define IS_HIRAGANA_WCHAR(c)  ( ((c) >= 0x3041) && ((c) <= 0x3093) )
@@ -39,7 +38,7 @@
 NJ_INT16 nje_convert_hira_to_kata(NJ_CHAR *hira, NJ_CHAR *kata, NJ_UINT16 len)
 {
     NJ_UINT16 pnt;
-    NJ_UINT16 wchar;
+    NJ_CHAR wchar;
 
 
     pnt = 0;
