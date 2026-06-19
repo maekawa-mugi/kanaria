@@ -35,12 +35,6 @@ static_assert(sizeof(NJ_CHAR) == sizeof(char32_t));
 
 constexpr int nj_func_set_dictionary_parameters = 0x00FA;
 constexpr int nj_func_search_word = 0x003C;
-constexpr int nj_func_set_left_part_of_speech = 0x00F3;
-constexpr int nj_func_set_right_part_of_speech = 0x00F2;
-constexpr int nj_func_set_stroke = 0x00F1;
-constexpr int nj_func_set_candidate = 0x00F0;
-constexpr int nj_func_get_left_pos_by_type = 0x00EE;
-constexpr int nj_func_get_right_pos_by_type = 0x00ED;
 
 constexpr int nj_err_invalid_param = 0x7B00;
 
@@ -478,61 +472,6 @@ static std::optional<word> dictionary_get_next(dictionary_work& d, int length = 
     out.part_of_speech.left = NJ_GET_FPOS_FROM_STEM(&d.work.result.word);
     out.part_of_speech.right = NJ_GET_BPOS_FROM_STEM(&d.work.result.word);
     return out;
-}
-
-static int dictionary_set_left_pos(dictionary_work& d, int left)
-{
-    uint16_t lcount = 0;
-    uint16_t rcount = 0;
-    if (d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN] == nullptr) {
-        return NJ_SET_ERR_VAL(nj_func_set_left_part_of_speech, NJ_ERR_NO_RULEDIC);
-    }
-    njd_r_get_count(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], &lcount, &rcount);
-    if (left < 1 || left > lcount) {
-        return NJ_SET_ERR_VAL(nj_func_set_left_part_of_speech, nj_err_invalid_param);
-    }
-    NJ_SET_FPOS_TO_STEM(&d.work.result.word, left);
-    return 0;
-}
-
-static int dictionary_set_right_pos(dictionary_work& d, int right)
-{
-    uint16_t lcount = 0;
-    uint16_t rcount = 0;
-    if (d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN] == nullptr) {
-        return NJ_SET_ERR_VAL(nj_func_set_right_part_of_speech, NJ_ERR_NO_RULEDIC);
-    }
-    njd_r_get_count(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], &lcount, &rcount);
-    if (right < 1 || right > rcount) {
-        return NJ_SET_ERR_VAL(nj_func_set_right_part_of_speech, nj_err_invalid_param);
-    }
-    NJ_SET_BPOS_TO_STEM(&d.work.result.word, right);
-    return 0;
-}
-
-static int dictionary_set_stroke(dictionary_work& d, const std::string& stroke)
-{
-    if (stroke.empty()) {
-        return NJ_SET_ERR_VAL(nj_func_set_stroke, nj_err_invalid_param);
-    }
-    convert_string_to_nj_char(d.work.previous_stroke, stroke, NJ_MAX_LEN, NJ_MAX_LEN + NJ_TERM_LEN);
-    return 0;
-}
-
-static int dictionary_set_candidate(dictionary_work& d, const std::string& candidate_text)
-{
-    if (candidate_text.empty()) {
-        return NJ_SET_ERR_VAL(nj_func_set_candidate, nj_err_invalid_param);
-    }
-    convert_string_to_nj_char(d.work.previous_candidate, candidate_text,
-                              NJ_MAX_RESULT_LEN, NJ_MAX_RESULT_LEN + NJ_TERM_LEN);
-    return 0;
-}
-
-static int dictionary_select_word(dictionary_work& d)
-{
-    std::memcpy(&d.work.wnn_class.dic_set, &d.work.dic_set, sizeof(NJ_DIC_SET));
-    return njx_select(&d.work.wnn_class, &d.work.result);
 }
 
 static std::vector<unsigned char> dictionary_get_connect_array(dictionary_work& d, int left_pos)

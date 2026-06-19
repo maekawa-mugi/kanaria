@@ -191,7 +191,7 @@ typedef struct {
         uint8_t *rear;
         uint16_t rearSize;
         uint16_t rearFlag;
-        uint8_t *yominasi_fore;
+        const uint8_t *yominasi_fore;
     } hinsi;
 
     NJ_CHAR  *yomi;
