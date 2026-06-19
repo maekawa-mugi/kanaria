@@ -2271,6 +2271,9 @@ static NJ_INT16 get_node_bottom(NJ_CHAR * yomi, NJ_UINT8 * now, NJ_UINT8 * node_
     } else {
         
         node = now;
+        if (node == NULL) {
+            return -1;
+        }
         if (NODE_LEFT_EXIST(node)) {
             
             if (NODE_IDX_EXIST(node)) {
