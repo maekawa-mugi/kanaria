@@ -123,6 +123,73 @@ static std::size_t utf8_codepoint_count(const std::string& s)
     return n;
 }
 
+static bool is_utf8_continuation(unsigned char c)
+{
+    return (c & 0xC0) == 0x80;
+}
+
+static std::optional<std::size_t> validated_utf8_codepoint_count(const std::string& s)
+{
+    std::size_t count = 0;
+    for (std::size_t i = 0; i < s.size();) {
+        unsigned char c = static_cast<unsigned char>(s[i]);
+        char32_t codepoint = 0;
+        std::size_t step = 0;
+
+        if (c <= 0x7F) {
+            codepoint = c;
+            step = 1;
+        } else if (c >= 0xC2 && c <= 0xDF) {
+            if (i + 1 >= s.size() || !is_utf8_continuation(static_cast<unsigned char>(s[i + 1]))) {
+                return std::nullopt;
+            }
+            codepoint = ((c & 0x1F) << 6)
+                | (static_cast<unsigned char>(s[i + 1]) & 0x3F);
+            step = 2;
+        } else if (c >= 0xE0 && c <= 0xEF) {
+            if (i + 2 >= s.size()
+                || !is_utf8_continuation(static_cast<unsigned char>(s[i + 1]))
+                || !is_utf8_continuation(static_cast<unsigned char>(s[i + 2]))) {
+                return std::nullopt;
+            }
+            unsigned char c1 = static_cast<unsigned char>(s[i + 1]);
+            if ((c == 0xE0 && c1 < 0xA0) || (c == 0xED && c1 > 0x9F)) {
+                return std::nullopt;
+            }
+            codepoint = ((c & 0x0F) << 12)
+                | ((c1 & 0x3F) << 6)
+                | (static_cast<unsigned char>(s[i + 2]) & 0x3F);
+            step = 3;
+        } else if (c >= 0xF0 && c <= 0xF4) {
+            if (i + 3 >= s.size()
+                || !is_utf8_continuation(static_cast<unsigned char>(s[i + 1]))
+                || !is_utf8_continuation(static_cast<unsigned char>(s[i + 2]))
+                || !is_utf8_continuation(static_cast<unsigned char>(s[i + 3]))) {
+                return std::nullopt;
+            }
+            unsigned char c1 = static_cast<unsigned char>(s[i + 1]);
+            if ((c == 0xF0 && c1 < 0x90) || (c == 0xF4 && c1 > 0x8F)) {
+                return std::nullopt;
+            }
+            codepoint = ((c & 0x07) << 18)
+                | ((c1 & 0x3F) << 12)
+                | ((static_cast<unsigned char>(s[i + 2]) & 0x3F) << 6)
+                | (static_cast<unsigned char>(s[i + 3]) & 0x3F);
+            step = 4;
+        } else {
+            return std::nullopt;
+        }
+
+        if (codepoint < 0x20 || (codepoint >= 0x7F && codepoint <= 0x9F)) {
+            return std::nullopt;
+        }
+
+        i += step;
+        ++count;
+    }
+    return count;
+}
+
 static std::vector<std::size_t> utf8_offsets(const std::string& s)
 {
     std::vector<std::size_t> offsets;
@@ -1041,10 +1108,11 @@ void engine_reset(engine& e)
 
 std::vector<candidate> engine_predict(engine& e, const std::string& utf8_hiragana, std::size_t limit)
 {
-    if (utf8_hiragana.empty() || limit == 0) {
+    auto input_len = validated_utf8_codepoint_count(utf8_hiragana);
+    if (!input_len || *input_len == 0 || limit == 0) {
         return {};
     }
-    set_dictionary_for_prediction(e.dictionary, utf8_codepoint_count(utf8_hiragana));
+    set_dictionary_for_prediction(e.dictionary, *input_len);
     dictionary_search(e.dictionary, search_prefix, order_by_frequency, utf8_hiragana);
 
     std::vector<word> words;
@@ -1059,7 +1127,8 @@ std::vector<candidate> engine_predict(engine& e, const std::string& utf8_hiragan
 
 std::vector<candidate> engine_convert(engine& e, const std::string& utf8_hiragana, std::size_t limit)
 {
-    if (utf8_hiragana.empty() || limit == 0 || utf8_codepoint_count(utf8_hiragana) > max_input_length) {
+    auto input_len = validated_utf8_codepoint_count(utf8_hiragana);
+    if (!input_len || *input_len == 0 || limit == 0 || *input_len > max_input_length) {
         return {};
     }
 
