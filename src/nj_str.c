@@ -30,7 +30,7 @@ NJ_CHAR *nj_strcpy(NJ_CHAR *dst, NJ_CHAR *src) {
     return ret;
 }
 
-NJ_CHAR *nj_strncpy(NJ_CHAR *dst, NJ_CHAR *src, NJ_UINT16 n) {
+NJ_CHAR *nj_strncpy(NJ_CHAR *dst, NJ_CHAR *src, uint16_t n) {
 
     NJ_CHAR *d = dst;
 
@@ -50,9 +50,9 @@ NJ_CHAR *nj_strncpy(NJ_CHAR *dst, NJ_CHAR *src, NJ_UINT16 n) {
     return dst;
 }
 
-NJ_UINT16 nj_strlen(NJ_CHAR *c) {
+uint16_t nj_strlen(NJ_CHAR *c) {
 
-    NJ_UINT16 count = 0;
+    uint16_t count = 0;
     
 
     while (*c++ != NJ_CHAR_NUL) {
@@ -61,7 +61,7 @@ NJ_UINT16 nj_strlen(NJ_CHAR *c) {
     return count;
 }
 
-NJ_INT16 nj_strcmp(NJ_CHAR *s1, NJ_CHAR *s2) {
+int16_t nj_strcmp(NJ_CHAR *s1, NJ_CHAR *s2) {
 
     while (*s1 == *s2) {
         if (*s1 == NJ_CHAR_NUL) {
@@ -73,7 +73,7 @@ NJ_INT16 nj_strcmp(NJ_CHAR *s1, NJ_CHAR *s2) {
     return NJ_CHAR_DIFF(s1, s2);
 }
 
-NJ_INT16 nj_strncmp(NJ_CHAR *s1, NJ_CHAR *s2, NJ_UINT16 n) {
+int16_t nj_strncmp(NJ_CHAR *s1, NJ_CHAR *s2, uint16_t n) {
 
     while (n != 0) {
         if (*s1 != *s2++) {
@@ -87,9 +87,9 @@ NJ_INT16 nj_strncmp(NJ_CHAR *s1, NJ_CHAR *s2, NJ_UINT16 n) {
     return (0);
 }
 
-NJ_UINT16 nj_charlen(NJ_CHAR *c) {
+uint16_t nj_charlen(NJ_CHAR *c) {
 
-    NJ_UINT16 count = 0;
+    uint16_t count = 0;
     
 
     while (*c != NJ_CHAR_NUL) {
@@ -99,8 +99,8 @@ NJ_UINT16 nj_charlen(NJ_CHAR *c) {
     return count;
 }
 
-NJ_INT16 nj_charncmp(NJ_CHAR *s1, NJ_CHAR *s2, NJ_UINT16 n) {
-    NJ_UINT16 i;
+int16_t nj_charncmp(NJ_CHAR *s1, NJ_CHAR *s2, uint16_t n) {
+    uint16_t i;
 
 
     while (n != 0) {
@@ -119,10 +119,10 @@ NJ_INT16 nj_charncmp(NJ_CHAR *s1, NJ_CHAR *s2, NJ_UINT16 n) {
     return (0);
 }
 
-NJ_CHAR *nj_charncpy(NJ_CHAR *dst, NJ_CHAR *src, NJ_UINT16 n) {
+NJ_CHAR *nj_charncpy(NJ_CHAR *dst, NJ_CHAR *src, uint16_t n) {
 
     NJ_CHAR *d = dst;
-    NJ_UINT16 i;
+    uint16_t i;
 
 
     while (n != 0) {
@@ -140,9 +140,9 @@ NJ_CHAR *nj_charncpy(NJ_CHAR *dst, NJ_CHAR *src, NJ_UINT16 n) {
     return dst;
 }
 
-NJ_UINT8 *nj_memcpy(NJ_UINT8 *dst, NJ_UINT8 *src, NJ_UINT16 n) {
+uint8_t *nj_memcpy(uint8_t *dst, uint8_t *src, uint16_t n) {
 
-    NJ_UINT8 *d = dst;
+    uint8_t *d = dst;
 
 
     while (n != 0) {

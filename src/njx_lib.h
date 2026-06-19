@@ -21,33 +21,33 @@
 #define NJD_MAX_CONNECT_CNT     6
 
 typedef struct {
-    NJ_UINT16 f_hinsi;                                  
-    NJ_UINT16 b_hinsi;                                  
-    NJ_UINT8  yomi_len;                                 
-    NJ_UINT8  hyouki_len;                               
+    uint16_t f_hinsi;
+    uint16_t b_hinsi;
+    uint8_t  yomi_len;
+    uint8_t  hyouki_len;
     NJ_CHAR   yomi[NJ_MAX_LEN +NJ_TERM_LEN];           
     NJ_CHAR   hyouki[NJ_MAX_RESULT_LEN + NJ_TERM_LEN]; 
-    NJ_UINT16 stem_b_hinsi;                             
-    NJ_UINT8  fzk_yomi_len;                             
+    uint16_t stem_b_hinsi;
+    uint8_t  fzk_yomi_len;
 } NJ_LEARN_WORD_INFO;
 
 
 typedef struct word_que {
-    NJ_UINT16  entry;           
-    NJ_UINT8   type;            
-    NJ_UINT16  mae_hinsi;       
-    NJ_UINT16  ato_hinsi;       
-    NJ_UINT8   yomi_len;        
-    NJ_UINT8   hyouki_len;      
-    NJ_UINT8   yomi_byte;       
-    NJ_UINT8   hyouki_byte;     
-    NJ_UINT8   next_flag;       
+    uint16_t  entry;
+    uint8_t   type;
+    uint16_t  mae_hinsi;
+    uint16_t  ato_hinsi;
+    uint8_t   yomi_len;
+    uint8_t   hyouki_len;
+    uint8_t   yomi_byte;
+    uint8_t   hyouki_byte;
+    uint8_t   next_flag;
 } NJ_WQUE;
 
 
 typedef struct {
     NJ_LEARN_WORD_INFO  selection_data;                             
-    NJ_UINT8            count;                                      
+    uint8_t            count;
 } NJ_PREVIOUS_SELECTION_INFO;
 
 typedef struct {
@@ -77,10 +77,10 @@ typedef struct {
     NJ_DIC_SET dic_set;         
 
     struct {
-        NJ_UINT8   commit_status;
-        NJ_UINT16  save_top;
-        NJ_UINT16  save_bottom;
-        NJ_UINT16  save_count;
+        uint8_t   commit_status;
+        uint16_t  save_top;
+        uint16_t  save_bottom;
+        uint16_t  save_count;
     } learndic_status;
 
 } NJ_CLASS;

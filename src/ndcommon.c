@@ -23,7 +23,7 @@
 
 
 
-NJ_INT16 njd_connect_test(NJ_SEARCH_CONDITION *con, NJ_UINT16 hinsiF, NJ_UINT16 hinsiR)
+int16_t njd_connect_test(NJ_SEARCH_CONDITION *con, uint16_t hinsiF, uint16_t hinsiR)
 {
 
     

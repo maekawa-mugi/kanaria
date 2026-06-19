@@ -54,7 +54,7 @@ def read_tsv(path: Path) -> "OrderedDict[str, bytearray]":
 
 
 def write_array(f, name: str, values: bytes) -> None:
-    f.write(f"static NJ_UINT8 {name}[] = {{\n")
+    f.write(f"static uint8_t {name}[] = {{\n")
     for offset in range(0, len(values), 16):
         chunk = values[offset : offset + 16]
         f.write("\t\t")
@@ -76,19 +76,19 @@ def write_c(blobs: "OrderedDict[str, bytearray]", output: Path) -> None:
         dic_sizes = [str(len(blobs[name])) for name in dic_names] + ["0"] * max(0, 20 - len(dic_names))
         dic_types = ["NJ_DIC_H_TYPE_NORMAL"] * 20
 
-        f.write("NJ_UINT8* dic_data[ ] = {\n")
+        f.write("uint8_t* dic_data[ ] = {\n")
         f.write("\t\t" + ", ".join(dic_slots) + "\n")
         f.write("};\n\n")
 
-        f.write("NJ_UINT8* con_data[ ] = {\n")
+        f.write("uint8_t* con_data[ ] = {\n")
         f.write("\t\t" + ", ".join(con_names) + "\n")
         f.write("};\n\n")
 
-        f.write("NJ_UINT32 dic_size[ ] = {\n")
+        f.write("uint32_t dic_size[ ] = {\n")
         f.write("\t\t" + ", ".join(dic_sizes) + "\n")
         f.write("};\n\n")
 
-        f.write("NJ_UINT8 dic_type[ ] = {\n")
+        f.write("uint8_t dic_type[ ] = {\n")
         for item in dic_types:
             f.write(f"\t\t{item},\n")
         f.write("};\n")

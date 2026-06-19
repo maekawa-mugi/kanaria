@@ -21,106 +21,106 @@
 #include "njd.h"
 
 
-#define NODE_TERM(x) ((NJ_UINT8)(0x80 & (*(x))))
-#define NODE_LEFT_EXIST(x) ((NJ_UINT8)(0x40 & (*(x))))
-#define NODE_DATA_EXIST(x) ((NJ_UINT8)(0x20 & (*(x))))
-#define NODE_IDX_EXIST(x) ((NJ_UINT8)(0x10 & (*(x))))
-#define NODE_IDX_CNT(x) ((NJ_UINT8)((0x0f & (*(x))) + 2))
+#define NODE_TERM(x) ((uint8_t)(0x80 & (*(x))))
+#define NODE_LEFT_EXIST(x) ((uint8_t)(0x40 & (*(x))))
+#define NODE_DATA_EXIST(x) ((uint8_t)(0x20 & (*(x))))
+#define NODE_IDX_EXIST(x) ((uint8_t)(0x10 & (*(x))))
+#define NODE_IDX_CNT(x) ((uint8_t)((0x0f & (*(x))) + 2))
 
-#define STEM_TERMINETER(x) ((NJ_UINT8)(0x80 & (*(x))))
+#define STEM_TERMINETER(x) ((uint8_t)(0x80 & (*(x))))
 
-#define STEM_NO_CONV_FLG(x) ((NJ_UINT8)(0x40 & (*(x))))
+#define STEM_NO_CONV_FLG(x) ((uint8_t)(0x40 & (*(x))))
 
 #define TERM_BIT (1)            
 #define INDEX_BIT (8)           
 
-#define APPEND_YOMI_FLG(h) ((NJ_UINT8)(0x80 & (*((h) + 0x1C))))
-#define HINSI_NO_TOP_ADDR(h) ((NJ_UINT8*)((h) + NJ_INT32_READ((h) + 0x1D)))
-#define FHINSI_NO_CNT(h) ((NJ_INT16)(NJ_INT16_READ((h) + 0x21)))
-#define BHINSI_NO_CNT(h) ((NJ_INT16)(NJ_INT16_READ((h) + 0x23)))
-#define HINSI_NO_BYTE(h) ((NJ_UINT8)(*((h) + 0x25)))
-#define HINDO_NO_TOP_ADDR(h) ((NJ_UINT8*)((h) + NJ_INT32_READ((h) + 0x26)))
-#define HINDO_NO_CNT(h) ((NJ_UINT8)(*((h) + 0x2A)))
-#define STEM_AREA_TOP_ADDR(h) ((NJ_UINT8*)((h) + NJ_INT32_READ((h) + 0x2B)))
-#define BIT_CANDIDATE_LEN(h) ((NJ_UINT8)(*((h) + 0x2F)))
-#define BIT_FHINSI(h) ((NJ_UINT8)(*((h) + 0x30)))
-#define BIT_BHINSI(h) ((NJ_UINT8)(*((h) + 0x31)))
-#define BIT_HINDO_LEN(h) ((NJ_UINT8)(*((h) + 0x32)))
-#define BIT_MUHENKAN_LEN(h) ((NJ_UINT8)(*((h) + 0x33)))
-#define BIT_YOMI_LEN(h) ((NJ_UINT8)(*((h) + 0x35)))
-#define YOMI_INDX_TOP_ADDR(h) ((NJ_UINT8*)((h) + NJ_INT32_READ((h) + 0x42)))
-#define YOMI_INDX_CNT(h) ((NJ_INT16)(*((h) + 0x46)))
-#define YOMI_INDX_SIZE(h) ((NJ_INT8)(*((h) + 0x47)))
-#define NODE_AREA_TOP_ADDR(h) ((NJ_UINT8*)((h) + NJ_INT32_READ((h) + 0x48)))
-#define BIT_NODE_AREA_DATA_LEN(h) ((NJ_UINT8)(*((h) + 0x4C)))
-#define BIT_NODE_AREA_LEFT_LEN(h) ((NJ_UINT8)(*((h) + 0x4D)))
-#define NODE_AREA_MID_ADDR(h) ((NJ_UINT32)(NJ_INT32_READ((h) + 0x4E)))
-#define CAND_IDX_AREA_TOP_ADDR(h) ((NJ_UINT8*)((h) + NJ_INT32_READ((h) + 0x52)))
-#define CAND_IDX_AREA_CNT(h) ((NJ_UINT32)(((NJ_INT32_READ((h) + 0x56)) >> 8) & 0x00FFFFFF))
-#define CAND_IDX_AREA_SIZE(h) ((NJ_UINT8)(*((h) + 0x59)))
+#define APPEND_YOMI_FLG(h) ((uint8_t)(0x80 & (*((h) + 0x1C))))
+#define HINSI_NO_TOP_ADDR(h) ((uint8_t*)((h) + nj_read_le32((h) + 0x1D)))
+#define FHINSI_NO_CNT(h) ((int16_t)(nj_read_le16((h) + 0x21)))
+#define BHINSI_NO_CNT(h) ((int16_t)(nj_read_le16((h) + 0x23)))
+#define HINSI_NO_BYTE(h) ((uint8_t)(*((h) + 0x25)))
+#define HINDO_NO_TOP_ADDR(h) ((uint8_t*)((h) + nj_read_le32((h) + 0x26)))
+#define HINDO_NO_CNT(h) ((uint8_t)(*((h) + 0x2A)))
+#define STEM_AREA_TOP_ADDR(h) ((uint8_t*)((h) + nj_read_le32((h) + 0x2B)))
+#define BIT_CANDIDATE_LEN(h) ((uint8_t)(*((h) + 0x2F)))
+#define BIT_FHINSI(h) ((uint8_t)(*((h) + 0x30)))
+#define BIT_BHINSI(h) ((uint8_t)(*((h) + 0x31)))
+#define BIT_HINDO_LEN(h) ((uint8_t)(*((h) + 0x32)))
+#define BIT_MUHENKAN_LEN(h) ((uint8_t)(*((h) + 0x33)))
+#define BIT_YOMI_LEN(h) ((uint8_t)(*((h) + 0x35)))
+#define YOMI_INDX_TOP_ADDR(h) ((uint8_t*)((h) + nj_read_le32((h) + 0x42)))
+#define YOMI_INDX_CNT(h) ((int16_t)(*((h) + 0x46)))
+#define YOMI_INDX_SIZE(h) ((int8_t)(*((h) + 0x47)))
+#define NODE_AREA_TOP_ADDR(h) ((uint8_t*)((h) + nj_read_le32((h) + 0x48)))
+#define BIT_NODE_AREA_DATA_LEN(h) ((uint8_t)(*((h) + 0x4C)))
+#define BIT_NODE_AREA_LEFT_LEN(h) ((uint8_t)(*((h) + 0x4D)))
+#define NODE_AREA_MID_ADDR(h) ((uint32_t)(nj_read_le32((h) + 0x4E)))
+#define CAND_IDX_AREA_TOP_ADDR(h) ((uint8_t*)((h) + nj_read_le32((h) + 0x52)))
+#define CAND_IDX_AREA_CNT(h) ((uint32_t)(((nj_read_le32((h) + 0x56)) >> 8) & 0x00FFFFFF))
+#define CAND_IDX_AREA_SIZE(h) ((uint8_t)(*((h) + 0x59)))
 
-#define WORD_LEN(x) ((NJ_UINT16)(0x007F & (x)))
+#define WORD_LEN(x) ((uint16_t)(0x007F & (x)))
 
-#define CURRENT_INFO_SET ((NJ_UINT8)(0x10))
+#define CURRENT_INFO_SET ((uint8_t)(0x10))
 
 #define COMP_DIC_FREQ_DIV 63      
 
 #define LOC_CURRENT_NO_ENTRY  0xffffffffU
 
 typedef struct {
-    NJ_UINT16 stem_size;        
-    NJ_UINT16 term;             
-    NJ_UINT16 no_conv_flg;      
+    uint16_t stem_size;
+    uint16_t term;
+    uint16_t no_conv_flg;
     NJ_HINDO hindo;             
-    NJ_UINT16 hindo_jitu;       
-    NJ_UINT16 candidate_size;   
-    NJ_UINT16 yomi_size;        
-    NJ_UINT16 fhinsi;           
-    NJ_UINT16 bhinsi;           
-    NJ_UINT16 fhinsi_jitu;      
-    NJ_UINT16 bhinsi_jitu;      
+    uint16_t hindo_jitu;
+    uint16_t candidate_size;
+    uint16_t yomi_size;
+    uint16_t fhinsi;
+    uint16_t bhinsi;
+    uint16_t fhinsi_jitu;
+    uint16_t bhinsi_jitu;
 } STEM_DATA_SET;
 
-static NJ_INT16 get_stem_next(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data);
-static void get_stem_word(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA_SET *stem_set, NJ_UINT8 check);
-static void get_stem_cand_data(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA_SET *stem_set);
-static NJ_UINT16 get_stem_yomi_data(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data,STEM_DATA_SET *stem_set);
-static NJ_UINT16 get_stem_yomi_size(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, NJ_UINT16 yomi_size);
-static NJ_UINT16 get_stem_yomi_string(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, NJ_CHAR *yomi, NJ_UINT16 yomi_pos, NJ_UINT16 yomi_size, NJ_UINT16 size);
-static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset);
-static NJ_INT16 bdic_search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset);
-static NJ_INT16 bdic_search_fore_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset);
+static int16_t get_stem_next(NJ_DIC_HANDLE hdl, uint8_t *stem_data);
+static void get_stem_word(NJ_DIC_HANDLE hdl, uint8_t *stem_data, STEM_DATA_SET *stem_set, uint8_t check);
+static void get_stem_cand_data(NJ_DIC_HANDLE hdl, uint8_t *stem_data, STEM_DATA_SET *stem_set);
+static uint16_t get_stem_yomi_data(NJ_DIC_HANDLE hdl, uint8_t *stem_data,STEM_DATA_SET *stem_set);
+static uint16_t get_stem_yomi_size(NJ_DIC_HANDLE hdl, uint8_t *stem_data, uint16_t yomi_size);
+static uint16_t get_stem_yomi_string(NJ_DIC_HANDLE hdl, uint8_t *stem_data, NJ_CHAR *yomi, uint16_t yomi_pos, uint16_t yomi_size, uint16_t size);
+static int16_t search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset);
+static int16_t bdic_search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset);
+static int16_t bdic_search_fore_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset);
 
-static NJ_HINDO get_stem_hindo(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data);
+static NJ_HINDO get_stem_hindo(NJ_DIC_HANDLE hdl, uint8_t *stem_data);
 
-static NJ_INT16 search_node2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset,
-                             NJ_UINT16 hidx);
-static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition,
-                                       NJ_SEARCH_LOCATION_SET *loctset, NJ_UINT16 hidx);
-static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node,
-                                 NJ_UINT8 *now, NJ_UINT16 idx_no,
-                                 NJ_CHAR  *yomi, NJ_UINT16 yomilen,
-                                 NJ_UINT8 *root, NJ_UINT8 *node_mid,
-                                 NJ_UINT16 bit_left, NJ_UINT16 bit_data,
-                                 NJ_UINT8 *data_top,
-                                 NJ_INT16 ytbl_cnt, NJ_UINT16 y,
-                                 NJ_UINT8 *ytbl_top, NJ_CACHE_INFO *storebuf,
-                                 NJ_UINT8 **con_node, NJ_UINT32 *data_offset);
-static NJ_INT16 get_node_bottom(NJ_CHAR *yomi, NJ_UINT8 *now, NJ_UINT8 *node_mid,
-                                NJ_UINT8 *data_top, NJ_UINT16 bit_left,
-                                NJ_UINT16 bit_data, NJ_UINT32 top,
-                                NJ_DIC_HANDLE handle, NJ_UINT32 *ret_bottom);
-static NJ_INT16 bdic_get_next_data(NJ_UINT8 *data_top, NJ_UINT8 *data_end,
+static int16_t search_node2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset,
+                             uint16_t hidx);
+static int16_t bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition,
+                                       NJ_SEARCH_LOCATION_SET *loctset, uint16_t hidx);
+static int16_t search_yomi_node(uint8_t operation, uint8_t *node,
+                                 uint8_t *now, uint16_t idx_no,
+                                 NJ_CHAR  *yomi, uint16_t yomilen,
+                                 uint8_t *root, uint8_t *node_mid,
+                                 uint16_t bit_left, uint16_t bit_data,
+                                 uint8_t *data_top,
+                                 int16_t ytbl_cnt, uint16_t y,
+                                 uint8_t *ytbl_top, NJ_CACHE_INFO *storebuf,
+                                 uint8_t **con_node, uint32_t *data_offset);
+static int16_t get_node_bottom(NJ_CHAR *yomi, uint8_t *now, uint8_t *node_mid,
+                                uint8_t *data_top, uint16_t bit_left,
+                                uint16_t bit_data, uint32_t top,
+                                NJ_DIC_HANDLE handle, uint32_t *ret_bottom);
+static int16_t bdic_get_next_data(uint8_t *data_top, uint8_t *data_end,
                                    NJ_SEARCH_LOCATION_SET *loctset,
-                                   NJ_SEARCH_CACHE *psrhCache, NJ_UINT16 abIdx);
-static NJ_INT16 bdic_get_word_freq(NJ_UINT8 *data_top, NJ_SEARCH_LOCATION_SET *loctset,
-                                   NJ_SEARCH_CACHE *psrhCache, NJ_UINT16 abIdx);
+                                   NJ_SEARCH_CACHE *psrhCache, uint16_t abIdx);
+static int16_t bdic_get_word_freq(uint8_t *data_top, NJ_SEARCH_LOCATION_SET *loctset,
+                                   NJ_SEARCH_CACHE *psrhCache, uint16_t abIdx);
 
-static NJ_HINDO get_stem_hindo(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data)
+static NJ_HINDO get_stem_hindo(NJ_DIC_HANDLE hdl, uint8_t *stem_data)
 {
-    NJ_UINT8 flg_bit;
-    NJ_UINT16 data;
-    NJ_UINT16 pos, j, bit_all;
+    uint8_t flg_bit;
+    uint16_t data;
+    uint16_t pos, j, bit_all;
 
 
     
@@ -131,12 +131,12 @@ static NJ_HINDO get_stem_hindo(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data)
 
     if (BIT_HINDO_LEN(hdl)) {
         
-        bit_all = (NJ_UINT16)(TERM_BIT + flg_bit);
-        pos = (NJ_UINT16)(bit_all >> 3);
-        data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+        bit_all = (uint16_t)(TERM_BIT + flg_bit);
+        pos = (uint16_t)(bit_all >> 3);
+        data = (uint16_t)(nj_read_le16(stem_data + pos));
         
         
-        j = (NJ_UINT16)(bit_all & 0x0007);
+        j = (uint16_t)(bit_all & 0x0007);
 
         return GET_BITFIELD_16(data, j, BIT_HINDO_LEN(hdl));
     } else {
@@ -145,13 +145,13 @@ static NJ_HINDO get_stem_hindo(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data)
     }
 }
 
-static NJ_INT16 get_stem_next(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data)
+static int16_t get_stem_next(NJ_DIC_HANDLE hdl, uint8_t *stem_data)
 {
-    NJ_UINT8 flg_bit;
-    NJ_UINT16 data;
-    NJ_UINT16 pos, j, bit_all;
-    NJ_UINT16 stem_size, cand_bit, yomi_bit;
-    NJ_UINT16 candidate_size, yomi_size;
+    uint8_t flg_bit;
+    uint16_t data;
+    uint16_t pos, j, bit_all;
+    uint16_t stem_size, cand_bit, yomi_bit;
+    uint16_t candidate_size, yomi_size;
 
 
     
@@ -162,15 +162,15 @@ static NJ_INT16 get_stem_next(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data)
 
     
     
-    bit_all = (NJ_UINT16)(TERM_BIT + flg_bit + 
+    bit_all = (uint16_t)(TERM_BIT + flg_bit +
                           BIT_HINDO_LEN(hdl) + 
                           BIT_FHINSI(hdl) + 
                           BIT_BHINSI(hdl));
-    pos = (NJ_UINT16)(bit_all >> 3);
-    data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+    pos = (uint16_t)(bit_all >> 3);
+    data = (uint16_t)(nj_read_le16(stem_data + pos));
 
     
-    j = (NJ_UINT16)(bit_all & 0x0007);
+    j = (uint16_t)(bit_all & 0x0007);
     cand_bit = BIT_CANDIDATE_LEN(hdl);
     
     candidate_size = GET_BITFIELD_16(data, j, cand_bit);
@@ -180,11 +180,11 @@ static NJ_INT16 get_stem_next(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data)
     if (APPEND_YOMI_FLG(hdl) && STEM_TERMINETER(stem_data)) {
         
         
-        pos = (NJ_UINT16)(bit_all >> 3);
-        data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+        pos = (uint16_t)(bit_all >> 3);
+        data = (uint16_t)(nj_read_le16(stem_data + pos));
 
         
-        j = (NJ_UINT16)(bit_all & 0x0007);
+        j = (uint16_t)(bit_all & 0x0007);
         yomi_bit = BIT_YOMI_LEN(hdl);
         
         yomi_size = GET_BITFIELD_16(data, j, yomi_bit);
@@ -206,16 +206,16 @@ static NJ_INT16 get_stem_next(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data)
     return stem_size;
 }
 
-static void get_stem_word(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA_SET *stem_set, NJ_UINT8 check)
+static void get_stem_word(NJ_DIC_HANDLE hdl, uint8_t *stem_data, STEM_DATA_SET *stem_set, uint8_t check)
 {
-    NJ_UINT8 flg_bit;
-    NJ_UINT16 data;
-    NJ_UINT16 pos, j, bit_all = 0;
-    NJ_UINT16 bit;
-    NJ_UINT16 dpos = 0;
-    NJ_INT16 next;
-    NJ_UINT8 b;
-    NJ_UINT8 *wkc;
+    uint8_t flg_bit;
+    uint16_t data;
+    uint16_t pos, j, bit_all = 0;
+    uint16_t bit;
+    uint16_t dpos = 0;
+    int16_t next;
+    uint8_t b;
+    uint8_t *wkc;
 
    
     
@@ -226,12 +226,12 @@ static void get_stem_word(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA_SET 
 
     if (BIT_HINDO_LEN(hdl)) {
         
-        bit_all = (NJ_UINT16)(TERM_BIT + flg_bit);
-        pos = (NJ_UINT16)(bit_all >> 3);
-        data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+        bit_all = (uint16_t)(TERM_BIT + flg_bit);
+        pos = (uint16_t)(bit_all >> 3);
+        data = (uint16_t)(nj_read_le16(stem_data + pos));
         
         
-        j = (NJ_UINT16)(bit_all & 0x0007);
+        j = (uint16_t)(bit_all & 0x0007);
 
         stem_set->hindo = GET_BITFIELD_16(data, j, BIT_HINDO_LEN(hdl));
     } else {
@@ -239,17 +239,17 @@ static void get_stem_word(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA_SET 
         stem_set->hindo = 0;
     }
     
-    stem_set->hindo_jitu = (NJ_UINT16)(*(HINDO_NO_TOP_ADDR(hdl) + stem_set->hindo));
+    stem_set->hindo_jitu = (uint16_t)(*(HINDO_NO_TOP_ADDR(hdl) + stem_set->hindo));
 
     if (BIT_FHINSI(hdl)) {
         
         
-        bit_all = (NJ_UINT16)(TERM_BIT + flg_bit + BIT_HINDO_LEN(hdl));
-        pos = (NJ_UINT16)(bit_all >> 3);
-        data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+        bit_all = (uint16_t)(TERM_BIT + flg_bit + BIT_HINDO_LEN(hdl));
+        pos = (uint16_t)(bit_all >> 3);
+        data = (uint16_t)(nj_read_le16(stem_data + pos));
         
         
-        j = (NJ_UINT16)(bit_all & 0x0007);
+        j = (uint16_t)(bit_all & 0x0007);
         
         stem_set->fhinsi = GET_BITFIELD_16(data, j, BIT_FHINSI(hdl));
     } else {
@@ -258,52 +258,52 @@ static void get_stem_word(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA_SET 
 
     
     b = HINSI_NO_BYTE(hdl);
-    wkc = (NJ_UINT8*)(HINSI_NO_TOP_ADDR(hdl) + (b * (NJ_UINT16)(stem_set->fhinsi)));
+    wkc = (uint8_t*)(HINSI_NO_TOP_ADDR(hdl) + (b * (uint16_t)(stem_set->fhinsi)));
 
     
     if (b == 2) {
-        stem_set->fhinsi_jitu = (NJ_UINT16)(NJ_INT16_READ(wkc));
+        stem_set->fhinsi_jitu = (uint16_t)(nj_read_le16(wkc));
     } else {
-        stem_set->fhinsi_jitu = (NJ_UINT16)*wkc;
+        stem_set->fhinsi_jitu = (uint16_t)*wkc;
     }
     
     if (BIT_BHINSI(hdl)) {
         
         
-        bit_all = (NJ_UINT16)(TERM_BIT + flg_bit + BIT_HINDO_LEN(hdl) + BIT_FHINSI(hdl));
-        pos = (NJ_UINT16)(bit_all >> 3);
-        data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+        bit_all = (uint16_t)(TERM_BIT + flg_bit + BIT_HINDO_LEN(hdl) + BIT_FHINSI(hdl));
+        pos = (uint16_t)(bit_all >> 3);
+        data = (uint16_t)(nj_read_le16(stem_data + pos));
         
         
-        j = (NJ_UINT16)(bit_all & 0x0007);
+        j = (uint16_t)(bit_all & 0x0007);
         
         stem_set->bhinsi = GET_BITFIELD_16(data, j, BIT_BHINSI(hdl));
     } else {
         stem_set->bhinsi = 0;
     }
     
-    wkc = (NJ_UINT8*)(HINSI_NO_TOP_ADDR(hdl)
-                      + (b * (FHINSI_NO_CNT(hdl) + (NJ_UINT16)(stem_set->bhinsi))));
+    wkc = (uint8_t*)(HINSI_NO_TOP_ADDR(hdl)
+                      + (b * (FHINSI_NO_CNT(hdl) + (uint16_t)(stem_set->bhinsi))));
     
     if (b == 2) {
-        stem_set->bhinsi_jitu = (NJ_UINT16)(NJ_INT16_READ(wkc));
+        stem_set->bhinsi_jitu = (uint16_t)(nj_read_le16(wkc));
     } else {
-        stem_set->bhinsi_jitu = (NJ_UINT16)*wkc;
+        stem_set->bhinsi_jitu = (uint16_t)*wkc;
     }
 
     
     if (check != 1) {
         
         
-        bit_all = (NJ_UINT16)(TERM_BIT + flg_bit + 
+        bit_all = (uint16_t)(TERM_BIT + flg_bit +
                               BIT_HINDO_LEN(hdl) + 
                               BIT_FHINSI(hdl) + 
                               BIT_BHINSI(hdl));
-        pos = (NJ_UINT16)(bit_all >> 3);
-        data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+        pos = (uint16_t)(bit_all >> 3);
+        data = (uint16_t)(nj_read_le16(stem_data + pos));
 
         
-        j = (NJ_UINT16)(bit_all & 0x0007);
+        j = (uint16_t)(bit_all & 0x0007);
         bit = BIT_CANDIDATE_LEN(hdl);
         
         stem_set->candidate_size = GET_BITFIELD_16(data, j, bit);
@@ -315,11 +315,11 @@ static void get_stem_word(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA_SET 
 
         
         if (APPEND_YOMI_FLG(hdl) && STEM_TERMINETER(stem_data)) {
-            pos = (NJ_UINT16)(bit_all >> 3);
-            data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+            pos = (uint16_t)(bit_all >> 3);
+            data = (uint16_t)(nj_read_le16(stem_data + pos));
 
             
-            j = (NJ_UINT16)(bit_all & 0x0007);
+            j = (uint16_t)(bit_all & 0x0007);
             bit = BIT_YOMI_LEN(hdl);
             
             stem_set->yomi_size = GET_BITFIELD_16(data, j, bit);
@@ -346,12 +346,12 @@ static void get_stem_word(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA_SET 
     }
 }
 
-static void get_stem_cand_data(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA_SET *stem_set)
+static void get_stem_cand_data(NJ_DIC_HANDLE hdl, uint8_t *stem_data, STEM_DATA_SET *stem_set)
 {
-    NJ_UINT8 flg_bit;
-    NJ_UINT16 data;
-    NJ_UINT16 pos, j, bit_all;
-    NJ_UINT16 cand_bit, yomi_bit;
+    uint8_t flg_bit;
+    uint16_t data;
+    uint16_t pos, j, bit_all;
+    uint16_t cand_bit, yomi_bit;
 
 
     
@@ -362,16 +362,16 @@ static void get_stem_cand_data(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA
 
     
     
-    bit_all = (NJ_UINT16)(TERM_BIT + flg_bit + 
+    bit_all = (uint16_t)(TERM_BIT + flg_bit +
                           BIT_HINDO_LEN(hdl) + 
                           BIT_FHINSI(hdl) + 
                           BIT_BHINSI(hdl));
-    pos = (NJ_UINT16)(bit_all >> 3);
-    data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+    pos = (uint16_t)(bit_all >> 3);
+    data = (uint16_t)(nj_read_le16(stem_data + pos));
 
     
     cand_bit = BIT_CANDIDATE_LEN(hdl);
-    j = (NJ_UINT16)(bit_all & 0x0007);
+    j = (uint16_t)(bit_all & 0x0007);
     
     stem_set->candidate_size = GET_BITFIELD_16(data, j, cand_bit);
     bit_all += cand_bit;
@@ -387,14 +387,14 @@ static void get_stem_cand_data(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, STEM_DATA
     stem_set->stem_size = GET_BIT_TO_BYTE(bit_all);
 }
 
-static NJ_UINT16 get_stem_yomi_data(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data,STEM_DATA_SET *stem_set)
+static uint16_t get_stem_yomi_data(NJ_DIC_HANDLE hdl, uint8_t *stem_data,STEM_DATA_SET *stem_set)
 {
-    NJ_UINT16 flg_bit;
-    NJ_UINT16 data;
-    NJ_UINT16 cand_bit, yomi_bit;
-    NJ_UINT16 pos, j, bit_all;
-    NJ_UINT16 yomi_pos;
-    NJ_UINT16 candidate_size;
+    uint16_t flg_bit;
+    uint16_t data;
+    uint16_t cand_bit, yomi_bit;
+    uint16_t pos, j, bit_all;
+    uint16_t yomi_pos;
+    uint16_t candidate_size;
 
 
     
@@ -405,13 +405,13 @@ static NJ_UINT16 get_stem_yomi_data(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data,STEM_
 
     
     
-    bit_all = (NJ_UINT16)(TERM_BIT + flg_bit + BIT_HINDO_LEN(hdl) + 
+    bit_all = (uint16_t)(TERM_BIT + flg_bit + BIT_HINDO_LEN(hdl) +
                           BIT_FHINSI(hdl) + BIT_BHINSI(hdl));
-    pos = (NJ_UINT16)(bit_all >> 3);
-    data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+    pos = (uint16_t)(bit_all >> 3);
+    data = (uint16_t)(nj_read_le16(stem_data + pos));
 
     
-    j = (NJ_UINT16)(bit_all & 0x0007);
+    j = (uint16_t)(bit_all & 0x0007);
 
     cand_bit = BIT_CANDIDATE_LEN(hdl);
     candidate_size = GET_BITFIELD_16(data, j, cand_bit);
@@ -423,11 +423,11 @@ static NJ_UINT16 get_stem_yomi_data(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data,STEM_
     if (APPEND_YOMI_FLG(hdl) && STEM_TERMINETER(stem_data)) {
         
         
-        pos = (NJ_UINT16)(bit_all >> 3);
-        data = (NJ_UINT16)(NJ_INT16_READ(stem_data + pos));
+        pos = (uint16_t)(bit_all >> 3);
+        data = (uint16_t)(nj_read_le16(stem_data + pos));
 
         
-        j = (NJ_UINT16)(bit_all & 0x0007);
+        j = (uint16_t)(bit_all & 0x0007);
         yomi_bit = BIT_YOMI_LEN(hdl);
         
         stem_set->yomi_size = GET_BITFIELD_16(data, j, yomi_bit);
@@ -444,15 +444,15 @@ static NJ_UINT16 get_stem_yomi_data(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data,STEM_
     return yomi_pos;
 }
 
-static NJ_UINT16 get_stem_yomi_size(NJ_DIC_HANDLE hdl, NJ_UINT8 *ydata, NJ_UINT16 yomi_size)
+static uint16_t get_stem_yomi_size(NJ_DIC_HANDLE hdl, uint8_t *ydata, uint16_t yomi_size)
 {
-    NJ_INT16 ytbl_cnt;
-    NJ_INT8 ysize;
-    NJ_UINT8 *ytbl_top;
-    NJ_UINT8 *ytbl;
-    NJ_UINT8 yidx;
-    NJ_UINT16 i;
-    NJ_UINT16 len;
+    int16_t ytbl_cnt;
+    int8_t ysize;
+    uint8_t *ytbl_top;
+    uint8_t *ytbl;
+    uint8_t yidx;
+    uint16_t i;
+    uint16_t len;
 
 
     
@@ -483,16 +483,16 @@ static NJ_UINT16 get_stem_yomi_size(NJ_DIC_HANDLE hdl, NJ_UINT8 *ydata, NJ_UINT1
     }
 }
 
-static NJ_UINT16 get_stem_yomi_string(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, NJ_CHAR *yomi, NJ_UINT16 yomi_pos, NJ_UINT16 yomi_size, NJ_UINT16 size)
+static uint16_t get_stem_yomi_string(NJ_DIC_HANDLE hdl, uint8_t *stem_data, NJ_CHAR *yomi, uint16_t yomi_pos, uint16_t yomi_size, uint16_t size)
 {
-    NJ_INT16 ytbl_cnt;
-    NJ_INT8 ysize;
-    NJ_UINT8 *ytbl_top, *ytbl;
-    NJ_UINT8 *ydata;
-    NJ_UINT8 yidx;
-    NJ_UINT16 i;
-    NJ_UINT16 copy_len;
-    NJ_UINT16 char_len;
+    int16_t ytbl_cnt;
+    int8_t ysize;
+    uint8_t *ytbl_top, *ytbl;
+    uint8_t *ydata;
+    uint8_t yidx;
+    uint16_t i;
+    uint16_t copy_len;
+    uint16_t char_len;
 
 
     
@@ -536,7 +536,7 @@ static NJ_UINT16 get_stem_yomi_string(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, NJ
             return size; 
         }
         
-        nj_memcpy((NJ_UINT8*)yomi, ydata, yomi_size);
+        nj_memcpy((uint8_t*)yomi, ydata, yomi_size);
         copy_len = yomi_size / sizeof(NJ_CHAR);
     }
 
@@ -547,39 +547,39 @@ static NJ_UINT16 get_stem_yomi_string(NJ_DIC_HANDLE hdl, NJ_UINT8 *stem_data, NJ
     return copy_len;
 }
 
-static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset)
+static int16_t search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset)
 {
-    NJ_UINT8 *root, *now, *node, *node_mid;
-    NJ_UINT8 index;
-    NJ_UINT8 *byomi;
-    NJ_UINT8 *wkc;
-    NJ_UINT8 idx_no;
-    NJ_INT16 idx;
-    NJ_INT16 char_size;
-    NJ_INT16 left, right, mid;  
-    NJ_INT16 ytbl_cnt;
-    NJ_UINT16 c, d;
-    NJ_UINT8  c1 = 0, c2 = 0;
-    NJ_UINT16 y;
-    NJ_UINT16 ysize = (condition->ylen * sizeof(NJ_CHAR));
-    NJ_UINT8 *ytbl_top;
-    NJ_UINT16 idx_cnt;
-    NJ_UINT16 nd_index;
-    NJ_UINT16 bit_left, bit_data;
-    NJ_UINT32 data_offset;
-    NJ_UINT16 data;
-    NJ_UINT16 pos, j, bit_all, bit_tmp, bit_idx;
-    NJ_UINT32 data_l;
-    NJ_UINT8 restart_flg = 0;
-    NJ_UINT8 bottom_flg = 0;
-    NJ_UINT8 *data_top, *stem_data;
-    NJ_UINT16 hindo, hindo_max;
-    NJ_UINT32 current,hindo_max_data, bottom, next;
+    uint8_t *root, *now, *node, *node_mid;
+    uint8_t index;
+    uint8_t *byomi;
+    uint8_t *wkc;
+    uint8_t idx_no;
+    int16_t idx;
+    int16_t char_size;
+    int16_t left, right, mid;
+    int16_t ytbl_cnt;
+    uint16_t c, d;
+    uint8_t  c1 = 0, c2 = 0;
+    uint16_t y;
+    uint16_t ysize = (condition->ylen * sizeof(NJ_CHAR));
+    uint8_t *ytbl_top;
+    uint16_t idx_cnt;
+    uint16_t nd_index;
+    uint16_t bit_left, bit_data;
+    uint32_t data_offset;
+    uint16_t data;
+    uint16_t pos, j, bit_all, bit_tmp, bit_idx;
+    uint32_t data_l;
+    uint8_t restart_flg = 0;
+    uint8_t bottom_flg = 0;
+    uint8_t *data_top, *stem_data;
+    uint16_t hindo, hindo_max;
+    uint32_t current,hindo_max_data, bottom, next;
 
 
     node = NULL;        
 
-    byomi = (NJ_UINT8*)(condition->yomi); 
+    byomi = (uint8_t*)(condition->yomi);
 
     
     root = NODE_AREA_TOP_ADDR(loctset->loct.handle);
@@ -626,12 +626,12 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
                 }
                 c1 = *byomi;
                 c2 = *(byomi + 1);
-                c = (NJ_UINT16)((c1 << 8) | c2);
+                c = (uint16_t)((c1 << 8) | c2);
             } else {                    
                 
                 c1 = *byomi;
                 c2 = 0x00;
-                c = (NJ_UINT16)(*byomi);
+                c = (uint16_t)(*byomi);
             }
 
             idx = -1;
@@ -645,7 +645,7 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
 
                     if (c1 == *wkc) {
                         if (c2 == *(wkc + 1)) {
-                            idx = (NJ_UINT16)(mid + 1);
+                            idx = (uint16_t)(mid + 1);
                             break;
                         }
                         if (c2 < *(wkc + 1)) {
@@ -663,9 +663,9 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
                 while (left <= right) {
                     mid = (left + right) >> 1;
                     wkc = ytbl_top + (mid * y);
-                    d = (NJ_UINT16)(*wkc);
+                    d = (uint16_t)(*wkc);
                     if (c == d) {
-                        idx = (NJ_UINT16)(mid + 1);
+                        idx = (uint16_t)(mid + 1);
                         break;
                     }
                     if (c < d) {
@@ -680,7 +680,7 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
                 loctset->loct.status = NJ_ST_SEARCH_END_EXT;
                 return 0;       
             }
-            index = (NJ_UINT8)idx;
+            index = (uint8_t)idx;
         } else {
             index = *byomi;
             char_size = 1;       
@@ -712,22 +712,22 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
             bit_tmp = bit_all;
 
             
-            bit_all += (NJ_UINT16)(idx_no << 3);
+            bit_all += (uint16_t)(idx_no << 3);
 
             
-            pos = (NJ_UINT16)(bit_all >> 3);
+            pos = (uint16_t)(bit_all >> 3);
             
-            data = (NJ_UINT16)(NJ_INT16_READ(now + pos));
+            data = (uint16_t)(nj_read_le16(now + pos));
 
             
-            j = (NJ_UINT16)(bit_all & 0x0007);
+            j = (uint16_t)(bit_all & 0x0007);
             
             nd_index = GET_BITFIELD_16(data, j, INDEX_BIT);
-            if (index == (NJ_UINT8)nd_index) {
+            if (index == (uint8_t)nd_index) {
                 
                 break;
             } else {
-                if ((!NODE_TERM(now)) && (index > (NJ_UINT8)nd_index) && (idx_no == 0)) {
+                if ((!NODE_TERM(now)) && (index > (uint8_t)nd_index) && (idx_no == 0)) {
                     
                     now += GET_BIT_TO_BYTE(bit_tmp + (idx_cnt * 8));
                     if (now == node_mid) {
@@ -737,7 +737,7 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
                     continue;   
                 } else {
                     if ((now == node_mid) && (restart_flg == 0) &&
-                        (index < (NJ_UINT8)nd_index) && (idx_no == 0) &&
+                        (index < (uint8_t)nd_index) && (idx_no == 0) &&
                         (root != node_mid)) {
                         now = root;
                         idx_no = 0;
@@ -750,7 +750,7 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
             }
         }
 
-        if ( (idx_cnt > (NJ_UINT16)(idx_no + 1))) {
+        if ( (idx_cnt > (uint16_t)(idx_no + 1))) {
             if (ysize == 0) {
                 if (condition->operation == NJ_CUR_OP_FORE) {
                     
@@ -780,11 +780,11 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
         } else {
             bit_idx = 4;
         }
-        pos = (NJ_UINT16)(bit_idx >> 3);
-        data_l = (NJ_UINT32)(NJ_INT32_READ(now + pos));
+        pos = (uint16_t)(bit_idx >> 3);
+        data_l = (uint32_t)(nj_read_le32(now + pos));
 
         
-        j = (NJ_UINT16)(bit_idx & 0x0007);
+        j = (uint16_t)(bit_idx & 0x0007);
 
         now += GET_BITFIELD_32(data_l, j, bit_left);
     }
@@ -808,11 +808,11 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
                 } else {
                     bit_idx = 4;
                 }
-                pos = (NJ_UINT16)(bit_idx >> 3);
-                data_l = (NJ_UINT32)(NJ_INT32_READ(node + pos));
+                pos = (uint16_t)(bit_idx >> 3);
+                data_l = (uint32_t)(nj_read_le32(node + pos));
                 
                 
-                j = (NJ_UINT16)(bit_idx & 0x0007);
+                j = (uint16_t)(bit_idx & 0x0007);
                 node += GET_BITFIELD_32(data_l, j, bit_left);
             }
         } else {
@@ -834,11 +834,11 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
         bit_all = bit_idx;
     }
     
-    pos = (NJ_UINT16)(bit_all >> 3);
-    data_l = (NJ_UINT32)(NJ_INT32_READ(node + pos));
+    pos = (uint16_t)(bit_all >> 3);
+    data_l = (uint32_t)(nj_read_le32(node + pos));
     
     
-    j = (NJ_UINT16)(bit_all & 0x0007);
+    j = (uint16_t)(bit_all & 0x0007);
     data_offset = GET_BITFIELD_32(data_l, j, bit_data);
 
     loctset->loct.top = data_offset;
@@ -861,11 +861,11 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
                     bit_all = 4;
                 }
                 
-                pos = (NJ_UINT16)(bit_all >> 3);
-                data_l = (NJ_UINT32)(NJ_INT32_READ(node + pos));
+                pos = (uint16_t)(bit_all >> 3);
+                data_l = (uint32_t)(nj_read_le32(node + pos));
                 
                 
-                j = (NJ_UINT16)(bit_all & 0x0007);
+                j = (uint16_t)(bit_all & 0x0007);
                 node += GET_BITFIELD_32(data_l, j, bit_left);
 
             } else {
@@ -910,11 +910,11 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
                                 bit_all = 4;
                             }
 
-                            pos = (NJ_UINT16)(bit_all >> 3);
-                            data_l = (NJ_UINT32)(NJ_INT32_READ(node + pos));
+                            pos = (uint16_t)(bit_all >> 3);
+                            data_l = (uint32_t)(nj_read_le32(node + pos));
                             
                             
-                            j = (NJ_UINT16)(bit_all & 0x0007);
+                            j = (uint16_t)(bit_all & 0x0007);
                             data_offset = GET_BITFIELD_32(data_l, j, bit_data);
                             
                             bottom = data_offset;
@@ -931,11 +931,11 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
                             bit_all = 4;
                         }
                         
-                        pos = (NJ_UINT16)(bit_all >> 3);
-                        data_l = (NJ_UINT32)(NJ_INT32_READ(node + pos));
+                        pos = (uint16_t)(bit_all >> 3);
+                        data_l = (uint32_t)(nj_read_le32(node + pos));
 
                         
-                        j = (NJ_UINT16)(bit_all & 0x0007);
+                        j = (uint16_t)(bit_all & 0x0007);
                         
                         
                         node += GET_BITFIELD_32(data_l, j, bit_left);
@@ -950,12 +950,12 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
             next = get_stem_next(loctset->loct.handle, stem_data);
             stem_data += next;
         }
-        loctset->loct.bottom = (NJ_UINT32)(stem_data - data_top);
+        loctset->loct.bottom = (uint32_t)(stem_data - data_top);
         
         
         stem_data = data_top + loctset->loct.top;
         
-        hindo = (NJ_UINT16) *((NJ_UINT8*)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
+        hindo = (uint16_t) *((uint8_t*)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
                                           + get_stem_hindo(loctset->loct.handle, stem_data)));
         
         hindo_max = hindo;
@@ -971,7 +971,7 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
             while (stem_data <= (data_top + loctset->loct.bottom)) {
                 
                 
-                hindo = (NJ_UINT16) *((NJ_UINT8*)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
+                hindo = (uint16_t) *((uint8_t*)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
                                                   + get_stem_hindo(loctset->loct.handle, stem_data)));
                 
                 
@@ -995,11 +995,11 @@ static NJ_INT16 search_node(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_S
     return 1;   
 }
 
-static NJ_INT16 bdic_search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset)
+static int16_t bdic_search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset)
 {
-    NJ_UINT8 *data, *data_end;
-    NJ_INT16 i, current = 0;
-    NJ_UINT16 hindo;
+    uint8_t *data, *data_end;
+    int16_t i, current = 0;
+    uint16_t hindo;
 
 
     data = STEM_AREA_TOP_ADDR(loctset->loct.handle);
@@ -1023,8 +1023,8 @@ static NJ_INT16 bdic_search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCAT
     if (NJ_GET_DIC_FMT(loctset->loct.handle) == NJ_DIC_FMT_KANAKAN) {
         data_end = loctset->loct.handle
             + NJ_DIC_COMMON_HEADER_SIZE 
-            + NJ_INT32_READ(loctset->loct.handle + NJ_DIC_POS_DATA_SIZE)
-            + NJ_INT32_READ(loctset->loct.handle + NJ_DIC_POS_EXT_SIZE) 
+            + nj_read_le32(loctset->loct.handle + NJ_DIC_POS_DATA_SIZE)
+            + nj_read_le32(loctset->loct.handle + NJ_DIC_POS_EXT_SIZE)
             - NJ_DIC_ID_LEN;
     } else {
         data_end = CAND_IDX_AREA_TOP_ADDR(loctset->loct.handle);
@@ -1034,7 +1034,7 @@ static NJ_INT16 bdic_search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCAT
         
         loctset->loct.status = NJ_ST_SEARCH_READY;
         loctset->loct.current += current;
-        hindo = (NJ_UINT16) *((NJ_UINT8*)(HINDO_NO_TOP_ADDR(loctset->loct.handle) + 
+        hindo = (uint16_t) *((uint8_t*)(HINDO_NO_TOP_ADDR(loctset->loct.handle) +
                                           get_stem_hindo(loctset->loct.handle, data)));
         loctset->cache_freq = CALCULATE_HINDO(hindo, loctset->dic_freq.base, 
                                               loctset->dic_freq.high, COMP_DIC_FREQ_DIV);
@@ -1045,16 +1045,16 @@ static NJ_INT16 bdic_search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCAT
     return 0; 
 }
 
-static NJ_INT16 bdic_search_fore_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset)
+static int16_t bdic_search_fore_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset)
 {
-    NJ_UINT8 *data, *data_top, *bottom, *data_end;
-    NJ_INT16 i = 0;
-    NJ_INT16 hindo = 0;
-    NJ_INT16 hindo_max = -1;
-    NJ_UINT8 no_hit = 0;
-    NJ_UINT32 current = loctset->loct.current;
-    NJ_UINT8 *current_org;
-    NJ_UINT32 hindo_data = 0;
+    uint8_t *data, *data_top, *bottom, *data_end;
+    int16_t i = 0;
+    int16_t hindo = 0;
+    int16_t hindo_max = -1;
+    uint8_t no_hit = 0;
+    uint32_t current = loctset->loct.current;
+    uint8_t *current_org;
+    uint32_t hindo_data = 0;
 
 
     
@@ -1079,8 +1079,8 @@ static NJ_INT16 bdic_search_fore_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_
     if (NJ_GET_DIC_FMT(loctset->loct.handle) == NJ_DIC_FMT_KANAKAN) {
         data_end = loctset->loct.handle
             + NJ_DIC_COMMON_HEADER_SIZE 
-            + NJ_INT32_READ(loctset->loct.handle + NJ_DIC_POS_DATA_SIZE)
-            + NJ_INT32_READ(loctset->loct.handle + NJ_DIC_POS_EXT_SIZE) 
+            + nj_read_le32(loctset->loct.handle + NJ_DIC_POS_DATA_SIZE)
+            + nj_read_le32(loctset->loct.handle + NJ_DIC_POS_EXT_SIZE)
             - NJ_DIC_ID_LEN;
     } else {
         data_end = CAND_IDX_AREA_TOP_ADDR(loctset->loct.handle);
@@ -1127,7 +1127,7 @@ static NJ_INT16 bdic_search_fore_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_
             }
         
             
-            hindo = (NJ_INT16) *((NJ_UINT8*)(HINDO_NO_TOP_ADDR(loctset->loct.handle) + get_stem_hindo(loctset->loct.handle, data)));
+            hindo = (int16_t) *((uint8_t*)(HINDO_NO_TOP_ADDR(loctset->loct.handle) + get_stem_hindo(loctset->loct.handle, data)));
             
             hindo = CALCULATE_HINDO(hindo, loctset->dic_freq.base, 
                                     loctset->dic_freq.high, COMP_DIC_FREQ_DIV);
@@ -1164,7 +1164,7 @@ static NJ_INT16 bdic_search_fore_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_
         }
 
         
-        hindo = (NJ_INT16) *((NJ_UINT8*)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
+        hindo = (int16_t) *((uint8_t*)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
                                          + get_stem_hindo(loctset->loct.handle, data)));
         loctset->cache_freq = CALCULATE_HINDO(hindo, loctset->dic_freq.base, 
                                               loctset->dic_freq.high, COMP_DIC_FREQ_DIV);
@@ -1178,11 +1178,11 @@ static NJ_INT16 bdic_search_fore_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_
     return 0; 
 }
 
-NJ_INT16 njd_b_search_word(NJ_SEARCH_CONDITION *con, NJ_SEARCH_LOCATION_SET *loctset)
+int16_t njd_b_search_word(NJ_SEARCH_CONDITION *con, NJ_SEARCH_LOCATION_SET *loctset)
 {
-    NJ_INT16 ret;
+    int16_t ret;
     NJ_DIC_INFO *pdicinfo;
-    NJ_UINT16 hIdx;
+    uint16_t hIdx;
 
 
 
@@ -1319,11 +1319,11 @@ NJ_INT16 njd_b_search_word(NJ_SEARCH_CONDITION *con, NJ_SEARCH_LOCATION_SET *loc
     return ret;
 }
 
-NJ_INT16 njd_b_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word)
+int16_t njd_b_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word)
 {
-    NJ_UINT8 *data;
+    uint8_t *data;
     STEM_DATA_SET stem_set;
-    NJ_UINT8 check;
+    uint8_t check;
 
 
 
@@ -1353,31 +1353,31 @@ NJ_INT16 njd_b_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word)
     get_stem_word(loctset->loct.handle, data, &stem_set, check);
 
     if (GET_LOCATION_OPERATION(loctset->loct.status) == NJ_CUR_OP_FORE) {
-        word->stem.info1 = (NJ_UINT16)(stem_set.yomi_size / sizeof(NJ_CHAR));
+        word->stem.info1 = (uint16_t)(stem_set.yomi_size / sizeof(NJ_CHAR));
     }
     word->stem.info1 = WORD_LEN(word->stem.info1);              
-    word->stem.info1 |= (NJ_UINT16)(stem_set.fhinsi_jitu << 7); 
+    word->stem.info1 |= (uint16_t)(stem_set.fhinsi_jitu << 7);
 
     if (check != 1) {
         if (stem_set.candidate_size == 0) {
             
             if (GET_LOCATION_OPERATION(loctset->loct.status) == NJ_CUR_OP_FORE) {
-                word->stem.info2 = (NJ_UINT16)(stem_set.yomi_size / sizeof(NJ_CHAR));
+                word->stem.info2 = (uint16_t)(stem_set.yomi_size / sizeof(NJ_CHAR));
             } else {
                 
-                word->stem.info2 = (NJ_UINT16)NJ_GET_YLEN_FROM_STEM(word);
+                word->stem.info2 = (uint16_t)NJ_GET_YLEN_FROM_STEM(word);
             }
         } else {
             
-            word->stem.info2 = (NJ_UINT16)(stem_set.candidate_size / sizeof(NJ_CHAR));
+            word->stem.info2 = (uint16_t)(stem_set.candidate_size / sizeof(NJ_CHAR));
         }
     } else {
         
-        word->stem.info2 = (NJ_UINT16)NJ_GET_YLEN_FROM_STEM(word);
+        word->stem.info2 = (uint16_t)NJ_GET_YLEN_FROM_STEM(word);
     }
 
     word->stem.info2 = WORD_LEN(word->stem.info2);                      
-    word->stem.info2 |= (NJ_UINT16)(stem_set.bhinsi_jitu << 7);         
+    word->stem.info2 |= (uint16_t)(stem_set.bhinsi_jitu << 7);
     word->stem.hindo = CALCULATE_HINDO(stem_set.hindo_jitu, loctset->dic_freq.base, 
                                        loctset->dic_freq.high, COMP_DIC_FREQ_DIV); 
     word->stem.loc = loctset->loct;                                     
@@ -1385,17 +1385,17 @@ NJ_INT16 njd_b_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word)
     return 1;
 }
 
-NJ_INT16 njd_b_get_candidate(NJ_WORD *word, NJ_CHAR *candidate, NJ_UINT16 size)
+int16_t njd_b_get_candidate(NJ_WORD *word, NJ_CHAR *candidate, uint16_t size)
 {
     NJ_SEARCH_LOCATION *loc;
     NJ_CHAR  *wkc, *cand;
-    NJ_UINT8  *wkd;
-    NJ_UINT8 *data;
-    NJ_UINT8 *data_org;
-    NJ_UINT16 len, j;
+    uint8_t  *wkd;
+    uint8_t *data;
+    uint8_t *data_org;
+    uint16_t len, j;
     STEM_DATA_SET stem_set;
-    NJ_INT16  next;
-    NJ_UINT16 yomi_pos;
+    int16_t  next;
+    uint16_t yomi_pos;
     NJ_CHAR   ybuf[NJ_MAX_LEN + NJ_TERM_LEN];
 
 
@@ -1480,13 +1480,13 @@ NJ_INT16 njd_b_get_candidate(NJ_WORD *word, NJ_CHAR *candidate, NJ_UINT16 size)
     return len;
 }
 
-NJ_INT16 njd_b_get_stroke(NJ_WORD *word, NJ_CHAR *stroke, NJ_UINT16 size)
+int16_t njd_b_get_stroke(NJ_WORD *word, NJ_CHAR *stroke, uint16_t size)
 {
     NJ_SEARCH_LOCATION *loc;
-    NJ_UINT8 *data;
-    NJ_INT16 len;
-    NJ_INT16 next;
-    NJ_UINT16 yomi_pos;
+    uint8_t *data;
+    int16_t len;
+    int16_t next;
+    uint16_t yomi_pos;
     STEM_DATA_SET stem_set;
 
 
@@ -1528,7 +1528,7 @@ NJ_INT16 njd_b_get_stroke(NJ_WORD *word, NJ_CHAR *stroke, NJ_UINT16 size)
                                size);
 
     
-    if (size < (NJ_UINT16)((len+NJ_TERM_LEN)*sizeof(NJ_CHAR))) {
+    if (size < (uint16_t)((len+NJ_TERM_LEN)*sizeof(NJ_CHAR))) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJD_B_GET_STROKE, NJ_ERR_BUFFER_NOT_ENOUGH);
     }
 
@@ -1536,41 +1536,41 @@ NJ_INT16 njd_b_get_stroke(NJ_WORD *word, NJ_CHAR *stroke, NJ_UINT16 size)
     return len;
 }
 
-static NJ_INT16 search_node2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset, NJ_UINT16 hidx)
+static int16_t search_node2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset, uint16_t hidx)
 {
-    NJ_UINT8 *root, *now, *node, *node_mid;
+    uint8_t *root, *now, *node, *node_mid;
     NJ_CHAR  *yomi;
 
-    NJ_INT16 ytbl_cnt;
-    NJ_UINT16 y;
-    NJ_UINT8 *ytbl_top;
+    int16_t ytbl_cnt;
+    uint16_t y;
+    uint8_t *ytbl_top;
 
-    NJ_UINT16 bit_left, bit_data;
-    NJ_UINT32 data_offset;
-    NJ_UINT16 j;
-    NJ_UINT8 *data_top, *stem_data;
-    NJ_UINT16 hindo, hindo_max, hindo_tmp;
-    NJ_UINT32 current, hindo_max_data, hindo_tmp_data;
+    uint16_t bit_left, bit_data;
+    uint32_t data_offset;
+    uint16_t j;
+    uint8_t *data_top, *stem_data;
+    uint16_t hindo, hindo_max, hindo_tmp;
+    uint32_t current, hindo_max_data, hindo_tmp_data;
 
     
     NJ_SEARCH_CACHE *psrhCache = condition->ds->dic[hidx].srhCache;
     NJ_CHAR  *key;
-    NJ_UINT8 cmpflg;
-    NJ_UINT8 endflg;
-    NJ_UINT16 abPtrIdx;
-    NJ_UINT16 key_len;
-    NJ_UINT16 i, l, m;
-    NJ_UINT16 abIdx;
-    NJ_UINT16 abIdx_current;
-    NJ_UINT16 abIdx_old;
-    NJ_UINT16 addcnt = 0;
+    uint8_t cmpflg;
+    uint8_t endflg;
+    uint16_t abPtrIdx;
+    uint16_t key_len;
+    uint16_t i, l, m;
+    uint16_t abIdx;
+    uint16_t abIdx_current;
+    uint16_t abIdx_old;
+    uint16_t addcnt = 0;
     NJ_CHAR   char_tmp[NJ_MAX_LEN + NJ_TERM_LEN];
-    NJ_UINT16 tmp_len;
-    NJ_UINT16 endIdx;
-    NJ_INT16 ret;
-    NJ_UINT8 *con_node;
-    NJ_UINT16 yomi_clen;
-    NJ_UINT8 aimai_flg = 0x01;
+    uint16_t tmp_len;
+    uint16_t endIdx;
+    int16_t ret;
+    uint8_t *con_node;
+    uint16_t yomi_clen;
+    uint8_t aimai_flg = 0x01;
     NJ_CHAR  key_tmp[NJ_MAX_CHAR_LEN + NJ_TERM_LEN];
     NJ_CACHE_INFO tmpbuff;
 
@@ -1908,7 +1908,7 @@ static NJ_INT16 search_node2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_
         
         stem_data = data_top + psrhCache->storebuff[abIdx_current].top;
 
-        hindo = (NJ_UINT16) *((NJ_UINT8 *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) +
+        hindo = (uint16_t) *((uint8_t *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) +
                                            get_stem_hindo(loctset->loct.handle, stem_data)));
 
         hindo_tmp = 0;
@@ -1929,7 +1929,7 @@ static NJ_INT16 search_node2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_
             stem_data += j;
 
             
-            hindo = (NJ_UINT16) *((NJ_UINT8 *) (HINDO_NO_TOP_ADDR(loctset->loct.handle) +
+            hindo = (uint16_t) *((uint8_t *) (HINDO_NO_TOP_ADDR(loctset->loct.handle) +
                                                 get_stem_hindo(loctset->loct.handle, stem_data)));
 
         }
@@ -1949,7 +1949,7 @@ static NJ_INT16 search_node2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_
         
         stem_data = data_top + psrhCache->storebuff[abIdx_current].top; 
 
-        hindo = (NJ_UINT16) *((NJ_UINT8 *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) 
+        hindo = (uint16_t) *((uint8_t *)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
                                            + get_stem_hindo(loctset->loct.handle, stem_data)));
 
         hindo_max = hindo; 
@@ -1963,7 +1963,7 @@ static NJ_INT16 search_node2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_
     loctset->cache_freq = CALCULATE_HINDO(hindo_max, loctset->dic_freq.base,
                                           loctset->dic_freq.high, COMP_DIC_FREQ_DIV);
     loctset->loct.current = hindo_max_data;
-    loctset->loct.current_cache = (NJ_UINT8)abIdx_current;
+    loctset->loct.current_cache = (uint8_t)abIdx_current;
 
     
     psrhCache->viewCnt = 1;
@@ -1972,32 +1972,32 @@ static NJ_INT16 search_node2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_
     return 1; 
 }
 
-static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *now,
-                                 NJ_UINT16 idx_no, NJ_CHAR  *yomi, NJ_UINT16 yomilen,
-                                 NJ_UINT8 * root, NJ_UINT8 * node_mid,
-                                 NJ_UINT16 bit_left, NJ_UINT16 bit_data,
-                                 NJ_UINT8 * data_top,
-                                 NJ_INT16 ytbl_cnt, NJ_UINT16 y, NJ_UINT8 * ytbl_top,
+static int16_t search_yomi_node(uint8_t operation, uint8_t *node, uint8_t *now,
+                                 uint16_t idx_no, NJ_CHAR  *yomi, uint16_t yomilen,
+                                 uint8_t * root, uint8_t * node_mid,
+                                 uint16_t bit_left, uint16_t bit_data,
+                                 uint8_t * data_top,
+                                 int16_t ytbl_cnt, uint16_t y, uint8_t * ytbl_top,
                                  NJ_CACHE_INFO * storebuf,
-                                 NJ_UINT8 ** con_node,
-                                 NJ_UINT32 * data_offset)
+                                 uint8_t ** con_node,
+                                 uint32_t * data_offset)
 {
 
-    NJ_UINT8 index;
-    NJ_UINT8 *wkc;
-    NJ_UINT8 *byomi;
-    NJ_INT16 idx;
-    NJ_INT16 char_size;
-    NJ_INT16 left, right, mid; 
-    NJ_UINT16 c, d;
-    NJ_UINT8 c1 = 0, c2 = 0;
-    NJ_UINT16 ysize = yomilen * sizeof(NJ_CHAR);
-    NJ_UINT16 idx_cnt;
-    NJ_UINT16 nd_index;
-    NJ_UINT16 data;
-    NJ_UINT16 pos, j, bit_all, bit_tmp, bit_idx;
-    NJ_UINT32 data_l;
-    NJ_UINT8 restart_flg = 0;
+    uint8_t index;
+    uint8_t *wkc;
+    uint8_t *byomi;
+    int16_t idx;
+    int16_t char_size;
+    int16_t left, right, mid;
+    uint16_t c, d;
+    uint8_t c1 = 0, c2 = 0;
+    uint16_t ysize = yomilen * sizeof(NJ_CHAR);
+    uint16_t idx_cnt;
+    uint16_t nd_index;
+    uint16_t data;
+    uint16_t pos, j, bit_all, bit_tmp, bit_idx;
+    uint32_t data_l;
+    uint8_t restart_flg = 0;
 
 
     *con_node = NULL;
@@ -2006,7 +2006,7 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
     idx_cnt = 1;
     storebuf->idx_no = 0;
 
-    byomi = (NJ_UINT8*)yomi;
+    byomi = (uint8_t*)yomi;
 
     
     while (ysize > 0) {
@@ -2024,12 +2024,12 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
                 }
                 c1 = *byomi;
                 c2 = *(byomi + 1);
-                c = (NJ_UINT16)((c1 << 8) | c2);
+                c = (uint16_t)((c1 << 8) | c2);
             } else {            
                 
                 c1 = *byomi;
                 c2 = 0x00;
-                c = (NJ_UINT16)(*byomi);
+                c = (uint16_t)(*byomi);
             }
 
             idx = -1;
@@ -2043,7 +2043,7 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
 
                     if (c1 == *wkc) {
                         if (c2 == *(wkc + 1)) {
-                            idx = (NJ_UINT16) (mid + 1);
+                            idx = (uint16_t) (mid + 1);
                             break;
                         }
                         if (c2 < *(wkc + 1)) {
@@ -2061,9 +2061,9 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
                 while (left <= right) {
                     mid = (left + right) >> 1;
                     wkc = ytbl_top + (mid * y);
-                    d = (NJ_UINT16) (*wkc);
+                    d = (uint16_t) (*wkc);
                     if (c == d) {
-                        idx = (NJ_UINT16) (mid + 1);
+                        idx = (uint16_t) (mid + 1);
                         break;
                     }
                     if (c < d) {
@@ -2077,7 +2077,7 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
             if (idx < 0) {
                 return -1;      
             }
-            index = (NJ_UINT8) idx;
+            index = (uint8_t) idx;
         } else {
             index = *byomi;
             char_size = 1;       
@@ -2109,20 +2109,20 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
             bit_tmp = bit_all;
 
             
-            bit_all += (NJ_UINT16) (idx_no << 3);
+            bit_all += (uint16_t) (idx_no << 3);
 
-            pos = (NJ_UINT16) (bit_all >> 3);
+            pos = (uint16_t) (bit_all >> 3);
             
-            data = (NJ_UINT16) (NJ_INT16_READ(now + pos));
+            data = (uint16_t) (nj_read_le16(now + pos));
 
-            j = (NJ_UINT16) (bit_all & 0x0007);
+            j = (uint16_t) (bit_all & 0x0007);
 
             nd_index = GET_BITFIELD_16(data, j, INDEX_BIT);
-            if (index == (NJ_UINT8) nd_index) {
+            if (index == (uint8_t) nd_index) {
                 
                 break;
             } else {
-                if ((!NODE_TERM(now)) && (index > (NJ_UINT8) nd_index) && (idx_no == 0)) {
+                if ((!NODE_TERM(now)) && (index > (uint8_t) nd_index) && (idx_no == 0)) {
                     
                     now += GET_BIT_TO_BYTE(bit_tmp + (idx_cnt * 8));
                     if (now == node_mid) {
@@ -2132,7 +2132,7 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
                     continue;   
                 } else {
                     if ((now == node_mid) && (restart_flg == 0)
-                        && (index < (NJ_UINT8) nd_index) && (idx_no == 0)
+                        && (index < (uint8_t) nd_index) && (idx_no == 0)
                         && (root != node_mid)) {
                         now = root;
                         idx_no = 0;
@@ -2144,7 +2144,7 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
             }
         }
 
-        if ( (idx_cnt > (NJ_UINT16) (idx_no + 1))) {
+        if ( (idx_cnt > (uint16_t) (idx_no + 1))) {
             if (ysize == 0) {
                 if (operation == NJ_CUR_OP_FORE) {
                     
@@ -2178,11 +2178,11 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
             } else {
                 bit_idx = 4;
             }
-            pos = (NJ_UINT16) (bit_idx >> 3);
-            data_l = (NJ_UINT32) (NJ_INT32_READ(now + pos));
+            pos = (uint16_t) (bit_idx >> 3);
+            data_l = (uint32_t) (nj_read_le32(now + pos));
 
             
-            j = (NJ_UINT16) (bit_idx & 0x0007);
+            j = (uint16_t) (bit_idx & 0x0007);
 
             now += GET_BITFIELD_32(data_l, j, bit_left);
             storebuf->now = now;
@@ -2212,11 +2212,11 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
                 } else {
                     bit_idx = 4;
                 }
-                pos = (NJ_UINT16) (bit_idx >> 3);
-                data_l = (NJ_UINT32) (NJ_INT32_READ(node + pos));
+                pos = (uint16_t) (bit_idx >> 3);
+                data_l = (uint32_t) (nj_read_le32(node + pos));
 
                 
-                j = (NJ_UINT16) (bit_idx & 0x0007);
+                j = (uint16_t) (bit_idx & 0x0007);
                 node += GET_BITFIELD_32(data_l, j, bit_left);
             }
         } else {
@@ -2237,29 +2237,29 @@ static NJ_INT16 search_yomi_node(NJ_UINT8 operation, NJ_UINT8 *node, NJ_UINT8 *n
         bit_all = bit_idx;
     }
 
-    pos = (NJ_UINT16) (bit_all >> 3);
-    data_l = (NJ_UINT32) (NJ_INT32_READ(node + pos));
+    pos = (uint16_t) (bit_all >> 3);
+    data_l = (uint32_t) (nj_read_le32(node + pos));
 
     
-    j = (NJ_UINT16) (bit_all & 0x0007);
+    j = (uint16_t) (bit_all & 0x0007);
     *data_offset = GET_BITFIELD_32(data_l, j, bit_data);
 
     return 1;
 }
 
-static NJ_INT16 get_node_bottom(NJ_CHAR * yomi, NJ_UINT8 * now, NJ_UINT8 * node_mid,
-                                NJ_UINT8 * data_top, NJ_UINT16 bit_left, NJ_UINT16 bit_data,
-                                NJ_UINT32 top, NJ_DIC_HANDLE handle,
-                                NJ_UINT32 * ret_bottom)
+static int16_t get_node_bottom(NJ_CHAR * yomi, uint8_t * now, uint8_t * node_mid,
+                                uint8_t * data_top, uint16_t bit_left, uint16_t bit_data,
+                                uint32_t top, NJ_DIC_HANDLE handle,
+                                uint32_t * ret_bottom)
 {
-    NJ_UINT8 *node;
-    NJ_UINT16 idx_cnt;
-    NJ_UINT32 data_offset;
-    NJ_UINT16 pos, j, bit_all;
-    NJ_UINT32 data_l;
-    NJ_UINT8 bottom_flg = 0;
-    NJ_UINT8 *stem_data;
-    NJ_UINT32 bottom, next;
+    uint8_t *node;
+    uint16_t idx_cnt;
+    uint32_t data_offset;
+    uint16_t pos, j, bit_all;
+    uint32_t data_l;
+    uint8_t bottom_flg = 0;
+    uint8_t *stem_data;
+    uint32_t bottom, next;
 
 
     
@@ -2282,11 +2282,11 @@ static NJ_INT16 get_node_bottom(NJ_CHAR * yomi, NJ_UINT8 * now, NJ_UINT8 * node_
                 bit_all = 4;
             }
 
-            pos = (NJ_UINT16) (bit_all >> 3);
-            data_l = (NJ_UINT32) (NJ_INT32_READ(node + pos));
+            pos = (uint16_t) (bit_all >> 3);
+            data_l = (uint32_t) (nj_read_le32(node + pos));
 
             
-            j = (NJ_UINT16) (bit_all & 0x0007);
+            j = (uint16_t) (bit_all & 0x0007);
             node += GET_BITFIELD_32(data_l, j, bit_left);
 
         } else {
@@ -2332,11 +2332,11 @@ static NJ_INT16 get_node_bottom(NJ_CHAR * yomi, NJ_UINT8 * now, NJ_UINT8 * node_
                             bit_all = 4;
                         }
 
-                        pos = (NJ_UINT16) (bit_all >> 3);
-                        data_l = (NJ_UINT32) (NJ_INT32_READ(node + pos));
+                        pos = (uint16_t) (bit_all >> 3);
+                        data_l = (uint32_t) (nj_read_le32(node + pos));
 
                         
-                        j = (NJ_UINT16) (bit_all & 0x0007);
+                        j = (uint16_t) (bit_all & 0x0007);
                         data_offset = GET_BITFIELD_32(data_l, j, bit_data);
                         
                         bottom = data_offset;
@@ -2353,11 +2353,11 @@ static NJ_INT16 get_node_bottom(NJ_CHAR * yomi, NJ_UINT8 * now, NJ_UINT8 * node_
                         bit_all = 4;
                     }
 
-                    pos = (NJ_UINT16) (bit_all >> 3);
-                    data_l = (NJ_UINT32) (NJ_INT32_READ(node + pos));
+                    pos = (uint16_t) (bit_all >> 3);
+                    data_l = (uint32_t) (nj_read_le32(node + pos));
 
                     
-                    j = (NJ_UINT16) (bit_all & 0x0007);
+                    j = (uint16_t) (bit_all & 0x0007);
 
                     
                     node += GET_BITFIELD_32(data_l, j, bit_left);
@@ -2372,39 +2372,39 @@ static NJ_INT16 get_node_bottom(NJ_CHAR * yomi, NJ_UINT8 * now, NJ_UINT8 * node_
         next = get_stem_next(handle, stem_data);
         stem_data += next;
     }
-    *ret_bottom = (NJ_UINT32) (stem_data - data_top);
+    *ret_bottom = (uint32_t) (stem_data - data_top);
 
     return 1;
 }
 
-static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset, NJ_UINT16 hidx)
+static int16_t bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset, uint16_t hidx)
 {
-    NJ_UINT8 *data, *data_top, *bottom, *data_end;
-    NJ_INT16 i = 0;
-    NJ_INT16 hindo = 0;
-    NJ_UINT32 current = loctset->loct.current;
+    uint8_t *data, *data_top, *bottom, *data_end;
+    int16_t i = 0;
+    int16_t hindo = 0;
+    uint32_t current = loctset->loct.current;
 
 
     NJ_SEARCH_CACHE *psrhCache = condition->ds->dic[hidx].srhCache;
 
-    NJ_UINT16 top_abIdx;
-    NJ_UINT16 bottom_abIdx;
-    NJ_UINT16 count_abIdx;
-    NJ_UINT16 current_abIdx;
-    NJ_UINT16 old_abIdx;
-    NJ_UINT8 freq_flag = 0;
-    NJ_INT16 save_hindo = 0;
-    NJ_UINT16 save_abIdx = 0;
-    NJ_UINT16 abPtrIdx;
-    NJ_UINT16 m;
-    NJ_INT16 ret;
-    NJ_INT16 loop_check;
+    uint16_t top_abIdx;
+    uint16_t bottom_abIdx;
+    uint16_t count_abIdx;
+    uint16_t current_abIdx;
+    uint16_t old_abIdx;
+    uint8_t freq_flag = 0;
+    int16_t save_hindo = 0;
+    uint16_t save_abIdx = 0;
+    uint16_t abPtrIdx;
+    uint16_t m;
+    int16_t ret;
+    int16_t loop_check;
 
-    NJ_UINT16 abIdx;
-    NJ_UINT16 abIdx_old;
-    NJ_UINT16 hindo_max, hindo_tmp;
-    NJ_UINT32 hindo_max_data, hindo_tmp_data;
-    NJ_UINT16 abIdx_current;
+    uint16_t abIdx;
+    uint16_t abIdx_old;
+    uint16_t hindo_max, hindo_tmp;
+    uint32_t hindo_max_data, hindo_tmp_data;
+    uint16_t abIdx_current;
 
 
 
@@ -2441,7 +2441,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                         
                         data = data_top + psrhCache->storebuff[m].top;
 
-                        hindo = (NJ_UINT16) *((NJ_UINT8 *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) +
+                        hindo = (uint16_t) *((uint8_t *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) +
                                                            get_stem_hindo(loctset->loct.handle, data)));
 
                         hindo_tmp = 0;
@@ -2462,7 +2462,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                             data += i;
 
                             
-                            hindo = (NJ_UINT16) *((NJ_UINT8 *) (HINDO_NO_TOP_ADDR(loctset->loct.handle) +
+                            hindo = (uint16_t) *((uint8_t *) (HINDO_NO_TOP_ADDR(loctset->loct.handle) +
                                                                 get_stem_hindo(loctset->loct.handle, data)));
 
                         }
@@ -2484,7 +2484,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                     
                     data = data_top + psrhCache->storebuff[abIdx_current].top; 
 
-                    hindo = (NJ_UINT16) *((NJ_UINT8 *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) 
+                    hindo = (uint16_t) *((uint8_t *)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
                                                        + get_stem_hindo(loctset->loct.handle, data)));
 
                     hindo_max = hindo; 
@@ -2498,7 +2498,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                 loctset->cache_freq = CALCULATE_HINDO(hindo_max, loctset->dic_freq.base,
                                                       loctset->dic_freq.high, COMP_DIC_FREQ_DIV);
                 loctset->loct.current = hindo_max_data;
-                loctset->loct.current_cache = (NJ_UINT8)abIdx_current;
+                loctset->loct.current_cache = (uint8_t)abIdx_current;
 
                 
                 psrhCache->viewCnt = 1;
@@ -2506,7 +2506,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                 
                 data = data_top + loctset->loct.top; 
 
-                hindo = (NJ_UINT16) *((NJ_UINT8 *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) + 
+                hindo = (uint16_t) *((uint8_t *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) +
                                                    get_stem_hindo(loctset->loct.handle, data)));
 
                 hindo_max = hindo; 
@@ -2523,7 +2523,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                     while (data <= (data_top + loctset->loct.bottom)) { 
 
                         
-                        hindo = (NJ_UINT16)*((NJ_UINT8 *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) + 
+                        hindo = (uint16_t)*((uint8_t *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) +
                                                           get_stem_hindo(loctset->loct.handle, data)));
 
                         
@@ -2560,8 +2560,8 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
     if (NJ_GET_DIC_FMT(loctset->loct.handle) == NJ_DIC_FMT_KANAKAN) {
         data_end = loctset->loct.handle
             + NJ_DIC_COMMON_HEADER_SIZE
-            + NJ_INT32_READ(loctset->loct.handle + NJ_DIC_POS_DATA_SIZE)
-            + NJ_INT32_READ(loctset->loct.handle + NJ_DIC_POS_EXT_SIZE)
+            + nj_read_le32(loctset->loct.handle + NJ_DIC_POS_DATA_SIZE)
+            + nj_read_le32(loctset->loct.handle + NJ_DIC_POS_EXT_SIZE)
             - NJ_DIC_ID_LEN;
     } else {
         data_end = CAND_IDX_AREA_TOP_ADDR(loctset->loct.handle);
@@ -2602,7 +2602,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                 loctset->loct.status = NJ_ST_SEARCH_READY;
                 loctset->loct.current_info = CURRENT_INFO_SET;
                 loctset->loct.current = psrhCache->storebuff[old_abIdx].current;
-                loctset->loct.current_cache = (NJ_UINT8)old_abIdx;
+                loctset->loct.current_cache = (uint8_t)old_abIdx;
                 return 1;
             } else {
                 
@@ -2643,7 +2643,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                 loctset->loct.top = psrhCache->storebuff[current_abIdx].top;
                 loctset->loct.bottom = psrhCache->storebuff[current_abIdx].bottom;
                 loctset->loct.current = psrhCache->storebuff[current_abIdx].current;
-                loctset->loct.current_cache = (NJ_UINT8)current_abIdx;
+                loctset->loct.current_cache = (uint8_t)current_abIdx;
                 psrhCache->viewCnt = 1;
                 return 1;
 
@@ -2675,7 +2675,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                     loctset->loct.top = psrhCache->storebuff[current_abIdx].top;
                     loctset->loct.bottom = psrhCache->storebuff[current_abIdx].bottom;
                     loctset->loct.current = psrhCache->storebuff[current_abIdx].current;
-                    loctset->loct.current_cache = (NJ_UINT8)current_abIdx;
+                    loctset->loct.current_cache = (uint8_t)current_abIdx;
                     psrhCache->viewCnt = 1;
                     return 1;
                 } else if (save_hindo != -1) {
@@ -2686,7 +2686,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
                     loctset->loct.top = psrhCache->storebuff[save_abIdx].top;
                     loctset->loct.bottom = psrhCache->storebuff[save_abIdx].bottom;
                     loctset->loct.current = psrhCache->storebuff[save_abIdx].current;
-                    loctset->loct.current_cache = (NJ_UINT8)save_abIdx;
+                    loctset->loct.current_cache = (uint8_t)save_abIdx;
                     psrhCache->viewCnt = 1;
                     return 1;
                 }
@@ -2708,7 +2708,7 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
         }
 
         
-        hindo = (NJ_INT16)*((NJ_UINT8 *)(HINDO_NO_TOP_ADDR(loctset->loct.handle) 
+        hindo = (int16_t)*((uint8_t *)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
                                          + get_stem_hindo(loctset->loct.handle, data)));
         loctset->cache_freq = CALCULATE_HINDO(hindo, loctset->dic_freq.base, 
                                               loctset->dic_freq.high, COMP_DIC_FREQ_DIV);
@@ -2722,20 +2722,20 @@ static NJ_INT16 bdic_search_fore_data2(NJ_SEARCH_CONDITION *condition, NJ_SEARCH
     return 0;
 }
 
-static NJ_INT16 bdic_get_next_data(NJ_UINT8 *data_top, NJ_UINT8 *data_end,
+static int16_t bdic_get_next_data(uint8_t *data_top, uint8_t *data_end,
                                    NJ_SEARCH_LOCATION_SET *loctset,
                                    NJ_SEARCH_CACHE *psrhCache,
-                                   NJ_UINT16 abIdx)
+                                   uint16_t abIdx)
 {
-    NJ_UINT8 *data, *bottom;
-    NJ_INT16 i = 0;
-    NJ_INT16 hindo = 0;
-    NJ_INT16 hindo_max = -1;
-    NJ_UINT8 no_hit = 0;
-    NJ_UINT32 current = psrhCache->storebuff[abIdx].current;
-    NJ_UINT8 *current_org;
-    NJ_UINT32 hindo_data = 0;
-    NJ_INT16 freq_org = loctset->cache_freq;
+    uint8_t *data, *bottom;
+    int16_t i = 0;
+    int16_t hindo = 0;
+    int16_t hindo_max = -1;
+    uint8_t no_hit = 0;
+    uint32_t current = psrhCache->storebuff[abIdx].current;
+    uint8_t *current_org;
+    uint32_t hindo_data = 0;
+    int16_t freq_org = loctset->cache_freq;
 
 
     if (psrhCache->storebuff[abIdx].current == LOC_CURRENT_NO_ENTRY) {
@@ -2784,7 +2784,7 @@ static NJ_INT16 bdic_get_next_data(NJ_UINT8 *data_top, NJ_UINT8 *data_end,
         }
 
         
-        hindo = (NJ_INT16)*((NJ_UINT8 *)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
+        hindo = (int16_t)*((uint8_t *)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
                                          + get_stem_hindo(loctset->loct.handle, data)));
         
         hindo = CALCULATE_HINDO(hindo, loctset->dic_freq.base, loctset->dic_freq.high, COMP_DIC_FREQ_DIV);
@@ -2808,11 +2808,11 @@ static NJ_INT16 bdic_get_next_data(NJ_UINT8 *data_top, NJ_UINT8 *data_end,
     return -1; 
 }
 
-static NJ_INT16 bdic_get_word_freq(NJ_UINT8 * data_top, NJ_SEARCH_LOCATION_SET * loctset,
-                                   NJ_SEARCH_CACHE * psrhCache, NJ_UINT16 abIdx)
+static int16_t bdic_get_word_freq(uint8_t * data_top, NJ_SEARCH_LOCATION_SET * loctset,
+                                   NJ_SEARCH_CACHE * psrhCache, uint16_t abIdx)
 {
-    NJ_UINT8 *data;
-    NJ_INT16 hindo = 0;
+    uint8_t *data;
+    int16_t hindo = 0;
 
 
     if (psrhCache->storebuff[abIdx].current != LOC_CURRENT_NO_ENTRY) {
@@ -2820,7 +2820,7 @@ static NJ_INT16 bdic_get_word_freq(NJ_UINT8 * data_top, NJ_SEARCH_LOCATION_SET *
         data = data_top + psrhCache->storebuff[abIdx].top + psrhCache->storebuff[abIdx].current;
 
         
-        hindo = (NJ_INT16)*((NJ_UINT8 *)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
+        hindo = (int16_t)*((uint8_t *)(HINDO_NO_TOP_ADDR(loctset->loct.handle)
                                          + get_stem_hindo(loctset->loct.handle, data)));
         
         hindo = CALCULATE_HINDO(hindo, loctset->dic_freq.base, loctset->dic_freq.high, COMP_DIC_FREQ_DIV);

@@ -19,10 +19,10 @@
 #include <vector>
 
 extern "C" {
-extern NJ_UINT32 dic_size[];
-extern NJ_UINT8 dic_type[];
-extern NJ_UINT8* dic_data[];
-extern NJ_UINT8* con_data[];
+extern uint32_t dic_size[];
+extern uint8_t dic_type[];
+extern uint8_t* dic_data[];
+extern uint8_t* con_data[];
 }
 
 namespace {
@@ -36,12 +36,12 @@ constexpr int comp_dic_freq_div = 63;
 constexpr int yominasi_dic_freq_div = 63;
 constexpr int fdic_data_size = 10;
 
-uint16_t rd16(const NJ_UINT8* p)
+uint16_t rd16(const uint8_t* p)
 {
     return static_cast<uint16_t>((static_cast<uint16_t>(p[1]) << 8) | p[0]);
 }
 
-uint32_t rd32(const NJ_UINT8* p)
+uint32_t rd32(const uint8_t* p)
 {
     return (static_cast<uint32_t>(p[3]) << 24)
         | (static_cast<uint32_t>(p[2]) << 16)
@@ -71,48 +71,48 @@ uint16_t bits_to_bytes(uint16_t bits)
     return static_cast<uint16_t>((bits + 7) >> 3);
 }
 
-uint32_t read_bits32(const NJ_UINT8* base, uint16_t bit_offset, uint16_t width)
+uint32_t read_bits32(const uint8_t* base, uint16_t bit_offset, uint16_t width)
 {
     const uint16_t pos = static_cast<uint16_t>(bit_offset >> 3);
     const uint16_t bit = static_cast<uint16_t>(bit_offset & 0x0007);
     return bitfield32(rd32(base + pos), bit, width);
 }
 
-uint16_t read_bits16(const NJ_UINT8* base, uint16_t bit_offset, uint16_t width)
+uint16_t read_bits16(const uint8_t* base, uint16_t bit_offset, uint16_t width)
 {
     const uint16_t pos = static_cast<uint16_t>(bit_offset >> 3);
     const uint16_t bit = static_cast<uint16_t>(bit_offset & 0x0007);
     return bitfield16(rd16(base + pos), bit, width);
 }
 
-uint32_t dic_type_of(const NJ_UINT8* h) { return rd32(h + 8); }
-uint32_t dic_data_size_of(const NJ_UINT8* h) { return rd32(h + NJ_DIC_POS_DATA_SIZE); }
-uint32_t dic_ext_size_of(const NJ_UINT8* h) { return rd32(h + NJ_DIC_POS_EXT_SIZE); }
-uint8_t dic_fmt(const NJ_UINT8* h) { return h[0x1c] & 0x03; }
+uint32_t dic_type_of(const uint8_t* h) { return rd32(h + 8); }
+uint32_t dic_data_size_of(const uint8_t* h) { return rd32(h + NJ_DIC_POS_DATA_SIZE); }
+uint32_t dic_ext_size_of(const uint8_t* h) { return rd32(h + NJ_DIC_POS_EXT_SIZE); }
+uint8_t dic_fmt(const uint8_t* h) { return h[0x1c] & 0x03; }
 
-uint8_t append_yomi_flag(const NJ_UINT8* h) { return h[0x1c] & 0x80; }
-const NJ_UINT8* hinsi_top(const NJ_UINT8* h) { return h + rd32(h + 0x1d); }
-uint16_t fhinsi_count(const NJ_UINT8* h) { return rd16(h + 0x21); }
-uint8_t hinsi_bytes(const NJ_UINT8* h) { return h[0x25]; }
-const NJ_UINT8* hindo_top(const NJ_UINT8* h) { return h + rd32(h + 0x26); }
-const NJ_UINT8* stem_area_top(const NJ_UINT8* h) { return h + rd32(h + 0x2b); }
-uint8_t bit_candidate_len(const NJ_UINT8* h) { return h[0x2f]; }
-uint8_t bit_fhinsi(const NJ_UINT8* h) { return h[0x30]; }
-uint8_t bit_bhinsi(const NJ_UINT8* h) { return h[0x31]; }
-uint8_t bit_hindo_len(const NJ_UINT8* h) { return h[0x32]; }
-uint8_t bit_muhenkan_len(const NJ_UINT8* h) { return h[0x33]; }
-uint8_t bit_yomi_len(const NJ_UINT8* h) { return h[0x35]; }
-const NJ_UINT8* yomi_index_top(const NJ_UINT8* h) { return h + rd32(h + 0x42); }
-uint16_t yomi_index_count(const NJ_UINT8* h) { return h[0x46]; }
-uint8_t yomi_index_size(const NJ_UINT8* h) { return h[0x47]; }
-const NJ_UINT8* node_area_top(const NJ_UINT8* h) { return h + rd32(h + 0x48); }
-uint8_t bit_node_data_len(const NJ_UINT8* h) { return h[0x4c]; }
-uint8_t bit_node_left_len(const NJ_UINT8* h) { return h[0x4d]; }
-const NJ_UINT8* node_area_mid(const NJ_UINT8* h) { return node_area_top(h) + rd32(h + 0x4e); }
-const NJ_UINT8* cand_index_top(const NJ_UINT8* h) { return h + rd32(h + 0x52); }
+uint8_t append_yomi_flag(const uint8_t* h) { return h[0x1c] & 0x80; }
+const uint8_t* hinsi_top(const uint8_t* h) { return h + rd32(h + 0x1d); }
+uint16_t fhinsi_count(const uint8_t* h) { return rd16(h + 0x21); }
+uint8_t hinsi_bytes(const uint8_t* h) { return h[0x25]; }
+const uint8_t* hindo_top(const uint8_t* h) { return h + rd32(h + 0x26); }
+const uint8_t* stem_area_top(const uint8_t* h) { return h + rd32(h + 0x2b); }
+uint8_t bit_candidate_len(const uint8_t* h) { return h[0x2f]; }
+uint8_t bit_fhinsi(const uint8_t* h) { return h[0x30]; }
+uint8_t bit_bhinsi(const uint8_t* h) { return h[0x31]; }
+uint8_t bit_hindo_len(const uint8_t* h) { return h[0x32]; }
+uint8_t bit_muhenkan_len(const uint8_t* h) { return h[0x33]; }
+uint8_t bit_yomi_len(const uint8_t* h) { return h[0x35]; }
+const uint8_t* yomi_index_top(const uint8_t* h) { return h + rd32(h + 0x42); }
+uint16_t yomi_index_count(const uint8_t* h) { return h[0x46]; }
+uint8_t yomi_index_size(const uint8_t* h) { return h[0x47]; }
+const uint8_t* node_area_top(const uint8_t* h) { return h + rd32(h + 0x48); }
+uint8_t bit_node_data_len(const uint8_t* h) { return h[0x4c]; }
+uint8_t bit_node_left_len(const uint8_t* h) { return h[0x4d]; }
+const uint8_t* node_area_mid(const uint8_t* h) { return node_area_top(h) + rd32(h + 0x4e); }
+const uint8_t* cand_index_top(const uint8_t* h) { return h + rd32(h + 0x52); }
 
-const NJ_UINT8* fdic_stem_top(const NJ_UINT8* h) { return h + rd32(h + 0x24); }
-const NJ_UINT8* fdic_strs_top(const NJ_UINT8* h) { return h + rd32(h + 0x28); }
+const uint8_t* fdic_stem_top(const uint8_t* h) { return h + rd32(h + 0x24); }
+const uint8_t* fdic_strs_top(const uint8_t* h) { return h + rd32(h + 0x28); }
 
 const char* dic_type_name(uint32_t type)
 {
@@ -192,7 +192,7 @@ std::string nj_to_utf8(const NJ_CHAR* src, int max_chars)
 }
 
 struct node_record {
-    const NJ_UINT8* ptr = nullptr;
+    const uint8_t* ptr = nullptr;
     std::size_t size = 0;
     bool term = false;
     bool has_left = false;
@@ -252,7 +252,7 @@ public:
 
     void dump_dictionary(int dic_index)
     {
-        const NJ_UINT8* handle = dic_data[dic_index];
+        const uint8_t* handle = dic_data[dic_index];
         const uint32_t type = dic_type_of(handle);
         switch (type) {
         case NJ_DIC_TYPE_JIRITSU:
@@ -278,7 +278,7 @@ public:
     }
 
 private:
-    node_record parse_node(const NJ_UINT8* handle, const NJ_UINT8* node) const
+    node_record parse_node(const uint8_t* handle, const uint8_t* node) const
     {
         node_record rec;
         rec.ptr = node;
@@ -309,11 +309,11 @@ private:
         return rec;
     }
 
-    void append_index_as_yomi_bytes(const NJ_UINT8* handle, uint8_t index, std::vector<NJ_UINT8>& out) const
+    void append_index_as_yomi_bytes(const uint8_t* handle, uint8_t index, std::vector<uint8_t>& out) const
     {
         if (yomi_index_count(handle) != 0) {
             const uint8_t size = yomi_index_size(handle);
-            const NJ_UINT8* table = yomi_index_top(handle) + (static_cast<uint16_t>(index) - 1) * size;
+            const uint8_t* table = yomi_index_top(handle) + (static_cast<uint16_t>(index) - 1) * size;
             if (size == 2) {
                 out.push_back(table[0]);
                 out.push_back(table[1]);
@@ -325,7 +325,7 @@ private:
         }
     }
 
-    stem_record parse_stem(const NJ_UINT8* handle, const NJ_UINT8* stem) const
+    stem_record parse_stem(const uint8_t* handle, const uint8_t* stem) const
     {
         uint16_t flag_bits = bit_muhenkan_len(handle);
         if (dic_fmt(handle) != NJ_DIC_FMT_KANAKAN) {
@@ -349,7 +349,7 @@ private:
         return rec;
     }
 
-    const NJ_UINT8* compressed_stem_end(const NJ_UINT8* handle) const
+    const uint8_t* compressed_stem_end(const uint8_t* handle) const
     {
         if (dic_fmt(handle) == NJ_DIC_FMT_KANAKAN) {
             return handle + NJ_DIC_COMMON_HEADER_SIZE + dic_data_size_of(handle) + dic_ext_size_of(handle) - NJ_DIC_ID_LEN;
@@ -359,13 +359,13 @@ private:
 
     void dump_compressed_trie(int dic_index)
     {
-        const NJ_UINT8* handle = dic_data[dic_index];
-        const NJ_UINT8* root = node_area_top(handle);
-        const NJ_UINT8* mid = node_area_mid(handle);
-        const NJ_UINT8* node_end = stem_area_top(handle);
+        const uint8_t* handle = dic_data[dic_index];
+        const uint8_t* root = node_area_top(handle);
+        const uint8_t* mid = node_area_mid(handle);
+        const uint8_t* node_end = stem_area_top(handle);
         std::unordered_set<std::uintptr_t> visited;
         std::unordered_set<uint32_t> dumped_groups;
-        std::vector<NJ_UINT8> prefix;
+        std::vector<uint8_t> prefix;
 
         walk_node_list(dic_index, root, node_end, prefix, visited, dumped_groups);
         if (mid != root) {
@@ -374,14 +374,14 @@ private:
     }
 
     void walk_node_list(int dic_index,
-                        const NJ_UINT8* start,
-                        const NJ_UINT8* node_end,
-                        const std::vector<NJ_UINT8>& prefix,
+                        const uint8_t* start,
+                        const uint8_t* node_end,
+                        const std::vector<uint8_t>& prefix,
                         std::unordered_set<std::uintptr_t>& visited,
                         std::unordered_set<uint32_t>& dumped_groups)
     {
-        const NJ_UINT8* handle = dic_data[dic_index];
-        const NJ_UINT8* node = start;
+        const uint8_t* handle = dic_data[dic_index];
+        const uint8_t* node = start;
 
         while (node >= node_area_top(handle) && node < node_end) {
             node_record rec = parse_node(handle, node);
@@ -398,7 +398,7 @@ private:
                 continue;
             }
 
-            std::vector<NJ_UINT8> node_prefix = prefix;
+            std::vector<uint8_t> node_prefix = prefix;
             for (uint8_t index : rec.indexes) {
                 append_index_as_yomi_bytes(handle, index, node_prefix);
             }
@@ -418,18 +418,18 @@ private:
         }
     }
 
-    void dump_compressed_stem_group(int dic_index, uint32_t data_offset, const std::vector<NJ_UINT8>& yomi)
+    void dump_compressed_stem_group(int dic_index, uint32_t data_offset, const std::vector<uint8_t>& yomi)
     {
-        const NJ_UINT8* handle = dic_data[dic_index];
-        const NJ_UINT8* top = stem_area_top(handle);
-        const NJ_UINT8* end = compressed_stem_end(handle);
+        const uint8_t* handle = dic_data[dic_index];
+        const uint8_t* top = stem_area_top(handle);
+        const uint8_t* end = compressed_stem_end(handle);
         if (top + data_offset >= end) {
             return;
         }
 
         uint32_t current = data_offset;
         while (top + current < end) {
-            const NJ_UINT8* stem = top + current;
+            const uint8_t* stem = top + current;
             stem_record rec = parse_stem(handle, stem);
             if (rec.size == 0 || stem + rec.size > end) {
                 return;
@@ -443,15 +443,15 @@ private:
         }
     }
 
-    std::size_t fill_yomi_buffer(const std::vector<NJ_UINT8>& yomi,
+    std::size_t fill_yomi_buffer(const std::vector<uint8_t>& yomi,
                                  std::array<NJ_CHAR, NJ_MAX_LEN + NJ_TERM_LEN>& yomi_buf) const
     {
         const std::size_t copy_len = std::min<std::size_t>(yomi.size() / sizeof(NJ_CHAR), NJ_MAX_LEN);
         for (std::size_t i = 0; i < copy_len; ++i) {
             yomi_buf[i] = static_cast<NJ_CHAR>(
-                (static_cast<NJ_UINT32>(yomi[i * 4 + 3]) << 24)
-                | (static_cast<NJ_UINT32>(yomi[i * 4 + 2]) << 16)
-                | (static_cast<NJ_UINT32>(yomi[i * 4 + 1]) << 8)
+                (static_cast<uint32_t>(yomi[i * 4 + 3]) << 24)
+                | (static_cast<uint32_t>(yomi[i * 4 + 2]) << 16)
+                | (static_cast<uint32_t>(yomi[i * 4 + 1]) << 8)
                 | yomi[i * 4]);
         }
         yomi_buf[copy_len] = NJ_CHAR_NUL;
@@ -472,19 +472,19 @@ private:
         loct.loct.current = stem_offset;
         loct.loct.top = 0;
         loct.loct.bottom = stem_offset;
-        loct.loct.status = static_cast<NJ_UINT8>((operation << 4) | NJ_ST_SEARCH_READY);
+        loct.loct.status = static_cast<uint8_t>((operation << 4) | NJ_ST_SEARCH_READY);
         loct.loct.type = dic_type[dic_index];
 
         word = {};
         word.yomi = yomi_data;
-        word.stem.info1 = static_cast<NJ_UINT16>(yomi_len);
+        word.stem.info1 = static_cast<uint16_t>(yomi_len);
         return njd_b_get_word(&loct, &word) > 0;
     }
 
     std::string compressed_candidate_with_operation(int dic_index,
                                                     uint32_t stem_offset,
                                                     uint8_t operation,
-                                                    const std::vector<NJ_UINT8>& yomi) const
+                                                    const std::vector<uint8_t>& yomi) const
     {
         std::array<NJ_CHAR, NJ_MAX_LEN + NJ_TERM_LEN> yomi_buf {};
         const std::size_t yomi_len = fill_yomi_buffer(yomi, yomi_buf);
@@ -499,7 +499,7 @@ private:
         return nj_to_utf8(candidate.data(), NJ_MAX_RESULT_LEN);
     }
 
-    std::string compressed_stroke_with_fore(int dic_index, uint32_t stem_offset, const std::vector<NJ_UINT8>& yomi) const
+    std::string compressed_stroke_with_fore(int dic_index, uint32_t stem_offset, const std::vector<uint8_t>& yomi) const
     {
         std::array<NJ_CHAR, NJ_MAX_LEN + NJ_TERM_LEN> yomi_buf {};
         const std::size_t yomi_len = fill_yomi_buffer(yomi, yomi_buf);
@@ -514,7 +514,7 @@ private:
         return nj_to_utf8(stroke.data(), NJ_MAX_LEN);
     }
 
-    void dump_compressed_stem(int dic_index, uint32_t stem_offset, const std::vector<NJ_UINT8>& yomi)
+    void dump_compressed_stem(int dic_index, uint32_t stem_offset, const std::vector<uint8_t>& yomi)
     {
         std::array<NJ_CHAR, NJ_MAX_LEN + NJ_TERM_LEN> yomi_buf {};
         const std::size_t yomi_len = fill_yomi_buffer(yomi, yomi_buf);
@@ -541,9 +541,9 @@ private:
 
     void dump_yominashi(int dic_index)
     {
-        const NJ_UINT8* handle = dic_data[dic_index];
-        const NJ_UINT8* top = fdic_stem_top(handle);
-        const NJ_UINT8* end = fdic_strs_top(handle);
+        const uint8_t* handle = dic_data[dic_index];
+        const uint8_t* top = fdic_stem_top(handle);
+        const uint8_t* end = fdic_strs_top(handle);
         for (uint32_t current = 0; top + current + fdic_data_size <= end; current += fdic_data_size) {
             NJ_SEARCH_LOCATION_SET loct {};
             loct.dic_freq.base = 0;

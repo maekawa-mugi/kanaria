@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Std C++23 porting layer for the Qt OpenWnn library.
  *
  * Copyright (C) 2015 The Qt Company
@@ -14,10 +14,10 @@ extern "C" {
 #include "nj_ext.h"
 #include "nj_dic.h"
 
-extern NJ_UINT32 dic_size[];
-extern NJ_UINT8 dic_type[];
-extern NJ_UINT8 *dic_data[];
-extern NJ_UINT8 *con_data[];
+extern uint32_t dic_size[];
+extern uint8_t dic_type[];
+extern uint8_t *dic_data[];
+extern uint8_t *con_data[];
 }
 
 #include <algorithm>
@@ -84,8 +84,8 @@ enum pos_type {
 
 struct nj_work {
     NJ_DIC_HANDLE dic_handle[NJ_MAX_DIC];
-    NJ_UINT32 dic_size[NJ_MAX_DIC];
-    NJ_UINT8 dic_type[NJ_MAX_DIC];
+    uint32_t dic_size[NJ_MAX_DIC];
+    uint8_t dic_type[NJ_MAX_DIC];
     NJ_CHAR key_string[NJ_MAX_LEN + NJ_TERM_LEN];
     NJ_RESULT result;
     NJ_CURSOR cursor;
@@ -95,7 +95,7 @@ struct nj_work {
     NJ_CHARSET approx_set;
     NJ_CHAR previous_stroke[NJ_MAX_LEN + NJ_TERM_LEN];
     NJ_CHAR previous_candidate[NJ_MAX_RESULT_LEN + NJ_TERM_LEN];
-    NJ_UINT8 flag;
+    uint8_t flag;
 };
 
 struct dictionary_work {
@@ -482,8 +482,8 @@ static std::optional<word> dictionary_get_next(dictionary_work& d, int length = 
 
 static int dictionary_set_left_pos(dictionary_work& d, int left)
 {
-    NJ_UINT16 lcount = 0;
-    NJ_UINT16 rcount = 0;
+    uint16_t lcount = 0;
+    uint16_t rcount = 0;
     if (d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN] == nullptr) {
         return NJ_SET_ERR_VAL(nj_func_set_left_part_of_speech, NJ_ERR_NO_RULEDIC);
     }
@@ -497,8 +497,8 @@ static int dictionary_set_left_pos(dictionary_work& d, int left)
 
 static int dictionary_set_right_pos(dictionary_work& d, int right)
 {
-    NJ_UINT16 lcount = 0;
-    NJ_UINT16 rcount = 0;
+    uint16_t lcount = 0;
+    uint16_t rcount = 0;
     if (d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN] == nullptr) {
         return NJ_SET_ERR_VAL(nj_func_set_right_part_of_speech, NJ_ERR_NO_RULEDIC);
     }
@@ -537,8 +537,8 @@ static int dictionary_select_word(dictionary_work& d)
 
 static std::vector<unsigned char> dictionary_get_connect_array(dictionary_work& d, int left_pos)
 {
-    NJ_UINT16 lcount = 0;
-    NJ_UINT16 rcount = 0;
+    uint16_t lcount = 0;
+    uint16_t rcount = 0;
     if (d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN] == nullptr) {
         return {};
     }
@@ -548,7 +548,7 @@ static std::vector<unsigned char> dictionary_get_connect_array(dictionary_work& 
     }
 
     std::vector<unsigned char> result(static_cast<std::size_t>(rcount) + 1, 0);
-    NJ_UINT8* connect = nullptr;
+    uint8_t* connect = nullptr;
     if (left_pos > 0) {
         njd_r_get_connect(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], left_pos, NJ_RULE_TYPE_FTOB, &connect);
         for (int i = 0; i < rcount; i++) {
@@ -562,8 +562,8 @@ static std::vector<unsigned char> dictionary_get_connect_array(dictionary_work& 
 
 static std::vector<std::vector<unsigned char>> dictionary_get_connect_matrix(dictionary_work& d)
 {
-    NJ_UINT16 lcount = 0;
-    NJ_UINT16 rcount = 0;
+    uint16_t lcount = 0;
+    uint16_t rcount = 0;
     if (d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN] == nullptr) {
         return {};
     }
@@ -578,7 +578,7 @@ static std::vector<std::vector<unsigned char>> dictionary_get_connect_matrix(dic
 
 static pos dictionary_get_pos(dictionary_work& d, pos_type type)
 {
-    NJ_UINT8 nj_type = 0;
+    uint8_t nj_type = 0;
     pos p;
     switch (type) {
     case pos_type_v1:

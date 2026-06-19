@@ -44,17 +44,17 @@
 #define LEARN_DIC_EXT_QUE_SIZE    6
 
 
-#define NJ_GET_DIC_VER(h) NJ_INT32_READ((h)+4)
+#define NJ_GET_DIC_VER(h) nj_read_le32((h)+4)
 
 
-#define GET_LOCATION_STATUS(x) ((NJ_UINT8)((x)&0x0f))
+#define GET_LOCATION_STATUS(x) ((uint8_t)((x)&0x0f))
 
-#define GET_LOCATION_OPERATION(x) ((NJ_UINT8)(((x) >> 4)&0x0f))
+#define GET_LOCATION_OPERATION(x) ((uint8_t)(((x) >> 4)&0x0f))
 
-#define SET_LOCATION_OPERATION(ope) ((NJ_UINT16)((ope) << 4))
+#define SET_LOCATION_OPERATION(ope) ((uint16_t)((ope) << 4))
 
 
-#define NJ_GET_DIC_FMT(h) ((NJ_UINT8)((*((h)+0x1C)) & 0x03))
+#define NJ_GET_DIC_FMT(h) ((uint8_t)((*((h)+0x1C)) & 0x03))
 
 
 #define CALCULATE_HINDO(freq, base, high, div) \

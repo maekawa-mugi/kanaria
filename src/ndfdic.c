@@ -32,56 +32,56 @@
 #define YOMINASI_DIC_FREQ_DIV 63  
 
 #define DATA_FHINSI(x)                                                  \
-    ( (NJ_UINT16)(0x01FF &                                              \
-                  (((NJ_UINT16)*((x)+DATA_OFFSET_FHINSI  ) << 1) |      \
+    ( (uint16_t)(0x01FF &                                              \
+                  (((uint16_t)*((x)+DATA_OFFSET_FHINSI  ) << 1) |      \
                    (           *((x)+DATA_OFFSET_FHINSI+1) >> 7))) )
 #define DATA_BHINSI(x)                                                  \
-    ( (NJ_UINT16)(0x01FF &                                              \
-                  (((NJ_UINT16)*((x)+DATA_OFFSET_BHINSI  ) << 2) |      \
+    ( (uint16_t)(0x01FF &                                              \
+                  (((uint16_t)*((x)+DATA_OFFSET_BHINSI  ) << 2) |      \
                    (           *((x)+DATA_OFFSET_BHINSI+1) >> 6))) )
 #define DATA_HINDO(x)                                                   \
-    ((NJ_HINDO)(0x003F & ((NJ_UINT16)*((x)+DATA_OFFSET_HINDO))))
+    ((NJ_HINDO)(0x003F & ((uint16_t)*((x)+DATA_OFFSET_HINDO))))
 #define DATA_CANDIDATE(x)                                               \
-    ((NJ_UINT32)(0x000FFFFF &                                           \
-                 (((NJ_UINT32)*((x)+DATA_OFFSET_CANDIDATE)   << 12) |   \
-                  ((NJ_UINT32)*((x)+DATA_OFFSET_CANDIDATE+1) <<  4) |   \
+    ((uint32_t)(0x000FFFFF &                                           \
+                 (((uint32_t)*((x)+DATA_OFFSET_CANDIDATE)   << 12) |   \
+                  ((uint32_t)*((x)+DATA_OFFSET_CANDIDATE+1) <<  4) |   \
                   (           *((x)+DATA_OFFSET_CANDIDATE+2) >>  4))))
 #define DATA_CANDIDATE_SIZE(x)                                          \
-    ((NJ_UINT8)((*((x)+DATA_OFFSET_CANDIDATE_LEN)   << 4) |             \
+    ((uint8_t)((*((x)+DATA_OFFSET_CANDIDATE_LEN)   << 4) |             \
                 (*((x)+DATA_OFFSET_CANDIDATE_LEN+1) >> 4)))
 #define DATA_YOMI(x) \
-    ((NJ_UINT32)(0x000FFFFF &                                           \
-                 (((NJ_UINT32)*((x)+DATA_OFFSET_YOMI)   << 16) |        \
-                  ((NJ_UINT32)*((x)+DATA_OFFSET_YOMI+1) <<  8) |        \
+    ((uint32_t)(0x000FFFFF &                                           \
+                 (((uint32_t)*((x)+DATA_OFFSET_YOMI)   << 16) |        \
+                  ((uint32_t)*((x)+DATA_OFFSET_YOMI+1) <<  8) |        \
                   (           *((x)+DATA_OFFSET_YOMI+2)      ))))
 #define DATA_YOMI_SIZE(x)                       \
-    ((NJ_UINT8)((*((x)+DATA_OFFSET_YOMI_LEN))))
+    ((uint8_t)((*((x)+DATA_OFFSET_YOMI_LEN))))
 
-#define YOMI_INDX_TOP_ADDR(h) ((NJ_UINT8*)((h)+NJ_INT32_READ((h)+0x1C)))
-#define YOMI_INDX_CNT(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x20)))
-#define YOMI_INDX_BYTE(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x22)))
-#define STEM_AREA_TOP_ADDR(h) ((NJ_UINT8*)((h)+NJ_INT32_READ((h)+0x24)))
-#define STRS_AREA_TOP_ADDR(h) ((NJ_UINT8*)((h)+NJ_INT32_READ((h)+0x28)))
-#define YOMI_AREA_TOP_ADDR(h) ((NJ_UINT8*)((h)+NJ_INT32_READ((h)+0x2C)))
+#define YOMI_INDX_TOP_ADDR(h) ((uint8_t*)((h)+nj_read_le32((h)+0x1C)))
+#define YOMI_INDX_CNT(h) ((uint16_t)(nj_read_le16((h)+0x20)))
+#define YOMI_INDX_BYTE(h) ((uint16_t)(nj_read_le16((h)+0x22)))
+#define STEM_AREA_TOP_ADDR(h) ((uint8_t*)((h)+nj_read_le32((h)+0x24)))
+#define STRS_AREA_TOP_ADDR(h) ((uint8_t*)((h)+nj_read_le32((h)+0x28)))
+#define YOMI_AREA_TOP_ADDR(h) ((uint8_t*)((h)+nj_read_le32((h)+0x2C)))
 
-#define NO_CONV_FLG ((NJ_UINT32) 0x00080000L)
+#define NO_CONV_FLG ((uint32_t) 0x00080000L)
 
 #define HINSI_OFFSET (7)
 
-#define CURRENT_INFO_SET (NJ_UINT8)(0x10)
+#define CURRENT_INFO_SET (uint8_t)(0x10)
 
-static NJ_UINT16 search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset);
-static NJ_UINT16 convert_to_yomi(NJ_DIC_HANDLE hdl, NJ_UINT8 *index, NJ_UINT16 len, NJ_CHAR *yomi, NJ_UINT16 size);
-static NJ_UINT16 yomi_strcmp_forward(NJ_DIC_HANDLE hdl, NJ_UINT8 *data, NJ_CHAR *yomi);
+static uint16_t search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset);
+static uint16_t convert_to_yomi(NJ_DIC_HANDLE hdl, uint8_t *index, uint16_t len, NJ_CHAR *yomi, uint16_t size);
+static uint16_t yomi_strcmp_forward(NJ_DIC_HANDLE hdl, uint8_t *data, NJ_CHAR *yomi);
 
-static NJ_UINT16 search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset)
+static uint16_t search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_SET *loctset)
 {
-    NJ_UINT32 offset;
-    NJ_UINT8 *data;
-    NJ_UINT16 i, j;
-    NJ_UINT16 hindo;
-    NJ_UINT8 hit_flg;
-    NJ_UINT8 *tmp_hinsi = NULL;
+    uint32_t offset;
+    uint8_t *data;
+    uint16_t i, j;
+    uint16_t hindo;
+    uint8_t hit_flg;
+    uint8_t *tmp_hinsi = NULL;
 
 
     offset = loctset->loct.current;
@@ -103,7 +103,7 @@ static NJ_UINT16 search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_
     tmp_hinsi = condition->hinsi.fore;
     condition->hinsi.fore = condition->hinsi.yominasi_fore;
     
-    i = (NJ_UINT16)((STRS_AREA_TOP_ADDR(loctset->loct.handle) - data) / DATA_SIZE);
+    i = (uint16_t)((STRS_AREA_TOP_ADDR(loctset->loct.handle) - data) / DATA_SIZE);
     for (j = 0; j < i; j++) {
         
         if (njd_connect_test(condition, DATA_FHINSI(data), DATA_BHINSI(data))) {
@@ -148,12 +148,12 @@ static NJ_UINT16 search_data(NJ_SEARCH_CONDITION *condition, NJ_SEARCH_LOCATION_
     return 0;
 }
 
-static NJ_UINT16 convert_to_yomi(NJ_DIC_HANDLE hdl, NJ_UINT8 *index, NJ_UINT16 len, NJ_CHAR *yomi, NJ_UINT16 size)
+static uint16_t convert_to_yomi(NJ_DIC_HANDLE hdl, uint8_t *index, uint16_t len, NJ_CHAR *yomi, uint16_t size)
 {
-    NJ_UINT8  *wkc;
+    uint8_t  *wkc;
     NJ_CHAR   *wky;
-    NJ_UINT16 i, idx, yib, ret;
-    NJ_UINT16 j, char_len;
+    uint16_t i, idx, yib, ret;
+    uint16_t j, char_len;
 
 
     
@@ -172,7 +172,7 @@ static NJ_UINT16 convert_to_yomi(NJ_DIC_HANDLE hdl, NJ_UINT8 *index, NJ_UINT16 l
     ret = 0;
     wky = yomi;
     for (i = 0; i < len; i++) {
-        idx = (NJ_UINT16)((*index - 1) * yib);  
+        idx = (uint16_t)((*index - 1) * yib);
         if (yib == 2) {         
             char_len = UTL_CHAR(wkc + idx);
             
@@ -198,12 +198,12 @@ static NJ_UINT16 convert_to_yomi(NJ_DIC_HANDLE hdl, NJ_UINT8 *index, NJ_UINT16 l
     return ret;
 }
 
-static NJ_UINT16 yomi_strcmp_forward(NJ_DIC_HANDLE hdl, NJ_UINT8 *data, NJ_CHAR *yomi)
+static uint16_t yomi_strcmp_forward(NJ_DIC_HANDLE hdl, uint8_t *data, NJ_CHAR *yomi)
 {
-    NJ_UINT8 *area;
+    uint8_t *area;
     NJ_CHAR  *stroke;
     NJ_CHAR   buf[NJ_MAX_LEN + NJ_TERM_LEN];
-    NJ_UINT16 ylen, dic_ylen, j, size;
+    uint16_t ylen, dic_ylen, j, size;
 
 
     
@@ -254,9 +254,9 @@ static NJ_UINT16 yomi_strcmp_forward(NJ_DIC_HANDLE hdl, NJ_UINT8 *data, NJ_CHAR 
     return 0;
 }
 
-NJ_INT16 njd_f_search_word(NJ_SEARCH_CONDITION *con, NJ_SEARCH_LOCATION_SET *loctset)
+int16_t njd_f_search_word(NJ_SEARCH_CONDITION *con, NJ_SEARCH_LOCATION_SET *loctset)
 {
-    NJ_UINT16 ret;
+    uint16_t ret;
 
     switch (con->operation) {
     case NJ_CUR_OP_LINK:
@@ -313,11 +313,11 @@ NJ_INT16 njd_f_search_word(NJ_SEARCH_CONDITION *con, NJ_SEARCH_LOCATION_SET *loc
     }
 }
 
-NJ_INT16 njd_f_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word)
+int16_t njd_f_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word)
 {
-    NJ_UINT8 *data;
+    uint8_t *data;
     NJ_CHAR  stroke[NJ_MAX_LEN + NJ_TERM_LEN];
-    NJ_INT16 yomilen, kouholen;
+    int16_t yomilen, kouholen;
 
 
     
@@ -337,9 +337,9 @@ NJ_INT16 njd_f_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word)
         return NJ_SET_ERR_VAL(NJ_FUNC_NJD_F_GET_WORD, NJ_ERR_INVALID_RESULT); 
     }
     word->stem.info1 = yomilen;
-    word->stem.info1 |= (NJ_UINT16)(DATA_FHINSI(data) << HINSI_OFFSET); 
-    word->stem.info2 = (NJ_UINT16)(DATA_BHINSI(data) << HINSI_OFFSET);  
-    kouholen = (NJ_UINT16)DATA_CANDIDATE_SIZE(data)/sizeof(NJ_CHAR);
+    word->stem.info1 |= (uint16_t)(DATA_FHINSI(data) << HINSI_OFFSET);
+    word->stem.info2 = (uint16_t)(DATA_BHINSI(data) << HINSI_OFFSET);
+    kouholen = (uint16_t)DATA_CANDIDATE_SIZE(data)/sizeof(NJ_CHAR);
     if (kouholen == 0) {
         
         kouholen = yomilen;
@@ -354,11 +354,11 @@ NJ_INT16 njd_f_get_word(NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word)
     return 1;
 }
 
-NJ_INT16 njd_f_get_stroke(NJ_WORD *word, NJ_CHAR *stroke, NJ_UINT16 size) {
+int16_t njd_f_get_stroke(NJ_WORD *word, NJ_CHAR *stroke, uint16_t size) {
     NJ_SEARCH_LOCATION *loc;
-    NJ_UINT8 *area, *data;
-    NJ_UINT16 len;
-    NJ_UINT32 j;
+    uint8_t *area, *data;
+    uint16_t len;
+    uint32_t j;
 
     if (NJ_GET_YLEN_FROM_STEM(word) == 0) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJD_F_GET_STROKE, NJ_ERR_INVALID_RESULT); 
@@ -399,12 +399,12 @@ NJ_INT16 njd_f_get_stroke(NJ_WORD *word, NJ_CHAR *stroke, NJ_UINT16 size) {
     return len;
 }
 
-NJ_INT16 njd_f_get_candidate(NJ_WORD *word, NJ_CHAR *candidate, NJ_UINT16 size)
+int16_t njd_f_get_candidate(NJ_WORD *word, NJ_CHAR *candidate, uint16_t size)
 {
     NJ_SEARCH_LOCATION *loc;
-    NJ_UINT8 *data, *area;
+    uint8_t *data, *area;
     NJ_CHAR   work[NJ_MAX_LEN + NJ_TERM_LEN];
-    NJ_UINT16 len, j;
+    uint16_t len, j;
 
 
 

@@ -35,9 +35,9 @@
 
 
 
-NJ_INT16 nje_convert_hira_to_kata(NJ_CHAR *hira, NJ_CHAR *kata, NJ_UINT16 len)
+int16_t nje_convert_hira_to_kata(NJ_CHAR *hira, NJ_CHAR *kata, uint16_t len)
 {
-    NJ_UINT16 pnt;
+    uint16_t pnt;
     NJ_CHAR wchar;
 
 

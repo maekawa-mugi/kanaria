@@ -21,13 +21,13 @@
 
 
 
-static NJ_INT16 set_previous_selection(NJ_CLASS *iwnn, NJ_RESULT *result);
-static NJ_INT16 set_learn_word_info(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *lword, NJ_RESULT *result);
+static int16_t set_previous_selection(NJ_CLASS *iwnn, NJ_RESULT *result);
+static int16_t set_learn_word_info(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *lword, NJ_RESULT *result);
 
 
 
-NJ_EXTERN NJ_INT16 njx_select(NJ_CLASS *iwnn, NJ_RESULT *r_result) {
-    NJ_INT16 ret;
+NJ_EXTERN int16_t njx_select(NJ_CLASS *iwnn, NJ_RESULT *r_result) {
+    int16_t ret;
     NJ_DIC_SET *dics;
 
 
@@ -55,7 +55,7 @@ NJ_EXTERN NJ_INT16 njx_select(NJ_CLASS *iwnn, NJ_RESULT *r_result) {
     return 0;   
 }
 
-NJ_EXTERN NJ_INT16 njx_init(NJ_CLASS *iwnn) {
+NJ_EXTERN int16_t njx_init(NJ_CLASS *iwnn) {
 
     if (iwnn == NULL) {
         
@@ -67,8 +67,8 @@ NJ_EXTERN NJ_INT16 njx_init(NJ_CLASS *iwnn) {
     return 0;
 }
 
-NJ_EXTERN NJ_INT16 njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *buf, NJ_UINT16 buf_size) {
-    NJ_INT16 ret;
+NJ_EXTERN int16_t njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *buf, uint16_t buf_size) {
+    int16_t ret;
 
 
     if (iwnn == NULL) {
@@ -97,8 +97,8 @@ NJ_EXTERN NJ_INT16 njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR 
     return ret;
 }
 
-NJ_EXTERN NJ_INT16 njx_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *buf, NJ_UINT16 buf_size) {
-    NJ_INT16 ret;
+NJ_EXTERN int16_t njx_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *buf, uint16_t buf_size) {
+    int16_t ret;
 
 
     if (iwnn == NULL) {
@@ -127,8 +127,8 @@ NJ_EXTERN NJ_INT16 njx_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *bu
 }
 
 
-static NJ_INT16 set_previous_selection(NJ_CLASS *iwnn, NJ_RESULT *result) {
-    NJ_INT16   ret;
+static int16_t set_previous_selection(NJ_CLASS *iwnn, NJ_RESULT *result) {
+    int16_t   ret;
     NJ_PREVIOUS_SELECTION_INFO *prev_info = &(iwnn->previous_selection);
 
 
@@ -147,9 +147,9 @@ static NJ_INT16 set_previous_selection(NJ_CLASS *iwnn, NJ_RESULT *result) {
     return 0;
 }
 
-static NJ_INT16 set_learn_word_info(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *lword, NJ_RESULT *result) 
+static int16_t set_learn_word_info(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *lword, NJ_RESULT *result)
 {
-    NJ_INT16 ret;
+    int16_t ret;
     NJ_DIC_SET *dics = &(iwnn->dic_set);
 
 
@@ -160,12 +160,12 @@ static NJ_INT16 set_learn_word_info(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *lword, N
     if (ret < 0) {
         return ret; 
     }
-    lword->yomi_len = (NJ_UINT8)ret;
+    lword->yomi_len = (uint8_t)ret;
     ret = njx_get_candidate(iwnn, result, lword->hyouki, sizeof(lword->hyouki));
     if (ret < 0) {
         return ret; 
     }
-    lword->hyouki_len = (NJ_UINT8)ret;
+    lword->hyouki_len = (uint8_t)ret;
 #else
     lword->yomi[0] = 0x0000;
     lword->yomi_len = 0;
@@ -180,28 +180,28 @@ static NJ_INT16 set_learn_word_info(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *lword, N
 
     
     ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_TANKANJI_F);
-    if ((ret != 0) && (lword->f_hinsi == (NJ_UINT16)ret)) {
+    if ((ret != 0) && (lword->f_hinsi == (uint16_t)ret)) {
         ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_CHIMEI_F);
         if (ret != 0) {
-            lword->f_hinsi = (NJ_UINT16)ret;
+            lword->f_hinsi = (uint16_t)ret;
         }
     }
 
     
     ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_TANKANJI_B);
-    if ((ret != 0) && (lword->b_hinsi == (NJ_UINT16)ret)) {
+    if ((ret != 0) && (lword->b_hinsi == (uint16_t)ret)) {
         ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_CHIMEI_B);
         if (ret != 0) {
-            lword->b_hinsi = (NJ_UINT16)ret;
+            lword->b_hinsi = (uint16_t)ret;
         }
     }
 
     
     ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_TANKANJI_B);
-    if ((ret != 0) && (lword->stem_b_hinsi == (NJ_UINT16)ret)) {
+    if ((ret != 0) && (lword->stem_b_hinsi == (uint16_t)ret)) {
         ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_CHIMEI_B);
         if (ret != 0) {
-            lword->stem_b_hinsi = (NJ_UINT16)ret;
+            lword->stem_b_hinsi = (uint16_t)ret;
         }
     }
 

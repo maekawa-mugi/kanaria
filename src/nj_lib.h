@@ -19,14 +19,9 @@
 #ifndef _NJ_LIB_H_
 #define _NJ_LIB_H_
 
-typedef signed char    NJ_INT8;
-typedef unsigned char  NJ_UINT8;
-typedef signed short   NJ_INT16;
-typedef unsigned short NJ_UINT16;
-typedef signed long    NJ_INT32;
-typedef unsigned long  NJ_UINT32;
+#include <stdint.h>
 
-typedef unsigned int     NJ_CHAR;
+typedef uint32_t NJ_CHAR;
 
 #define NJ_CHAR_NUL  0x0000
 
@@ -48,7 +43,7 @@ typedef NJ_VOID VOID;
 #define NJ_CHAR_WAVE_DASH_SMALL 0x007E 
 #endif 
 
-typedef NJ_INT16 NJ_HINDO;      
+typedef int16_t NJ_HINDO;
 
 #define NJ_INDEX_SIZE      2
 
@@ -106,29 +101,29 @@ typedef NJ_INT16 NJ_HINDO;
 #define NJ_USER_QUE_SIZE        (((NJ_MAX_USER_LEN + NJ_MAX_USER_KOUHO_LEN) * sizeof(NJ_CHAR)) + 5)
 #define NJ_USER_DIC_SIZE        ((NJ_USER_QUE_SIZE + NJ_INDEX_SIZE + NJ_INDEX_SIZE) * NJ_MAX_USER_COUNT + NJ_INDEX_SIZE  + NJ_INDEX_SIZE + NJ_LEARN_DIC_HEADER_SIZE + 4)
 
-typedef NJ_UINT8 * NJ_DIC_HANDLE;
+typedef uint8_t * NJ_DIC_HANDLE;
 
 typedef struct {
-    NJ_UINT16 base;         
-    NJ_UINT16 high;         
+    uint16_t base;
+    uint16_t high;
 } NJ_DIC_FREQ;
 
 typedef struct {
-    NJ_UINT32  current;     
-    NJ_UINT32  top;         
-    NJ_UINT32  bottom;      
-    NJ_UINT8  *node;        
-    NJ_UINT8  *now;         
-    NJ_UINT16  idx_no;      
+    uint32_t  current;
+    uint32_t  top;
+    uint32_t  bottom;
+    uint8_t  *node;
+    uint8_t  *now;
+    uint16_t  idx_no;
 } NJ_CACHE_INFO;
 
 typedef struct {
-    NJ_UINT8      statusFlg;                        
-#define NJ_STATUSFLG_CACHEOVER ((NJ_UINT8)0x01)     
-#define NJ_STATUSFLG_AIMAI     ((NJ_UINT8)0x02)     
-#define NJ_STATUSFLG_HINDO     ((NJ_UINT8)0x04)     
-    NJ_UINT8      viewCnt;                          
-    NJ_UINT16     keyPtr[NJ_MAX_KEYWORD];           
+    uint8_t      statusFlg;
+#define NJ_STATUSFLG_CACHEOVER ((uint8_t)0x01)
+#define NJ_STATUSFLG_AIMAI     ((uint8_t)0x02)
+#define NJ_STATUSFLG_HINDO     ((uint8_t)0x04)
+    uint8_t      viewCnt;
+    uint16_t     keyPtr[NJ_MAX_KEYWORD];
     NJ_CACHE_INFO storebuff[NJ_SEARCH_CACHE_SIZE];  
 } NJ_SEARCH_CACHE;
 
@@ -141,9 +136,9 @@ typedef struct {
 
 
 typedef struct {
-    NJ_UINT8           type;            
+    uint8_t           type;
 #define NJ_DIC_H_TYPE_NORMAL   0x00     
-    NJ_UINT8           limit;           
+    uint8_t           limit;
 
     NJ_DIC_HANDLE       handle;         
 
@@ -161,7 +156,7 @@ typedef struct {
     NJ_DIC_HANDLE  rHandle[NJ_MODE_TYPE_MAX]; 
 
     
-    NJ_UINT16           mode;
+    uint16_t           mode;
 #define NJ_CACHE_MODE_NONE          0x0000    
 #define NJ_CACHE_MODE_VALID         0x0001    
 
@@ -170,7 +165,7 @@ typedef struct {
 } NJ_DIC_SET;
 
 typedef struct {
-    NJ_UINT16  charset_count;               
+    uint16_t  charset_count;
     NJ_CHAR    *from[NJ_MAX_CHARSET];       
     NJ_CHAR    *to[NJ_MAX_CHARSET];         
 } NJ_CHARSET;
@@ -178,30 +173,30 @@ typedef struct {
 
 typedef struct {
 
-    NJ_UINT8 operation;          
+    uint8_t operation;
 #define NJ_CUR_OP_COMP      0    
 #define NJ_CUR_OP_FORE      1    
 #define NJ_CUR_OP_LINK      2    
 
-    NJ_UINT8 mode;               
+    uint8_t mode;
 #define NJ_CUR_MODE_FREQ    0    
 #define NJ_CUR_MODE_YOMI    1    
 
     NJ_DIC_SET *ds;              
 
     struct {
-        NJ_UINT8 *fore;          
-        NJ_UINT16 foreSize;      
-        NJ_UINT16 foreFlag;      
-        NJ_UINT8 *rear;          
-        NJ_UINT16 rearSize;      
-        NJ_UINT16 rearFlag;      
-        NJ_UINT8 *yominasi_fore; 
+        uint8_t *fore;
+        uint16_t foreSize;
+        uint16_t foreFlag;
+        uint8_t *rear;
+        uint16_t rearSize;
+        uint16_t rearFlag;
+        uint8_t *yominasi_fore;
     } hinsi;
 
     NJ_CHAR  *yomi;
-    NJ_UINT16 ylen;       
-    NJ_UINT16 yclen;      
+    uint16_t ylen;
+    uint16_t yclen;
     NJ_CHAR  *kanji;      
 
     NJ_CHARSET *charset;  
@@ -210,14 +205,14 @@ typedef struct {
 
 typedef struct {
     NJ_DIC_HANDLE  handle;        
-    NJ_UINT32      current;       
-    NJ_UINT32      top;           
-    NJ_UINT32      bottom;        
-    NJ_UINT32      relation[NJ_MAX_PHR_CONNECT];   
-    NJ_UINT8       current_cache; 
-    NJ_UINT8       current_info;  
-    NJ_UINT8       status;       
-    NJ_UINT8       type;     
+    uint32_t      current;
+    uint32_t      top;
+    uint32_t      bottom;
+    uint32_t      relation[NJ_MAX_PHR_CONNECT];
+    uint8_t       current_cache;
+    uint8_t       current_info;
+    uint8_t       status;
+    uint8_t       type;
 } NJ_SEARCH_LOCATION;
 
 typedef struct {
@@ -233,7 +228,7 @@ typedef struct {
 
 
 typedef struct {
-    NJ_UINT8 hinsi_group;          
+    uint8_t hinsi_group;
 #define NJ_HINSI_MEISI          0    
 #define NJ_HINSI_JINMEI         1    
 #define NJ_HINSI_MEISI_NO_CONJ  2    
@@ -245,22 +240,22 @@ typedef struct {
 
     
     struct {
-        NJ_UINT16  yomi_len;    
-        NJ_UINT16  kouho_len;   
-        NJ_UINT32  hinsi;       
-        NJ_UINT32  attr;        
-        NJ_INT16   freq;        
+        uint16_t  yomi_len;
+        uint16_t  kouho_len;
+        uint32_t  hinsi;
+        uint32_t  attr;
+        int16_t   freq;
     } stem;
 
     
     struct {
-        NJ_UINT16  yomi_len;    
-        NJ_UINT16  kouho_len;   
-        NJ_UINT32  hinsi;       
-        NJ_INT16   freq;        
+        uint16_t  yomi_len;
+        uint16_t  kouho_len;
+        uint32_t  hinsi;
+        int16_t   freq;
     } fzk;
 
-    NJ_INT16   connect;         
+    int16_t   connect;
 
 } NJ_WORD_INFO;
 
@@ -269,38 +264,38 @@ typedef struct {
 
     
     struct NJ_STEM {
-        NJ_UINT16  info1;       
-        NJ_UINT16  info2;       
+        uint16_t  info1;
+        uint16_t  info2;
         NJ_HINDO   hindo;       
         NJ_SEARCH_LOCATION loc; 
-        NJ_UINT8   type;        
+        uint8_t   type;
     } stem;
 
     
     struct NJ_FZK {
-        NJ_UINT16  info1;       
-        NJ_UINT16  info2;       
+        uint16_t  info1;
+        uint16_t  info2;
         NJ_HINDO   hindo;       
     } fzk;
 } NJ_WORD;
 
-#define NJ_GET_FPOS_FROM_STEM(s) ((NJ_UINT16)((s)->stem.info1 >> 7))
-#define NJ_GET_BPOS_FROM_STEM(s) ((NJ_UINT16)((s)->stem.info2 >> 7))
+#define NJ_GET_FPOS_FROM_STEM(s) ((uint16_t)((s)->stem.info1 >> 7))
+#define NJ_GET_BPOS_FROM_STEM(s) ((uint16_t)((s)->stem.info2 >> 7))
 
 
-#define NJ_SET_FPOS_TO_STEM(s,v) ((s)->stem.info1 = ((s)->stem.info1 & 0x007F) | (NJ_UINT16)((v) << 7))
-#define NJ_GET_YLEN_FROM_STEM(s) ((NJ_UINT8)((s)->stem.info1 & 0x7F))
-#define NJ_GET_KLEN_FROM_STEM(s) ((NJ_UINT8)((s)->stem.info2 & 0x7F))
-#define NJ_SET_YLEN_TO_STEM(s,v) ((s)->stem.info1 = ((s)->stem.info1 & 0xFF80) | (NJ_UINT16)((v) & 0x7F))
-#define NJ_SET_BPOS_TO_STEM(s,v) ((s)->stem.info2 = ((s)->stem.info2 & 0x007F) | (NJ_UINT16)((v) << 7))
-#define NJ_SET_KLEN_TO_STEM(s,v) ((s)->stem.info2 = ((s)->stem.info2 & 0xFF80) | (NJ_UINT16)((v) & 0x7F))
+#define NJ_SET_FPOS_TO_STEM(s,v) ((s)->stem.info1 = ((s)->stem.info1 & 0x007F) | (uint16_t)((v) << 7))
+#define NJ_GET_YLEN_FROM_STEM(s) ((uint8_t)((s)->stem.info1 & 0x7F))
+#define NJ_GET_KLEN_FROM_STEM(s) ((uint8_t)((s)->stem.info2 & 0x7F))
+#define NJ_SET_YLEN_TO_STEM(s,v) ((s)->stem.info1 = ((s)->stem.info1 & 0xFF80) | (uint16_t)((v) & 0x7F))
+#define NJ_SET_BPOS_TO_STEM(s,v) ((s)->stem.info2 = ((s)->stem.info2 & 0x007F) | (uint16_t)((v) << 7))
+#define NJ_SET_KLEN_TO_STEM(s,v) ((s)->stem.info2 = ((s)->stem.info2 & 0xFF80) | (uint16_t)((v) & 0x7F))
 
-#define NJ_GET_YLEN_FROM_FZK(f) ((NJ_UINT8)((f)->fzk.info1 & 0x7F))
-#define NJ_GET_BPOS_FROM_FZK(f) ((NJ_UINT16)((f)->fzk.info2 >> 7))
+#define NJ_GET_YLEN_FROM_FZK(f) ((uint8_t)((f)->fzk.info1 & 0x7F))
+#define NJ_GET_BPOS_FROM_FZK(f) ((uint16_t)((f)->fzk.info2 >> 7))
 
 typedef struct {
     
-    NJ_UINT16 operation_id;
+    uint16_t operation_id;
 #define NJ_OP_MASK          0x000f  
 #define NJ_GET_RESULT_OP(id) ((id) & NJ_OP_MASK)
 #define NJ_OP_SEARCH        0x0000  
@@ -321,15 +316,15 @@ typedef struct {
 } NJ_RESULT;
 
 typedef struct {
-    NJ_UINT16  mode;                            
+    uint16_t  mode;
 #define NJ_DEFAULT_MODE (NJ_NO_RENBUN|NJ_NO_TANBUN|NJ_RELATION_ON|NJ_YOMINASI_ON)
-    NJ_UINT16  forecast_learn_limit;            
+    uint16_t  forecast_learn_limit;
 #define NJ_DEFAULT_FORECAST_LEARN_LIMIT 30      
-    NJ_UINT16  forecast_limit;                  
+    uint16_t  forecast_limit;
 #define NJ_DEFAULT_FORECAST_LIMIT 100           
-    NJ_UINT8   char_min;                        
+    uint8_t   char_min;
 #define NJ_DEFAULT_CHAR_MIN 0                   
-    NJ_UINT8   char_max;                        
+    uint8_t   char_max;
 #define NJ_DEFAULT_CHAR_MAX NJ_MAX_LEN          
 } NJ_ANALYZE_OPTION;
 
@@ -344,17 +339,17 @@ extern "C" {
 
 #define NJ_EXTERN extern
 
-NJ_EXTERN NJ_INT16 njx_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR  *buf, NJ_UINT16 buf_size);
-NJ_EXTERN NJ_INT16 njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR  *buf, NJ_UINT16 buf_size);
-NJ_EXTERN NJ_INT16 njx_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor);
-NJ_EXTERN NJ_INT16 njx_get_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *result);
-NJ_EXTERN NJ_INT16 njx_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_UINT8 restore, NJ_UINT32 size);
-NJ_EXTERN NJ_INT16 njx_add_word(NJ_CLASS *iwnn, NJ_WORD_INFO *word, NJ_UINT8 type, NJ_UINT8 connect);
-NJ_EXTERN NJ_INT16 njx_delete_word(NJ_CLASS *iwnn, NJ_RESULT *result);
-NJ_EXTERN NJ_INT16 njx_create_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_INT8 type, NJ_UINT32 size);
+NJ_EXTERN int16_t njx_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR  *buf, uint16_t buf_size);
+NJ_EXTERN int16_t njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR  *buf, uint16_t buf_size);
+NJ_EXTERN int16_t njx_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor);
+NJ_EXTERN int16_t njx_get_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *result);
+NJ_EXTERN int16_t njx_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t restore, uint32_t size);
+NJ_EXTERN int16_t njx_add_word(NJ_CLASS *iwnn, NJ_WORD_INFO *word, uint8_t type, uint8_t connect);
+NJ_EXTERN int16_t njx_delete_word(NJ_CLASS *iwnn, NJ_RESULT *result);
+NJ_EXTERN int16_t njx_create_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, int8_t type, uint32_t size);
 
-NJ_EXTERN NJ_INT16 njx_init(NJ_CLASS *iwnn);
-NJ_EXTERN NJ_INT16 njx_select(NJ_CLASS *iwnn, NJ_RESULT *r_result);
+NJ_EXTERN int16_t njx_init(NJ_CLASS *iwnn);
+NJ_EXTERN int16_t njx_select(NJ_CLASS *iwnn, NJ_RESULT *r_result);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -23,7 +23,7 @@
 #define NJ_GET_ERR_CODE(x)      ((x) & NJ_ERR_CODE_MASK)
 #define NJ_GET_ERR_FUNC(x)      ((x) & NJ_ERR_FUNC_MASK)
 
-#define NJ_SET_ERR_VAL(x, y)    ((NJ_INT16)((x) | (y) | 0x8000))
+#define NJ_SET_ERR_VAL(x, y)    ((int16_t)((x) | (y) | 0x8000))
 
 #define NJ_ERR_PARAM_DIC_NULL                       (0x0000) 
 #define NJ_ERR_PARAM_YOMI_NULL                      (0x0100) 

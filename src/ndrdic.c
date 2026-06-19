@@ -22,25 +22,25 @@
 #include "njd.h"
 
 
-#define F_HINSI_TOP_ADDR(h) ((NJ_UINT8*)((h)+NJ_INT32_READ((h)+0x20)))
-#define B_HINSI_TOP_ADDR(h) ((NJ_UINT8*)((h)+NJ_INT32_READ((h)+0x24)))
-#define V2_F_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x28)))
-#define BUN_B_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x2A)))
-#define TAN_F_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x30)))
-#define TAN_B_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x32)))
-#define SUUJI_B_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x34)))
-#define MEISI_F_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x36)))
-#define MEISI_B_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x38)))
-#define JINMEI_F_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x3A)))
-#define JINMEI_B_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x3C)))
-#define CHIMEI_F_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x3E)))
-#define CHIMEI_B_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x40)))
-#define KIGOU_F_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x42)))
-#define KIGOU_B_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x44)))
-#define V1_F_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x52)))
-#define V3_F_HINSI(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x54)))
+#define F_HINSI_TOP_ADDR(h) ((uint8_t*)((h)+nj_read_le32((h)+0x20)))
+#define B_HINSI_TOP_ADDR(h) ((uint8_t*)((h)+nj_read_le32((h)+0x24)))
+#define V2_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x28)))
+#define BUN_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x2A)))
+#define TAN_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x30)))
+#define TAN_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x32)))
+#define SUUJI_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x34)))
+#define MEISI_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x36)))
+#define MEISI_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x38)))
+#define JINMEI_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x3A)))
+#define JINMEI_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x3C)))
+#define CHIMEI_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x3E)))
+#define CHIMEI_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x40)))
+#define KIGOU_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x42)))
+#define KIGOU_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x44)))
+#define V1_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x52)))
+#define V3_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x54)))
 
-NJ_INT16 njd_r_get_hinsi(NJ_DIC_HANDLE rule, NJ_UINT8 type) {
+int16_t njd_r_get_hinsi(NJ_DIC_HANDLE rule, uint8_t type) {
 
     
     if (rule == NULL) {
@@ -83,8 +83,8 @@ NJ_INT16 njd_r_get_hinsi(NJ_DIC_HANDLE rule, NJ_UINT8 type) {
     }
 }
 
-NJ_INT16 njd_r_get_connect(NJ_DIC_HANDLE rule, NJ_UINT16 hinsi, NJ_UINT8 type, NJ_UINT8 **connect) {
-    NJ_UINT16 i, rec_len;
+int16_t njd_r_get_connect(NJ_DIC_HANDLE rule, uint16_t hinsi, uint8_t type, uint8_t **connect) {
+    uint16_t i, rec_len;
 
     
     if (rule == NULL) {
@@ -96,19 +96,19 @@ NJ_INT16 njd_r_get_connect(NJ_DIC_HANDLE rule, NJ_UINT16 hinsi, NJ_UINT8 type, N
 
     if (type == NJ_RULE_TYPE_BTOF) {    
         i = F_HINSI_SET_CNT(rule);      
-        rec_len = (NJ_UINT16)((i + 7) / 8);
+        rec_len = (uint16_t)((i + 7) / 8);
                                         
-        *connect = (NJ_UINT8*)(F_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len));
+        *connect = (uint8_t*)(F_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len));
     } else {                            
         i = B_HINSI_SET_CNT(rule);      
-        rec_len = (NJ_UINT16)((i + 7) / 8);
+        rec_len = (uint16_t)((i + 7) / 8);
                                         
-        *connect = (NJ_UINT8*)(B_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len));
+        *connect = (uint8_t*)(B_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len));
     }
     return 0;
 }
 
-NJ_INT16 njd_r_get_count(NJ_DIC_HANDLE rule, NJ_UINT16 *fcount, NJ_UINT16 *rcount) {
+int16_t njd_r_get_count(NJ_DIC_HANDLE rule, uint16_t *fcount, uint16_t *rcount) {
 
     
     if (rule == NULL) {

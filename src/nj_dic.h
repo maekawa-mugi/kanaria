@@ -48,33 +48,41 @@
 
 #define NJD_SAME_INDEX_LIMIT    50
 
-#define NJ_INT16_READ(in)                                               \
-    (((((NJ_INT16)((in)[1])) << 8) & 0xff00U) + ((in)[0] & 0xffU))
+static inline uint16_t nj_read_le16(const uint8_t *in)
+{
+    return (uint16_t)in[0] | ((uint16_t)in[1] << 8);
+}
 
-#define NJ_INT32_READ(in)                                               \
-    (((((NJ_INT32)((in)[3])) << 24) & 0xff000000) |                     \
-     ((((NJ_INT32)((in)[2])) << 16) &   0xff0000) |                     \
-     ((((NJ_INT32)((in)[1])) <<  8) &     0xff00) |                     \
-     ((((NJ_INT32)((in)[0]))      ) &       0xff))
+static inline uint32_t nj_read_le32(const uint8_t *in)
+{
+    return (uint32_t)in[0] |
+           ((uint32_t)in[1] << 8) |
+           ((uint32_t)in[2] << 16) |
+           ((uint32_t)in[3] << 24);
+}
 
-#define NJ_INT32_WRITE(to, from)\
-        {(to)[0]=(NJ_UINT8)((from) & 0x000000ff);\
-         (to)[1]=(NJ_UINT8)(((from)>>8) & 0x000000ff);\
-         (to)[2]=(NJ_UINT8)(((from)>>16) & 0x000000ff);\
-         (to)[3]=(NJ_UINT8)(((from)>>24) & 0x000000ff);}
+static inline void nj_write_le32(uint8_t *to, uint32_t from)
+{
+    to[0] = (uint8_t)from;
+    to[1] = (uint8_t)(from >> 8);
+    to[2] = (uint8_t)(from >> 16);
+    to[3] = (uint8_t)(from >> 24);
+}
 
-#define NJ_INT16_WRITE(to, from)\
-        {(to)[0]=(NJ_UINT8)((from) & 0x00ff);\
-         (to)[1]=(NJ_UINT8)(((from)>>8) & 0x00ff);}
+static inline void nj_write_le16(uint8_t *to, uint16_t from)
+{
+    to[0] = (uint8_t)from;
+    to[1] = (uint8_t)(from >> 8);
+}
 
-#define NJ_GET_MAX_YLEN(h) ((NJ_INT16)(NJ_INT32_READ((h)+0x14)/sizeof(NJ_CHAR)))
+#define NJ_GET_MAX_YLEN(h) ((int16_t)(nj_read_le32((h)+0x14)/sizeof(NJ_CHAR)))
 
-#define NJ_GET_MAX_KLEN(h) ((NJ_INT16)(NJ_INT32_READ((h)+0x18)/sizeof(NJ_CHAR)))
+#define NJ_GET_MAX_KLEN(h) ((int16_t)(nj_read_le32((h)+0x18)/sizeof(NJ_CHAR)))
 
-#define NJ_GET_DIC_TYPE(h) ((NJ_UINT32)(NJ_INT32_READ((h)+8)))
+#define NJ_GET_DIC_TYPE(h) (nj_read_le32((h)+8))
 
-#define F_HINSI_SET_CNT(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x1C)))
-#define B_HINSI_SET_CNT(h) ((NJ_UINT16)(NJ_INT16_READ((h)+0x1E)))
+#define F_HINSI_SET_CNT(h) (nj_read_le16((h)+0x1C))
+#define B_HINSI_SET_CNT(h) (nj_read_le16((h)+0x1E))
 
 
 #endif 
