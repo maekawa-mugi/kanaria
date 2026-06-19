@@ -51,6 +51,10 @@ constexpr int freq_user = 500;
 constexpr int max_input_length = 50;
 constexpr int max_output_length = 50;
 constexpr int clause_cost = -1000;
+constexpr std::size_t clause_beam_width = 8;
+constexpr std::size_t sentence_beam_width = 8;
+constexpr int stem_length_bonus = 24;
+constexpr int fzk_length_penalty = 8;
 
 enum search_operation {
     search_exact,
@@ -580,7 +584,9 @@ static word make_clause_word(const std::string& stroke, const word& stem, const 
     out.candidate = stem.candidate + fzk.candidate;
     out.stroke = stroke;
     out.part_of_speech = { stem.part_of_speech.left, fzk.part_of_speech.right };
-    out.frequency = stem.frequency;
+    out.frequency = stem.frequency
+        + stem_length_bonus * static_cast<int>(utf8_codepoint_count(stem.stroke))
+        - fzk_length_penalty * static_cast<int>(utf8_codepoint_count(fzk.stroke));
     out.attribute = 1;
     return out;
 }
@@ -595,6 +601,46 @@ static bool connectible(const clause_converter& c, int right, int left)
 
 static std::vector<word> get_independent_words(clause_converter& c, const std::string& input, bool all);
 static std::vector<word> get_ancillary_pattern(clause_converter& c, const std::string& input);
+
+static bool same_clause_word(const word& lhs, const word& rhs)
+{
+    return lhs.candidate == rhs.candidate
+        && lhs.stroke == rhs.stroke
+        && lhs.part_of_speech.left == rhs.part_of_speech.left
+        && lhs.part_of_speech.right == rhs.part_of_speech.right;
+}
+
+static bool insert_clause(std::vector<clause>& clause_list, const clause& cl, std::size_t limit)
+{
+    auto same = std::find_if(clause_list.begin(), clause_list.end(), [&](const clause& x) {
+        return same_clause_word(x.value, cl.value);
+    });
+    if (same != clause_list.end()) {
+        if (same->value.frequency >= cl.value.frequency) {
+            return false;
+        }
+        clause_list.erase(same);
+    }
+
+    auto it = std::find_if(clause_list.begin(), clause_list.end(), [&](const clause& x) {
+        return x.value.frequency < cl.value.frequency;
+    });
+    clause_list.insert(it, cl);
+    if (limit != 0 && clause_list.size() > limit) {
+        bool kept = false;
+        for (const auto& x : clause_list) {
+            if (same_clause_word(x.value, cl.value)) {
+                kept = true;
+                break;
+            }
+        }
+        clause_list.resize(limit);
+        return kept && std::any_of(clause_list.begin(), clause_list.end(), [&](const clause& x) {
+            return same_clause_word(x.value, cl.value);
+        });
+    }
+    return true;
+}
 
 static bool add_clause(clause_converter& c, std::vector<clause>& clause_list, const std::string& input,
                        const word& stem, const word* fzk, const pos& terminal, bool all)
@@ -614,23 +660,7 @@ static bool add_clause(clause_converter& c, std::vector<clause>& clause_list, co
     }
 
     clause cl{ *w };
-    if (clause_list.empty()) {
-        clause_list.push_back(cl);
-        return true;
-    }
-    if (!all) {
-        if (clause_list.front().value.frequency < cl.value.frequency) {
-            clause_list.insert(clause_list.begin(), cl);
-            return true;
-        }
-    } else {
-        auto it = std::find_if(clause_list.begin(), clause_list.end(), [&](const clause& x) {
-            return x.value.frequency < cl.value.frequency;
-        });
-        clause_list.insert(it, cl);
-        return true;
-    }
-    return false;
+    return insert_clause(clause_list, cl, all ? 0 : clause_beam_width);
 }
 
 static bool single_clause_convert(clause_converter& c, std::vector<clause>& clause_list,
@@ -644,7 +674,6 @@ static bool single_clause_convert(clause_converter& c, std::vector<clause>& clau
         }
     }
 
-    int max = clause_cost * 2;
     const std::size_t input_len = utf8_codepoint_count(input);
     for (std::size_t split = 1; split < input_len; split++) {
         auto fzks = get_ancillary_pattern(c, utf8_mid(input, split));
@@ -662,12 +691,9 @@ static bool single_clause_convert(clause_converter& c, std::vector<clause>& clau
         }
 
         for (const auto& stem : stems) {
-            if (all || stem.frequency > max) {
-                for (const auto& fzk : fzks) {
-                    if (add_clause(c, clause_list, input, stem, &fzk, terminal, all)) {
-                        ret = true;
-                        max = stem.frequency;
-                    }
+            for (const auto& fzk : fzks) {
+                if (add_clause(c, clause_list, input, stem, &fzk, terminal, all)) {
+                    ret = true;
                 }
             }
         }
@@ -796,6 +822,32 @@ static word default_clause_word(const clause_converter& c, const std::string& in
     return w;
 }
 
+static bool same_sentence_word(const sentence& lhs, const sentence& rhs)
+{
+    return same_clause_word(lhs.value, rhs.value);
+}
+
+static void insert_sentence(std::vector<sentence>& list, const sentence& value)
+{
+    auto same = std::find_if(list.begin(), list.end(), [&](const sentence& x) {
+        return same_sentence_word(x, value);
+    });
+    if (same != list.end()) {
+        if (same->value.frequency >= value.value.frequency) {
+            return;
+        }
+        list.erase(same);
+    }
+
+    auto it = std::find_if(list.begin(), list.end(), [&](const sentence& x) {
+        return x.value.frequency < value.value.frequency;
+    });
+    list.insert(it, value);
+    if (list.size() > sentence_beam_width) {
+        list.resize(sentence_beam_width);
+    }
+}
+
 static std::optional<sentence> consecutive_clause_convert(clause_converter& c, const std::string& input)
 {
     const std::size_t input_len = utf8_codepoint_count(input);
@@ -803,20 +855,20 @@ static std::optional<sentence> consecutive_clause_convert(clause_converter& c, c
         return std::nullopt;
     }
 
-    std::vector<std::optional<sentence>> sentences(input_len);
+    std::vector<std::vector<sentence>> sentences(input_len);
     for (std::size_t start = 0; start < input_len; start++) {
-        if (start != 0 && !sentences[start - 1]) {
+        if (start != 0 && sentences[start - 1].empty()) {
             continue;
         }
 
         std::size_t end = std::min(input_len, start + 20);
         for (; end > start; --end) {
             std::size_t idx = end - 1;
-            if (sentences[idx]) {
-                int base = (start != 0 && sentences[start - 1])
-                    ? sentences[start - 1]->value.frequency
+            if (!sentences[idx].empty()) {
+                int base = (start != 0 && !sentences[start - 1].empty())
+                    ? sentences[start - 1].front().value.frequency
                     : 0;
-                if (sentences[idx]->value.frequency > base + clause_cost + freq_learn) {
+                if (sentences[idx].front().value.frequency > base + clause_cost + freq_learn) {
                     break;
                 }
             }
@@ -828,31 +880,40 @@ static std::optional<sentence> consecutive_clause_convert(clause_converter& c, c
             } else {
                 single_clause_convert(c, clauses, key, c.pos_end_clause_3, false);
             }
-            clause best{ clauses.empty() ? default_clause_word(c, key) : clauses.front().value };
-
-            sentence ws;
-            if (start == 0) {
-                ws.value = best.value;
-                ws.value.stroke = key;
-                ws.elements.push_back(best);
-            } else {
-                ws = *sentences[start - 1];
-                ws.value.candidate += best.value.candidate;
-                ws.value.stroke += best.value.stroke;
-                ws.value.frequency += best.value.frequency;
-                ws.value.part_of_speech.right = best.value.part_of_speech.right;
-                ws.value.attribute = 2;
-                ws.elements.push_back(best);
+            if (clauses.empty()) {
+                clauses.push_back(clause{ default_clause_word(c, key) });
             }
-            ws.value.frequency += clause_cost;
 
-            if (!sentences[idx] || sentences[idx]->value.frequency < ws.value.frequency) {
-                sentences[idx] = ws;
+            for (const auto& best : clauses) {
+                if (start == 0) {
+                    sentence ws;
+                    ws.value = best.value;
+                    ws.value.stroke = key;
+                    ws.elements.push_back(best);
+                    ws.value.frequency += clause_cost;
+                    insert_sentence(sentences[idx], ws);
+                    continue;
+                }
+
+                for (const auto& prev : sentences[start - 1]) {
+                    sentence ws = prev;
+                    ws.value.candidate += best.value.candidate;
+                    ws.value.stroke += best.value.stroke;
+                    ws.value.frequency += best.value.frequency;
+                    ws.value.part_of_speech.right = best.value.part_of_speech.right;
+                    ws.value.attribute = 2;
+                    ws.elements.push_back(best);
+                    ws.value.frequency += clause_cost;
+                    insert_sentence(sentences[idx], ws);
+                }
             }
         }
     }
 
-    return sentences[input_len - 1];
+    if (sentences[input_len - 1].empty()) {
+        return std::nullopt;
+    }
+    return sentences[input_len - 1].front();
 }
 
 static void clause_converter_init(clause_converter& c, dictionary_work& dict)
