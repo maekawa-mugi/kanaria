@@ -35,14 +35,11 @@ QUE_TYPE_JIRI = 1
 QUE_TYPE_FZK = 2
 
 INPUT_HEADER = [
-    "stem_offset",
     "yomi",
     "candidate",
     "freq",
     "left_connection_id",
     "right_connection_id",
-    "yomi_len",
-    "candidate_len",
 ]
 
 DICTIONARY_SLOTS = [
@@ -112,7 +109,7 @@ def read_entries(path: Path) -> list[Entry]:
                 continue
             if len(row) != len(INPUT_HEADER):
                 raise SystemExit(f"{path}:{lineno}: expected {len(INPUT_HEADER)} columns")
-            _, yomi, candidate, freq, left_connection_id, right_connection_id, _, _ = row
+            yomi, candidate, freq, left_connection_id, right_connection_id = row
             if not yomi or not candidate:
                 continue
             out.append(Entry(yomi, candidate, int(freq), int(left_connection_id), int(right_connection_id)))

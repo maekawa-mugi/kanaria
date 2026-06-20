@@ -8,14 +8,11 @@ from pathlib import Path
 
 
 INPUT_HEADER = [
-    "stem_offset",
     "yomi",
     "candidate",
     "freq",
     "left_connection_id",
     "right_connection_id",
-    "yomi_len",
-    "candidate_len",
 ]
 
 

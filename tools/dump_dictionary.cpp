@@ -65,17 +65,6 @@ const char* dictionary_file_name(int dic_index, uint32_t type)
     }
 }
 
-std::size_t utf8_codepoint_count(const std::string& s)
-{
-    std::size_t n = 0;
-    for (unsigned char c : s) {
-        if ((c & 0xc0) != 0x80) {
-            ++n;
-        }
-    }
-    return n;
-}
-
 void append_codepoint_as_utf8(std::string& dst, char32_t codepoint)
 {
     if (codepoint <= 0x7F) {
@@ -139,8 +128,8 @@ public:
             return;
         }
         std::cout
-            << "dic_type\tstem_offset\tyomi\tcandidate\tfreq\t"
-            << "left_connection_id\tright_connection_id\tyomi_len\tcandidate_len\n";
+            << "dic_type\tyomi\tcandidate\tfreq\t"
+            << "left_connection_id\tright_connection_id\n";
     }
 
     void dump_all()
@@ -209,10 +198,8 @@ private:
             if (njx_get_candidate(&env, &result, candidate.data(), sizeof(candidate)) <= 0) {
                 continue;
             }
-            const uint32_t stem_offset = result.word.stem.loc.top + result.word.stem.loc.current;
             write_row(dic_index,
                       dic_type_of(dic_data[dic_index]),
-                      stem_offset,
                       nj_to_utf8(stroke.data(), NJ_MAX_LEN),
                       nj_to_utf8(candidate.data(), NJ_MAX_RESULT_LEN),
                       result.word);
@@ -221,7 +208,6 @@ private:
 
     void write_row(int dic_index,
                    uint32_t type,
-                   uint32_t stem_offset,
                    const std::string& yomi,
                    const std::string& candidate,
                    const NJ_WORD& word)
@@ -242,14 +228,11 @@ private:
         }
 
         *out
-            << stem_offset << "\t"
             << yomi << "\t"
             << candidate << "\t"
             << freq << "\t"
             << left_connection_id << "\t"
-            << right_connection_id << "\t"
-            << utf8_codepoint_count(yomi) << "\t"
-            << utf8_codepoint_count(candidate) << "\n";
+            << right_connection_id << "\n";
     }
 
     std::ofstream& split_stream(int dic_index, uint32_t type)
@@ -265,8 +248,8 @@ private:
         auto [inserted, _] = split_streams_.try_emplace(name, path, std::ios::binary);
         inserted->second << "\xef\xbb\xbf";
         inserted->second
-            << "stem_offset\tyomi\tcandidate\tfreq\t"
-            << "left_connection_id\tright_connection_id\tyomi_len\tcandidate_len\n";
+            << "yomi\tcandidate\tfreq\t"
+            << "left_connection_id\tright_connection_id\n";
         return inserted->second;
     }
 

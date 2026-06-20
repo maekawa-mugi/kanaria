@@ -22,9 +22,6 @@ Human-readable dictionary dumps live in `dict/`, split by dictionary role:
   `independent_words_extra.tsv` や `ancillary_words_extra.tsv` のように既存辞書名を
   prefix にしてください。
 
-The first `stem_offset` column is ignored while packing from TSV. It is kept only
-for compatibility with dictionary dumps.
-
 The dump tool can regenerate split TSV files from a compiled dictionary:
 
 ```sh
