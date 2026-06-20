@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-typedef uint32_t NJ_CHAR;
+typedef uint16_t NJ_CHAR;
 
 #define NJ_CHAR_NUL  0x0000
 

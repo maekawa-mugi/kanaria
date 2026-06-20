@@ -18,7 +18,10 @@
 #define _NJ_EXTERN_H_
 
 
-#define NJ_MAX_CHAR_LEN  1
+#define NJ_MAX_CHAR_LEN  2
+
+#define NJ_CHAR_IS_HIGH_SURROGATE(c) ((c) >= 0xD800 && (c) <= 0xDBFF)
+#define NJ_CHAR_IS_LOW_SURROGATE(c)  ((c) >= 0xDC00 && (c) <= 0xDFFF)
 
 #define NJ_CHAR_IS_EQUAL(a, b) \
     (*(a) == *(b))
@@ -35,6 +38,9 @@
 #define NJ_CHAR_COPY(dst, src)                                          \
     {                                                                   \
         *(dst) = *(src);                                                \
+        if (NJ_CHAR_LEN(src) == 2) {                                    \
+            *((dst) + 1) = *((src) + 1);                               \
+        }                                                               \
     }
 
 #define NJ_CHAR_STRLEN_IS_0(c)   (*(c) == NJ_CHAR_NUL)
@@ -43,9 +49,10 @@
 
 
 #define NJ_CHAR_LEN(s)                                                  \
-    1
+    ((NJ_CHAR_IS_HIGH_SURROGATE(*(s)) &&                                \
+      NJ_CHAR_IS_LOW_SURROGATE(*((s) + 1))) ? 2 : 1)
 
-#define UTL_CHAR(s)  1
+#define UTL_CHAR(s) NJ_CHAR_LEN(s)
 
 
 #define NJ_GET_DIC_INFO(dicinfo) ((uint8_t)((dicinfo)->type))

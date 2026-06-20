@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
@@ -25,6 +26,9 @@ extern const uint8_t* const con_data[];
 }
 
 namespace {
+
+static_assert(std::endian::native == std::endian::little,
+              "Kanaria dictionary dumps require little-endian byte order");
 
 uint32_t rd32(const uint8_t* p)
 {
@@ -89,9 +93,16 @@ std::string nj_to_utf8(const NJ_CHAR* src, int max_chars)
     std::string dst;
     dst.reserve((NJ_MAX_LEN + NJ_MAX_RESULT_LEN + NJ_TERM_LEN) * 4 + 1);
 
-    for (int i = 0; src[i] != NJ_CHAR_NUL && i < max_chars; i++) {
-        char32_t codepoint = src[i];
-        if (codepoint > 0x10FFFF || (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
+    for (int i = 0; i < max_chars && src[i] != NJ_CHAR_NUL;) {
+        char32_t codepoint = src[i++];
+        if (codepoint >= 0xD800 && codepoint <= 0xDBFF) {
+            if (i >= max_chars || !NJ_CHAR_IS_LOW_SURROGATE(src[i])) {
+                break;
+            }
+            codepoint = 0x10000
+                + ((codepoint - 0xD800) << 10)
+                + (src[i++] - 0xDC00);
+        } else if (codepoint >= 0xDC00 && codepoint <= 0xDFFF) {
             break;
         }
         append_codepoint_as_utf8(dst, codepoint);

@@ -41,5 +41,19 @@ int main()
         return item.stroke == sentence;
     }), "clause fragments leaked into full-sentence candidates");
 
+    const auto supplementary = kanaria::engine_convert(*engine, "😀", 5);
+    ok &= expect(!supplementary.empty() && supplementary.back().candidate == "😀",
+                 "supplementary Unicode character did not round-trip through UTF-16");
+
+    std::string utf16_limit;
+    for (int i = 0; i < 25; ++i) {
+        utf16_limit += "😀";
+    }
+    ok &= expect(!kanaria::engine_convert(*engine, utf16_limit, 1).empty(),
+                 "50-unit UTF-16 input was rejected");
+    utf16_limit += "😀";
+    ok &= expect(kanaria::engine_convert(*engine, utf16_limit, 1).empty(),
+                 "UTF-16 input beyond the internal limit was accepted");
+
     return ok ? 0 : 1;
 }

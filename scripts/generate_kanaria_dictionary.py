@@ -22,6 +22,7 @@ NJ_LEARN_DIC_HEADER_SIZE = 72
 NJ_MAX_LEN = 50
 NJ_MAX_RESULT_LEN = 50
 NJ_MAX_CUSTOM_WORD_COUNT = 0xFFFF
+NJ_CHAR_BYTES = 2
 
 POS_DATA_OFFSET = 0x20
 POS_LEARN_WORD = 0x24
@@ -85,10 +86,16 @@ def u16(value: int) -> bytes:
 
 
 def nj_chars(text: str) -> bytes:
-    data = text.encode("utf-32-le")
-    if len(data) > NJ_MAX_LEN * 4 and text:
-        raise SystemExit(f"entry is too long for Kanaria NJ_CHAR storage: {text!r}")
+    data = text.encode("utf-16-le")
+    if len(data) > NJ_MAX_LEN * NJ_CHAR_BYTES and text:
+        raise SystemExit(f"entry is too long for Kanaria UTF-16 storage: {text!r}")
     return data
+
+
+def utf16_sort_key(text: str) -> tuple[int, ...]:
+    data = text.encode("utf-16-le")
+    return tuple(int.from_bytes(data[i : i + NJ_CHAR_BYTES], "little")
+                 for i in range(0, len(data), NJ_CHAR_BYTES))
 
 
 def read_entries(path: Path) -> list[Entry]:
@@ -149,8 +156,8 @@ def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
         entries = entries[-NJ_MAX_CUSTOM_WORD_COUNT:]
 
     encoded: list[tuple[Entry, bytes, bytes]] = []
-    max_yomi_bytes = 4
-    max_candidate_bytes = 4
+    max_yomi_bytes = NJ_CHAR_BYTES
+    max_candidate_bytes = NJ_CHAR_BYTES
     for entry in entries:
         yomi = nj_chars(entry.yomi)
         candidate = nj_chars(entry.candidate)
@@ -176,8 +183,14 @@ def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
     learn[POS_INDEX_OFFSET - 28 : POS_INDEX_OFFSET - 24] = u32(index_offset)
     learn[POS_INDEX_OFFSET2 - 28 : POS_INDEX_OFFSET2 - 24] = u32(index_offset2)
 
-    yomi_order = sorted(range(word_count), key=lambda i: (encoded[i][0].yomi, encoded[i][0].candidate))
-    candidate_order = sorted(range(word_count), key=lambda i: (encoded[i][0].candidate, encoded[i][0].yomi))
+    yomi_order = sorted(
+        range(word_count),
+        key=lambda i: (utf16_sort_key(encoded[i][0].yomi), utf16_sort_key(encoded[i][0].candidate)),
+    )
+    candidate_order = sorted(
+        range(word_count),
+        key=lambda i: (utf16_sort_key(encoded[i][0].candidate), utf16_sort_key(encoded[i][0].yomi)),
+    )
 
     body = bytearray()
     body += learn
@@ -207,8 +220,8 @@ def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
     common += u32(NJ_DIC_TYPE_CUSTOM_INCOMPRESS)
     common += u32(len(body))
     common += u32(len(footer))
-    common += u32(min(max_yomi_bytes, NJ_MAX_LEN * 4))
-    common += u32(min(max_candidate_bytes, NJ_MAX_RESULT_LEN * 4))
+    common += u32(min(max_yomi_bytes, NJ_MAX_LEN * NJ_CHAR_BYTES))
+    common += u32(min(max_candidate_bytes, NJ_MAX_RESULT_LEN * NJ_CHAR_BYTES))
     return bytes(common + body + footer)
 
 

@@ -22,6 +22,7 @@ extern const uint8_t *const con_data[];
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstring>
 #include <map>
 #include <optional>
@@ -31,7 +32,9 @@ extern const uint8_t *const con_data[];
 namespace kanaria {
 namespace {
 
-static_assert(sizeof(NJ_CHAR) == sizeof(char32_t));
+static_assert(sizeof(NJ_CHAR) == sizeof(char16_t));
+static_assert(std::endian::native == std::endian::little,
+              "Kanaria's internal UTF-16 representation requires little-endian byte order");
 
 constexpr int nj_func_set_dictionary_parameters = 0x00FA;
 constexpr int nj_func_search_word = 0x003C;
@@ -124,7 +127,7 @@ static bool is_utf8_continuation(unsigned char c)
     return (c & 0xC0) == 0x80;
 }
 
-static std::optional<std::size_t> validated_utf8_codepoint_count(const std::string& s)
+static std::optional<std::size_t> validated_utf8_code_unit_count(const std::string& s)
 {
     std::size_t count = 0;
     for (std::size_t i = 0; i < s.size();) {
@@ -181,7 +184,7 @@ static std::optional<std::size_t> validated_utf8_codepoint_count(const std::stri
         }
 
         i += step;
-        ++count;
+        count += codepoint > 0xFFFF ? 2 : 1;
     }
     return count;
 }
@@ -231,9 +234,9 @@ static std::string to_ascii_lower(std::string s)
     return s;
 }
 
-static std::u32string utf8_to_utf32(const std::string& src_string)
+static std::u16string utf8_to_utf16(const std::string& src_string)
 {
-    std::u32string out;
+    std::u16string out;
     out.reserve(src_string.size());
 
     for (std::size_t i = 0; i < src_string.size();) {
@@ -261,7 +264,13 @@ static std::u32string utf8_to_utf32(const std::string& src_string)
             step = 4;
         }
 
-        out.push_back(codepoint);
+        if (codepoint <= 0xFFFF) {
+            out.push_back(static_cast<char16_t>(codepoint));
+        } else {
+            codepoint -= 0x10000;
+            out.push_back(static_cast<char16_t>(0xD800 + (codepoint >> 10)));
+            out.push_back(static_cast<char16_t>(0xDC00 + (codepoint & 0x3FF)));
+        }
         i += step;
     }
     return out;
@@ -275,13 +284,16 @@ static void convert_string_to_nj_char(NJ_CHAR* dst, const std::string& src_strin
     }
 
     const int max_output_chars = std::min(max_chars, capacity_chars - 1);
-    const std::u32string utf32 = utf8_to_utf32(src_string);
+    const std::u16string utf16 = utf8_to_utf16(src_string);
     int o = 0;
-    for (char32_t codepoint : utf32) {
+    for (std::size_t i = 0; i < utf16.size(); ++i) {
         if (o >= max_output_chars) {
             break;
         }
-        dst[o++] = static_cast<NJ_CHAR>(codepoint);
+        if (NJ_CHAR_IS_HIGH_SURROGATE(utf16[i]) && o + 1 >= max_output_chars) {
+            break;
+        }
+        dst[o++] = static_cast<NJ_CHAR>(utf16[i]);
     }
 
     dst[o] = NJ_CHAR_NUL;
@@ -311,9 +323,16 @@ static std::string convert_nj_char_to_string(const NJ_CHAR* src, int max_chars)
     std::string dst;
     dst.reserve((NJ_MAX_LEN + NJ_MAX_RESULT_LEN + NJ_TERM_LEN) * 4 + 1);
 
-    for (int i = 0; src[i] != NJ_CHAR_NUL && i < max_chars; i++) {
-        char32_t codepoint = src[i];
-        if (codepoint > 0x10FFFF || (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
+    for (int i = 0; i < max_chars && src[i] != NJ_CHAR_NUL;) {
+        char32_t codepoint = src[i++];
+        if (codepoint >= 0xD800 && codepoint <= 0xDBFF) {
+            if (i >= max_chars || !NJ_CHAR_IS_LOW_SURROGATE(src[i])) {
+                break;
+            }
+            codepoint = 0x10000
+                + ((codepoint - 0xD800) << 10)
+                + (src[i++] - 0xDC00);
+        } else if (codepoint >= 0xDC00 && codepoint <= 0xDFFF) {
             break;
         }
         append_codepoint_as_utf8(dst, codepoint);
@@ -1025,7 +1044,7 @@ void engine_reset(engine& e)
 
 std::vector<candidate> engine_predict(engine& e, const std::string& utf8_hiragana, std::size_t limit)
 {
-    auto input_len = validated_utf8_codepoint_count(utf8_hiragana);
+    auto input_len = validated_utf8_code_unit_count(utf8_hiragana);
     if (!input_len || *input_len == 0 || limit == 0) {
         return {};
     }
@@ -1050,7 +1069,7 @@ std::vector<candidate> engine_predict(engine& e, const std::string& utf8_hiragan
 
 std::vector<candidate> engine_convert(engine& e, const std::string& utf8_hiragana, std::size_t limit)
 {
-    auto input_len = validated_utf8_codepoint_count(utf8_hiragana);
+    auto input_len = validated_utf8_code_unit_count(utf8_hiragana);
     if (!input_len || *input_len == 0 || limit == 0 || *input_len > max_input_length) {
         return {};
     }
