@@ -107,31 +107,31 @@
 
 
 
-static NJ_WQUE *get_que(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
-static int16_t is_continued(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
+static NJ_WQUE *get_que(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id);
+static int16_t is_continued(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id);
 static uint16_t search_next_que(NJ_DIC_HANDLE handle, uint16_t que_id);
-static int16_t que_strcmp_complete_with_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id, NJ_CHAR *yomi, uint16_t yomi_len, NJ_CHAR *hyouki, uint8_t multi_flg);
-static NJ_CHAR  *get_string(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id, uint8_t *slen);
-static NJ_CHAR  *get_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id, uint8_t *slen);
-static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern, uint8_t comp_flg);
-static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern);
-static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern, uint16_t hIdx);
-static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t op, NJ_CHAR *yomi, uint16_t ylen, uint16_t *from, uint16_t *to, uint8_t *forward_flag);
-static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t ylen, uint16_t sfrom, uint16_t sto, uint16_t *from, uint16_t *to,
+static int16_t que_strcmp_complete_with_hyouki(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id, NJ_CHAR *yomi, uint16_t yomi_len, NJ_CHAR *hyouki, uint8_t multi_flg);
+static NJ_CHAR  *get_string(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id, uint8_t *slen);
+static NJ_CHAR  *get_hyouki(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id, uint8_t *slen);
+static int16_t get_cand_by_sequential(NJ_CLASS *context, NJ_SEARCH_CONDITION *cond, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern, uint8_t comp_flg);
+static int16_t get_cand_by_evaluate(NJ_CLASS *context, NJ_SEARCH_CONDITION *cond, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern);
+static int16_t get_cand_by_evaluate2(NJ_CLASS *context, NJ_SEARCH_CONDITION *cond, NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern, uint16_t hIdx);
+static int16_t search_range_by_yomi(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint8_t op, NJ_CHAR *yomi, uint16_t ylen, uint16_t *from, uint16_t *to, uint8_t *forward_flag);
+static int16_t search_range_by_yomi2(NJ_CLASS *context, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t ylen, uint16_t sfrom, uint16_t sto, uint16_t *from, uint16_t *to,
                                       uint8_t *forward_flag);
-static int16_t search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t ylen, uint16_t *from, uint16_t *to);
-static int16_t str_que_cmp(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t yomiLen, uint16_t que_id, uint8_t mode);
-static NJ_WQUE *get_que_type_and_next(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
-static NJ_WQUE *get_queue_connection_ids(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
-static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
-static int16_t continue_cnt(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
+static int16_t search_range_by_yomi_multi(NJ_CLASS *context, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t ylen, uint16_t *from, uint16_t *to);
+static int16_t str_que_cmp(NJ_CLASS *context, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t yomiLen, uint16_t que_id, uint8_t mode);
+static NJ_WQUE *get_que_type_and_next(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id);
+static NJ_WQUE *get_queue_connection_ids(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id);
+static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id);
+static int16_t continue_cnt(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id);
 
 static const uint8_t *get_search_index_address(NJ_DIC_HANDLE handle);
 
-static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset);
+static NJ_HINDO get_hindo(NJ_CLASS *context, NJ_SEARCH_LOCATION_SET *loctset);
 
 static NJ_HINDO calculate_hindo(NJ_DIC_HANDLE handle, int32_t freq, NJ_DIC_FREQ *dic_freq, int16_t freq_max, int16_t freq_min);
-static int16_t que_strcmp_include(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id, NJ_CHAR *yomi);
+static int16_t que_strcmp_include(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id, NJ_CHAR *yomi);
 
 #define GET_LEARN_MAX_WORD_COUNT(h) ((uint16_t)nj_read_le32((h) + POS_MAX_WORD))
 
@@ -154,7 +154,7 @@ static const uint8_t *get_search_index_address(NJ_DIC_HANDLE handle) {
     return LEARN_INDEX_TOP_ADDR(handle);
 }
 
-int16_t njd_l_search_word(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *con,
+int16_t njd_l_search_word(NJ_CLASS *context, NJ_SEARCH_CONDITION *con,
                            NJ_SEARCH_LOCATION_SET *loctset,
                            uint8_t comp_flg) {
 
@@ -195,13 +195,13 @@ int16_t njd_l_search_word(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *con,
         }
         
         
-        return get_cand_by_sequential(iwnn, con, loctset, con->operation, comp_flg);
+        return get_cand_by_sequential(context, con, loctset, con->operation, comp_flg);
 
     case NJ_CUR_OP_FORE:
         
         if (con->mode == NJ_CUR_MODE_YOMI) {
             
-            return get_cand_by_sequential(iwnn, con, loctset, con->operation, 0);
+            return get_cand_by_sequential(context, con, loctset, con->operation, 0);
         } else {
             
             
@@ -220,13 +220,13 @@ int16_t njd_l_search_word(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *con,
             
             if ((con->ds->dic[hIdx].srhCache == NULL) || (con->ylen == 0) ||
                 !(con->ds->mode & 0x0001)) {
-                return get_cand_by_evaluate(iwnn, con, loctset, con->operation);
+                return get_cand_by_evaluate(context, con, loctset, con->operation);
             } else {
-                ret = get_cand_by_evaluate2(iwnn, con, loctset, con->operation, hIdx);
+                ret = get_cand_by_evaluate2(context, con, loctset, con->operation, hIdx);
                 if (ret == NJ_SET_ERR_VAL(NJ_FUNC_SEARCH_RANGE_BY_YOMI, NJ_ERR_CACHE_NOT_ENOUGH)) {
                     
                     NJ_SET_CACHEOVER_TO_SCACHE(con->ds->dic[hIdx].srhCache);
-                    ret = get_cand_by_evaluate2(iwnn, con, loctset, con->operation, hIdx);
+                    ret = get_cand_by_evaluate2(context, con, loctset, con->operation, hIdx);
                 }
                 return ret;
             }
@@ -247,10 +247,10 @@ int16_t njd_l_search_word(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *con,
         
         if (comp_flg == 0) {
             
-            return get_cand_by_sequential(iwnn, con, loctset, con->operation, 0);
+            return get_cand_by_sequential(context, con, loctset, con->operation, 0);
         } else {
             
-            return get_cand_by_evaluate(iwnn, con, loctset, con->operation);
+            return get_cand_by_evaluate(context, con, loctset, con->operation);
         }
 
     default:
@@ -260,10 +260,10 @@ int16_t njd_l_search_word(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *con,
     return 0;
 }
 
-static NJ_WQUE *get_que_type_and_next(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static NJ_WQUE *get_que_type_and_next(NJ_CLASS *context, NJ_DIC_HANDLE handle,
                                       uint16_t que_id) {
     const uint8_t *ptr;
-    NJ_WQUE *que = &(iwnn->que_tmp);
+    NJ_WQUE *que = &(context->que_tmp);
 
 
     if (que_id >= GET_LEARN_MAX_WORD_COUNT(handle)) {
@@ -289,10 +289,10 @@ static NJ_WQUE *get_que_type_and_next(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     return NULL; 
 }
 
-static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *context, NJ_DIC_HANDLE handle,
                                               uint16_t que_id) {
     const uint8_t *ptr;
-    NJ_WQUE *que = &(iwnn->que_tmp);
+    NJ_WQUE *que = &(context->que_tmp);
 
 
     if (que_id >= GET_LEARN_MAX_WORD_COUNT(handle)) {
@@ -320,10 +320,10 @@ static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *iwnn, NJ_DIC_HANDLE hand
     return NULL;
 }
 
-static NJ_WQUE *get_queue_connection_ids(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static NJ_WQUE *get_queue_connection_ids(NJ_CLASS *context, NJ_DIC_HANDLE handle,
                                  uint16_t que_id) {
     const uint8_t *ptr;
-    NJ_WQUE *que = &(iwnn->que_tmp);
+    NJ_WQUE *que = &(context->que_tmp);
 
 
     if (que_id >= GET_LEARN_MAX_WORD_COUNT(handle)) {
@@ -349,9 +349,9 @@ static NJ_WQUE *get_queue_connection_ids(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     return NULL; 
 }
 
-static NJ_WQUE *get_que(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id) {
+static NJ_WQUE *get_que(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id) {
     const uint8_t *ptr;
-    NJ_WQUE *que = &(iwnn->que_tmp);
+    NJ_WQUE *que = &(context->que_tmp);
 
 
     if (que_id >= GET_LEARN_MAX_WORD_COUNT(handle)) {
@@ -383,7 +383,7 @@ static NJ_WQUE *get_que(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id) {
     return NULL; 
 }
 
-static int16_t is_continued(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id) {
+static int16_t is_continued(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id) {
     NJ_WQUE *que;
     uint16_t i;
     uint16_t max, end;
@@ -405,9 +405,9 @@ static int16_t is_continued(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_i
             return 0;
         }
 
-        que = get_que_type_and_next(iwnn, handle, que_id);
+        que = get_que_type_and_next(context, handle, que_id);
 #ifdef IWNN_ERR_CHECK
-        if (iwnn->err_check_flg == 1) {
+        if (context->err_check_flg == 1) {
             que = NULL;
         }
 #endif 
@@ -430,7 +430,7 @@ static int16_t is_continued(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_i
     return 0; 
 }
 
-static int16_t continue_cnt(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id) {
+static int16_t continue_cnt(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t que_id) {
     NJ_WQUE *que;
     uint16_t i;
     uint16_t max, end;
@@ -453,7 +453,7 @@ static int16_t continue_cnt(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_i
             return cnt;
         }
 
-        que = get_que_type_and_next(iwnn, handle, que_id);
+        que = get_que_type_and_next(context, handle, que_id);
         if (que == NULL) {
             return NJ_SET_ERR_VAL(NJ_FUNC_CONTINUE_CNT, NJ_ERR_DIC_BROKEN); 
         }
@@ -502,7 +502,7 @@ static uint16_t search_next_que(NJ_DIC_HANDLE handle, uint16_t que_id) {
     return 0; 
 }
 
-static int16_t que_strcmp_complete_with_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static int16_t que_strcmp_complete_with_hyouki(NJ_CLASS *context, NJ_DIC_HANDLE handle,
                                                 uint16_t que_id, NJ_CHAR *yomi, uint16_t yomi_len, NJ_CHAR *hyouki,
                                                 uint8_t multi_flg) {
     NJ_CHAR *str;
@@ -527,7 +527,7 @@ static int16_t que_strcmp_complete_with_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE han
     }
 
     while (cnt--) {
-        str = get_string(iwnn, handle, que_id, &slen);
+        str = get_string(context, handle, que_id, &slen);
         if (str == NULL) {
             return NJ_SET_ERR_VAL(NJ_FUNC_QUE_STRCMP_COMPLETE_WITH_HYOUKI, 
                                   NJ_ERR_DIC_BROKEN);
@@ -540,7 +540,7 @@ static int16_t que_strcmp_complete_with_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE han
             return 0;
         }
 
-        str = get_hyouki(iwnn, handle, que_id, &slen);
+        str = get_hyouki(context, handle, que_id, &slen);
         if (str == NULL) {
             return NJ_SET_ERR_VAL(NJ_FUNC_QUE_STRCMP_COMPLETE_WITH_HYOUKI, 
                                   NJ_ERR_DIC_BROKEN);
@@ -565,7 +565,7 @@ static int16_t que_strcmp_complete_with_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE han
             return 0; 
         }
         
-        ret = is_continued(iwnn, handle, que_id);
+        ret = is_continued(context, handle, que_id);
         if (ret <= 0) {
             
             return ret;
@@ -590,7 +590,7 @@ static int16_t que_strcmp_complete_with_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE han
     return 0; 
 }
 
-static int16_t que_strcmp_include(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static int16_t que_strcmp_include(NJ_CLASS *context, NJ_DIC_HANDLE handle,
                                    uint16_t que_id, NJ_CHAR *yomi) {
     NJ_CHAR *str;
     uint16_t que_len;
@@ -614,7 +614,7 @@ static int16_t que_strcmp_include(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     while (--i) {        
 
         
-        ret = is_continued(iwnn, handle, que_id);
+        ret = is_continued(context, handle, que_id);
         if (ret < 0) {
             
             return ret;
@@ -626,9 +626,9 @@ static int16_t que_strcmp_include(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
         
         que_id = search_next_que(handle, que_id);
 
-        str = get_string(iwnn, handle, que_id, &slen);
+        str = get_string(context, handle, que_id, &slen);
 #ifdef IWNN_ERR_CHECK
-        if (iwnn->err_check_flg == 2) {
+        if (context->err_check_flg == 2) {
             str = NULL;
         }
 #endif 
@@ -677,7 +677,7 @@ static int16_t que_strcmp_include(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     return que_count;
 }
 
-static NJ_CHAR *get_string(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static NJ_CHAR *get_string(NJ_CLASS *context, NJ_DIC_HANDLE handle,
                            uint16_t que_id, uint8_t *slen) {
     const uint8_t *src;
     uint8_t *dst;
@@ -720,7 +720,7 @@ static NJ_CHAR *get_string(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
 
     
     copy_size = (uint8_t)que_size - LEARN_QUE_STRING_OFFSET;
-    dst = (uint8_t*)&(iwnn->learn_string_tmp[0]);
+    dst = (uint8_t*)&(context->learn_string_tmp[0]);
     if (copy_size > size) {
         
         copy_size = size;
@@ -759,12 +759,12 @@ static NJ_CHAR *get_string(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
             *dst++ = *src++;
         }
     }
-    iwnn->learn_string_tmp[*slen] = NJ_CHAR_NUL;
+    context->learn_string_tmp[*slen] = NJ_CHAR_NUL;
 
-    return &(iwnn->learn_string_tmp[0]);
+    return &(context->learn_string_tmp[0]);
 }
 
-static NJ_CHAR *get_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static NJ_CHAR *get_hyouki(NJ_CLASS *context, NJ_DIC_HANDLE handle,
                            uint16_t que_id, uint8_t *slen) {
     const uint8_t *src;
     uint8_t *dst;
@@ -778,7 +778,7 @@ static NJ_CHAR *get_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     uint32_t dictype;
 
 
-    que = get_que_yomiLen_and_hyoukiLen(iwnn, handle, que_id);
+    que = get_que_yomiLen_and_hyoukiLen(context, handle, que_id);
     if (que == NULL) {
         return NULL;
     }
@@ -803,14 +803,14 @@ static NJ_CHAR *get_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     src = POS_TO_ADDRESS(handle, que_id);
     
     if (que->hyouki_len == 0) {
-        hira = get_string(iwnn, handle, que_id, slen);
+        hira = get_string(context, handle, que_id, slen);
         if (hira == NULL) {
             return NULL; 
         }
         
         if (GET_MFLG_FROM_DATA(src) != 0) {
-            *slen = (uint8_t)nje_convert_hira_to_kata(hira, &(iwnn->muhenkan_tmp[0]), *slen);
-            return &(iwnn->muhenkan_tmp[0]);
+            *slen = (uint8_t)nje_convert_hira_to_kata(hira, &(context->muhenkan_tmp[0]), *slen);
+            return &(context->muhenkan_tmp[0]);
         } else {
             return hira;
         }
@@ -823,7 +823,7 @@ static NJ_CHAR *get_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     
     size = que->yomi_byte;
     copy_size = (uint8_t)que_size - LEARN_QUE_STRING_OFFSET;
-    dst = (uint8_t*)&(iwnn->learn_string_tmp[0]);
+    dst = (uint8_t*)&(context->learn_string_tmp[0]);
     if (copy_size > size) {
         
         copy_size = size;
@@ -918,12 +918,12 @@ static NJ_CHAR *get_hyouki(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     }
 
     *slen = que->hyouki_len;
-    iwnn->learn_string_tmp[*slen] = NJ_CHAR_NUL;
+    context->learn_string_tmp[*slen] = NJ_CHAR_NUL;
 
-    return &(iwnn->learn_string_tmp[0]);
+    return &(context->learn_string_tmp[0]);
 }
 
-static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
+static int16_t get_cand_by_sequential(NJ_CLASS *context, NJ_SEARCH_CONDITION *cond,
                                        NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern,
                                        uint8_t comp_flg) {
     uint16_t current, from, to;
@@ -938,7 +938,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
     
     if (GET_LOCATION_STATUS(loctset->loct.status) == NJ_ST_SEARCH_NO_INIT) {
         
-        ret = search_range_by_yomi(iwnn, loctset->loct.handle, search_pattern,
+        ret = search_range_by_yomi(context, loctset->loct.handle, search_pattern,
                                    cond->yomi, cond->ylen, &from, &to, &forward_flag);
         if (ret < 0) {
             return ret;
@@ -970,7 +970,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
         que_id = GET_UINT16(p);
         if (search_pattern == NJ_CUR_OP_COMP) {
             
-            ret = str_que_cmp(iwnn, loctset->loct.handle, cond->yomi, cond->ylen, que_id, 1);
+            ret = str_que_cmp(context, loctset->loct.handle, cond->yomi, cond->ylen, que_id, 1);
             
             
             if (ret == 2) {
@@ -978,7 +978,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
             }
         } else if (search_pattern == NJ_CUR_OP_FORE) {
             
-            ret = str_que_cmp(iwnn, loctset->loct.handle, cond->yomi, cond->ylen, que_id, 2);
+            ret = str_que_cmp(context, loctset->loct.handle, cond->yomi, cond->ylen, que_id, 2);
             
             
             if (ret == 2) {
@@ -988,7 +988,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
             
             
             
-            ret = que_strcmp_complete_with_hyouki(iwnn, loctset->loct.handle, que_id,
+            ret = que_strcmp_complete_with_hyouki(context, loctset->loct.handle, que_id,
                                                   cond->yomi, cond->ylen, cond->kanji, 0);
         }
         
@@ -999,7 +999,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
             if (search_pattern == NJ_CUR_OP_LINK) {
                 
                 
-                num_count = continue_cnt(iwnn, loctset->loct.handle, que_id);
+                num_count = continue_cnt(context, loctset->loct.handle, que_id);
                 if (num_count < 0) {
                     
                     return num_count; 
@@ -1011,7 +1011,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                     loctset->loct.current_info = (uint8_t)(((num_count + 1) << 4) | ret);
                     loctset->loct.current = current;
                     loctset->loct.status = NJ_ST_SEARCH_READY;
-                    loctset->cache_freq = get_hindo(iwnn, loctset);
+                    loctset->cache_freq = get_hindo(context, loctset);
                     return 1;
                 }
             } else {
@@ -1021,7 +1021,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                 
                 
                 
-                que = get_queue_connection_ids(iwnn, loctset->loct.handle, que_id);
+                que = get_queue_connection_ids(context, loctset->loct.handle, que_id);
                 if (njd_connection_matches(cond, que->left_connection_id, que->right_connection_id)) {
 
                     
@@ -1029,7 +1029,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                     case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
                         if ((search_pattern == NJ_CUR_OP_COMP) && (comp_flg == 1)) {
                             yomi = cond->yomi + cond->ylen;
-                            ret = que_strcmp_include(iwnn, loctset->loct.handle, que_id, yomi);
+                            ret = que_strcmp_include(context, loctset->loct.handle, que_id, yomi);
                             if (ret < 0) {
                                 return ret;
                             }
@@ -1042,7 +1042,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                     loctset->loct.status = NJ_ST_SEARCH_READY;
                     
                     loctset->loct.current_info = (ret & 0x0f) << 4;
-                    loctset->cache_freq = get_hindo(iwnn, loctset);
+                    loctset->cache_freq = get_hindo(context, loctset);
                     return 1;
                 }
             }
@@ -1056,7 +1056,7 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
     return 0;
 }
 
-static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
+static int16_t get_cand_by_evaluate(NJ_CLASS *context, NJ_SEARCH_CONDITION *cond,
                                      NJ_SEARCH_LOCATION_SET *loctset, uint8_t search_pattern) {
     uint16_t from, to, i;
     uint16_t que_id, oldest;
@@ -1082,12 +1082,12 @@ static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
             
             
             
-            ret = search_range_by_yomi_multi(iwnn, loctset->loct.handle, 
+            ret = search_range_by_yomi_multi(context, loctset->loct.handle,
                                              cond->yomi, cond->ylen, &from, &to);
         } else {
             
             
-            ret = search_range_by_yomi(iwnn, loctset->loct.handle, search_pattern,
+            ret = search_range_by_yomi(context, loctset->loct.handle, search_pattern,
                                        cond->yomi, cond->ylen, &from, &to, &forward_flag);
         }
         if (ret <= 0) {
@@ -1129,11 +1129,11 @@ static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
             
             if (search_pattern == NJ_CUR_OP_LINK) {
                 
-                ret = que_strcmp_complete_with_hyouki(iwnn, loctset->loct.handle, que_id,
+                ret = que_strcmp_complete_with_hyouki(context, loctset->loct.handle, que_id,
                                                       cond->yomi, cond->ylen, cond->kanji, 1);
             } else {
                 
-                ret = str_que_cmp(iwnn, loctset->loct.handle, cond->yomi, cond->ylen, que_id, 2);
+                ret = str_que_cmp(context, loctset->loct.handle, cond->yomi, cond->ylen, que_id, 2);
                 
                 if (ret == 2) {
                     ret = 0; 
@@ -1146,7 +1146,7 @@ static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                 if (search_pattern == NJ_CUR_OP_LINK) {
                     
                     
-                    num_count = continue_cnt(iwnn, loctset->loct.handle, que_id);
+                    num_count = continue_cnt(context, loctset->loct.handle, que_id);
                     if (num_count < 0) {
                         
                         return num_count; 
@@ -1166,7 +1166,7 @@ static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                     
                     
                     
-                    que = get_queue_connection_ids(iwnn, loctset->loct.handle, que_id);
+                    que = get_queue_connection_ids(context, loctset->loct.handle, que_id);
                     if (njd_connection_matches(cond, que->left_connection_id, que->right_connection_id)) {
                         
                         loctset->loct.current_info = (uint8_t)0x10;
@@ -1189,13 +1189,13 @@ static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
         return 0;
     } else {
         loctset->loct.status = NJ_ST_SEARCH_READY;
-        loctset->cache_freq = get_hindo(iwnn, loctset);
+        loctset->cache_freq = get_hindo(context, loctset);
         return 1;
     }
 
 }
 
-static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t op,
+static int16_t search_range_by_yomi(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint8_t op,
                                      NJ_CHAR  *yomi, uint16_t len, uint16_t *from, uint16_t *to,
                                      uint8_t *forward_flag) {
     uint16_t right, mid = 0, left, max;
@@ -1239,10 +1239,10 @@ static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_
         mid = left + ((right - left) / 2);
         p = ptr + (mid * NJ_INDEX_SIZE);
         que_id = GET_UINT16(p);
-        str = get_string(iwnn, handle, que_id, &slen);
+        str = get_string(context, handle, que_id, &slen);
 
 #ifdef IWNN_ERR_CHECK
-        if (iwnn->err_check_flg == 3) {
+        if (context->err_check_flg == 3) {
             str = NULL;
         }
 #endif 
@@ -1297,10 +1297,10 @@ static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_
         
         for (cmp = mid - 1; cmp >= 0; cmp--) {
             que_id = GET_UINT16(p);
-            str = get_string(iwnn, handle, que_id, &slen);
+            str = get_string(context, handle, que_id, &slen);
 
 #ifdef IWNN_ERR_CHECK
-            if (iwnn->err_check_flg == 4) {
+            if (context->err_check_flg == 4) {
                 str = NULL;
             }
 #endif 
@@ -1341,7 +1341,7 @@ static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_
 #endif 
 
 #ifdef IWNN_ERR_CHECK
-    if (iwnn->err_check_flg == 5) {
+    if (context->err_check_flg == 5) {
         mid = max - 2;
     }
 #endif 
@@ -1353,10 +1353,10 @@ static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_
         
         for (right = mid + 1; right < max; right++) {
             que_id = GET_UINT16(p);
-            str = get_string(iwnn, handle, que_id, &slen);
+            str = get_string(context, handle, que_id, &slen);
 
 #ifdef IWNN_ERR_CHECK
-            if (iwnn->err_check_flg == 5) {
+            if (context->err_check_flg == 5) {
                 str = NULL;
             }
 #endif 
@@ -1394,7 +1394,7 @@ static int16_t search_range_by_yomi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_
     return 1;
 }
 
-static int16_t search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static int16_t search_range_by_yomi_multi(NJ_CLASS *context, NJ_DIC_HANDLE handle,
                                            NJ_CHAR *yomi, uint16_t len, uint16_t *from, uint16_t *to) {
     uint16_t right, mid = 0, left, max = 0;
     uint16_t que_id;
@@ -1440,7 +1440,7 @@ static int16_t search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
             que_id = GET_UINT16(p);
 
             
-            ret = str_que_cmp(iwnn, handle, comp_yomi, comp_len, que_id, 1);
+            ret = str_que_cmp(context, handle, comp_yomi, comp_len, que_id, 1);
             if (ret < 0) {
                 return NJ_SET_ERR_VAL(NJ_FUNC_SEARCH_RANGE_BY_YOMI_MULTI, NJ_ERR_DIC_BROKEN); 
             }
@@ -1483,7 +1483,7 @@ static int16_t search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
         
         for (cmp = mid - 1; cmp >= 0; cmp--) {
             que_id = GET_UINT16(p);
-            ret = str_que_cmp(iwnn, handle, comp_yomi, comp_len, que_id, 1);
+            ret = str_que_cmp(context, handle, comp_yomi, comp_len, que_id, 1);
             if (ret < 0) {
                 return NJ_SET_ERR_VAL(NJ_FUNC_SEARCH_RANGE_BY_YOMI_MULTI, NJ_ERR_DIC_BROKEN); 
             }
@@ -1512,7 +1512,7 @@ static int16_t search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
         
         for (right = mid + 1; right < max; right++) {
             que_id = GET_UINT16(p);
-            ret = str_que_cmp(iwnn, handle, yomi, len, que_id, 1);
+            ret = str_que_cmp(context, handle, yomi, len, que_id, 1);
             if (ret < 0) {
                 return NJ_SET_ERR_VAL(NJ_FUNC_SEARCH_RANGE_BY_YOMI_MULTI, NJ_ERR_DIC_BROKEN); 
             }
@@ -1530,7 +1530,7 @@ static int16_t search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     return 1;
 }
 
-static int16_t str_que_cmp(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi,
+static int16_t str_que_cmp(NJ_CLASS *context, NJ_DIC_HANDLE handle, NJ_CHAR *yomi,
                             uint16_t yomiLen, uint16_t que_id, uint8_t mode) {
     NJ_CHAR   *queYomi;
     uint8_t  queYomiLen;
@@ -1538,7 +1538,7 @@ static int16_t str_que_cmp(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi,
 
 
 #ifdef IWNN_ERR_CHECK
-    if (iwnn->err_check_flg == 6) {
+    if (context->err_check_flg == 6) {
         que_id = GET_LEARN_MAX_WORD_COUNT(handle);
     }
 #endif 
@@ -1547,9 +1547,9 @@ static int16_t str_que_cmp(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi,
         return NJ_SET_ERR_VAL(NJ_FUNC_STR_QUE_CMP, NJ_ERR_DIC_BROKEN);
     }
 
-    queYomi = get_string(iwnn, handle, que_id, &queYomiLen);
+    queYomi = get_string(context, handle, que_id, &queYomiLen);
 #ifdef IWNN_ERR_CHECK
-    if (iwnn->err_check_flg == 7) {
+    if (context->err_check_flg == 7) {
         return NJ_SET_ERR_VAL(NJ_FUNC_STR_QUE_CMP, NJ_ERR_DIC_BROKEN);
     }
 #endif 
@@ -1606,7 +1606,7 @@ static NJ_HINDO calculate_hindo(NJ_DIC_HANDLE handle, int32_t freq, NJ_DIC_FREQ 
     return NORMALIZE_HINDO(hindo, freq_max, freq_min);
 }
 
-static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset) {
+static NJ_HINDO get_hindo(NJ_CLASS *context, NJ_SEARCH_LOCATION_SET *loctset) {
     NJ_WQUE   *que;
     uint16_t que_id, oldest;
     uint8_t  offset;
@@ -1627,7 +1627,7 @@ static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset) {
         que_id = search_next_que(loctset->loct.handle, que_id);
     }
 
-    que = get_que(iwnn, loctset->loct.handle, que_id);
+    que = get_que(context, loctset->loct.handle, que_id);
     if (que == NULL) {
         return INIT_HINDO; 
     }
@@ -1643,7 +1643,7 @@ static NJ_HINDO get_hindo(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset) {
     return calculate_hindo(loctset->loct.handle, dic_freq, &(loctset->dic_freq), 1000, 0);
 }
 
-int16_t njd_l_get_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word) {
+int16_t njd_l_get_word(NJ_CLASS *context, NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD *word) {
     NJ_WQUE *que;
     uint16_t que_id;
     uint8_t offset;
@@ -1661,7 +1661,7 @@ int16_t njd_l_get_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD 
         que_id = search_next_que(loctset->loct.handle, que_id);
     }
 
-    que = get_que(iwnn, loctset->loct.handle, que_id);
+    que = get_que(context, loctset->loct.handle, que_id);
     if (que == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJD_L_GET_WORD, NJ_ERR_CANNOT_GET_QUE); 
     }
@@ -1690,7 +1690,7 @@ int16_t njd_l_get_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD 
     return 1;
 }
 
-int16_t njd_l_get_stroke(NJ_CLASS *iwnn, NJ_WORD *word, NJ_CHAR *stroke, uint16_t size) {
+int16_t njd_l_get_stroke(NJ_CLASS *context, NJ_WORD *word, NJ_CHAR *stroke, uint16_t size) {
     uint16_t que_id;
     NJ_CHAR   *str;
     uint8_t  slen;
@@ -1709,10 +1709,10 @@ int16_t njd_l_get_stroke(NJ_CLASS *iwnn, NJ_WORD *word, NJ_CHAR *stroke, uint16_
     if (ylen == 0) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJD_L_GET_STROKE, NJ_ERR_INVALID_RESULT); 
     }
-    str = get_string(iwnn, word->stem.loc.handle, que_id, &slen);
+    str = get_string(context, word->stem.loc.handle, que_id, &slen);
 
 #ifdef IWNN_ERR_CHECK
-    if (iwnn->err_check_flg == 9) {
+    if (context->err_check_flg == 9) {
         str = NULL;
     }
 #endif 
@@ -1727,7 +1727,7 @@ int16_t njd_l_get_stroke(NJ_CLASS *iwnn, NJ_WORD *word, NJ_CHAR *stroke, uint16_
     return slen;
 }
 
-int16_t njd_l_get_candidate(NJ_CLASS *iwnn, NJ_WORD *word,
+int16_t njd_l_get_candidate(NJ_CLASS *context, NJ_WORD *word,
                              NJ_CHAR *candidate, uint16_t size) {
     uint16_t que_id;
     NJ_CHAR   *str;
@@ -1744,9 +1744,9 @@ int16_t njd_l_get_candidate(NJ_CLASS *iwnn, NJ_WORD *word,
         
         return NJ_SET_ERR_VAL(NJ_FUNC_NJD_L_GET_CANDIDATE, NJ_ERR_BUFFER_NOT_ENOUGH);
     }
-    str = get_hyouki(iwnn, word->stem.loc.handle, que_id, &slen);
+    str = get_hyouki(context, word->stem.loc.handle, que_id, &slen);
 #ifdef IWNN_ERR_CHECK
-    if (iwnn->err_check_flg == 10) {
+    if (context->err_check_flg == 10) {
         str = NULL;
     }
 #endif 
@@ -1761,7 +1761,7 @@ int16_t njd_l_get_candidate(NJ_CLASS *iwnn, NJ_WORD *word,
     return klen;
 }
 
-int16_t njd_l_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle) {
+int16_t njd_l_check_dic(NJ_CLASS *context, NJ_DIC_HANDLE handle) {
     uint16_t flg;
     uint16_t word_cnt, max;
     const uint8_t *ptr;
@@ -1834,7 +1834,7 @@ int16_t njd_l_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle) {
     ptr = LEARN_INDEX_TOP_ADDR(handle);
     for (i = 0; i < word_cnt; i++) {
         id1 = GET_UINT16(ptr);
-        if (get_hyouki(iwnn, handle, id1, &slen) == NULL) {
+        if (get_hyouki(context, handle, id1, &slen) == NULL) {
             return NJ_SET_ERR_VAL(NJ_FUNC_NJD_L_CHECK_DIC,
                                   NJ_ERR_DIC_BROKEN);
         }
@@ -1855,7 +1855,7 @@ int16_t njd_l_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle) {
     return 0;
 }
 
-static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
+static int16_t get_cand_by_evaluate2(NJ_CLASS *context, NJ_SEARCH_CONDITION *cond,
                                       NJ_SEARCH_LOCATION_SET *loctset,
                                       uint8_t search_pattern,
                                       uint16_t idx) {
@@ -1939,7 +1939,7 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                     addcnt = 0;
                     nj_charncpy(char_tmp, yomi, 1);
                     tmp_len = nj_strlen(char_tmp);
-                    ret = search_range_by_yomi(iwnn, loctset->loct.handle, search_pattern,
+                    ret = search_range_by_yomi(context, loctset->loct.handle, search_pattern,
                                                char_tmp, tmp_len, &from,
                                                &to, &forward_flag);
                     if (ret < 0) {
@@ -1968,7 +1968,7 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                                 
                                 nj_strcpy(char_tmp, pCharset->to[l]);
                                 tmp_len = nj_strlen(char_tmp);
-                                ret = search_range_by_yomi(iwnn, loctset->loct.handle, search_pattern,
+                                ret = search_range_by_yomi(context, loctset->loct.handle, search_pattern,
                                                            char_tmp, tmp_len, &from, &to, &forward_flag);
                                 if (ret < 0) {
                                     
@@ -2028,7 +2028,7 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                             que_id = GET_UINT16(p);
 
                             
-                            str = get_string(iwnn, loctset->loct.handle, que_id, &slen);
+                            str = get_string(context, loctset->loct.handle, que_id, &slen);
 
                             if (str == NULL) {
                                 return NJ_SET_ERR_VAL(NJ_FUNC_SEARCH_RANGE_BY_YOMI, NJ_ERR_DIC_BROKEN); 
@@ -2043,7 +2043,7 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                             tmp_len = nj_strlen(char_tmp);
                             
                             
-                            ret = search_range_by_yomi2(iwnn, loctset->loct.handle,
+                            ret = search_range_by_yomi2(context, loctset->loct.handle,
                                                         char_tmp, tmp_len, 
                                                         (uint16_t)(psrhCache->storebuff[m].top),
                                                         (uint16_t)(psrhCache->storebuff[m].bottom),
@@ -2085,7 +2085,7 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                                         nj_strncpy(pchar_tmp, pCharset->to[l], tmp_len);
                                         *(pchar_tmp + tmp_len) = NJ_CHAR_NUL;
                                         tmp_len = nj_strlen(char_tmp);
-                                        ret = search_range_by_yomi2(iwnn, loctset->loct.handle,
+                                        ret = search_range_by_yomi2(context, loctset->loct.handle,
                                                                     char_tmp, tmp_len,
                                                                     (uint16_t)(psrhCache->storebuff[m].top),
                                                                     (uint16_t)(psrhCache->storebuff[m].bottom),
@@ -2187,14 +2187,14 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
 
                         
                         
-                        str = get_string(iwnn, loctset->loct.handle, que_id, &slen);
+                        str = get_string(context, loctset->loct.handle, que_id, &slen);
                         if (str == NULL) {
                             return NJ_SET_ERR_VAL(NJ_FUNC_SEARCH_RANGE_BY_YOMI, NJ_ERR_DIC_BROKEN); 
                         }
 
                         
                         
-                        que = get_queue_connection_ids(iwnn, loctset->loct.handle, que_id);
+                        que = get_queue_connection_ids(context, loctset->loct.handle, que_id);
                         if (njd_connection_matches(cond, que->left_connection_id, que->right_connection_id)) {
                             
                             loctset->loct.current_info = (uint8_t)0x10;
@@ -2222,12 +2222,12 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
         return 0;
     } else {
         loctset->loct.status = NJ_ST_SEARCH_READY;
-        loctset->cache_freq = get_hindo(iwnn, loctset);
+        loctset->cache_freq = get_hindo(context, loctset);
         return 1;
     }
 }
 
-static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static int16_t search_range_by_yomi2(NJ_CLASS *context, NJ_DIC_HANDLE handle,
                                       NJ_CHAR  *yomi, uint16_t len,
                                       uint16_t sfrom, uint16_t sto,
                                       uint16_t *from, uint16_t *to,
@@ -2260,7 +2260,7 @@ static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
         mid = left + ((right - left) / 2);
         p = ptr + (mid * NJ_INDEX_SIZE);
         que_id = GET_UINT16(p);
-        str = get_string(iwnn, handle, que_id, &slen);
+        str = get_string(context, handle, que_id, &slen);
         if (str == NULL) {
             return NJ_SET_ERR_VAL(NJ_FUNC_SEARCH_RANGE_BY_YOMI, NJ_ERR_DIC_BROKEN); 
         }
@@ -2299,7 +2299,7 @@ static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
         
         for (cmp = mid - 1; cmp >= 0; cmp--) {
             que_id = GET_UINT16(p);
-            str = get_string(iwnn, handle, que_id, &slen);
+            str = get_string(context, handle, que_id, &slen);
             if (str == NULL) {
                 return NJ_SET_ERR_VAL(NJ_FUNC_SEARCH_RANGE_BY_YOMI, NJ_ERR_DIC_BROKEN); 
             }
@@ -2329,7 +2329,7 @@ static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
         
         for (right = mid + 1; right < max; right++) {
             que_id = GET_UINT16(p);
-            str = get_string(iwnn, handle, que_id, &slen);
+            str = get_string(context, handle, que_id, &slen);
             if (str == NULL) {
                 return NJ_SET_ERR_VAL(NJ_FUNC_SEARCH_RANGE_BY_YOMI, NJ_ERR_DIC_BROKEN); 
             }

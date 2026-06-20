@@ -21,21 +21,21 @@
 
 
 
-static int16_t set_previous_selection(NJ_CLASS *iwnn, NJ_RESULT *result);
-static int16_t set_learn_word_info(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *lword, NJ_RESULT *result);
+static int16_t set_previous_selection(NJ_CLASS *context, NJ_RESULT *result);
+static int16_t set_learn_word_info(NJ_CLASS *context, NJ_LEARN_WORD_INFO *lword, NJ_RESULT *result);
 
 
 
-NJ_EXTERN int16_t njx_select(NJ_CLASS *iwnn, NJ_RESULT *r_result) {
+NJ_EXTERN int16_t njx_select(NJ_CLASS *context, NJ_RESULT *r_result) {
     int16_t ret;
     NJ_DIC_SET *dics;
 
 
-    if (iwnn == NULL) {
+    if (context == NULL) {
         
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_SELECT, NJ_ERR_PARAM_ENV_NULL);
     }
-    dics = &(iwnn->dic_set);
+    dics = &(context->dic_set);
 
     if (dics->rHandle[NJ_MODE_TYPE_HENKAN] == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_SELECT, NJ_ERR_NO_RULEDIC);
@@ -44,34 +44,34 @@ NJ_EXTERN int16_t njx_select(NJ_CLASS *iwnn, NJ_RESULT *r_result) {
     
     if ( r_result != NULL ) {
         
-        ret = set_previous_selection(iwnn, r_result);
+        ret = set_previous_selection(context, r_result);
         if (ret < 0) {
             return ret; 
         }
     } else {
         
-        set_previous_selection(iwnn, NULL);
+        set_previous_selection(context, NULL);
     }
     return 0;   
 }
 
-NJ_EXTERN int16_t njx_init(NJ_CLASS *iwnn) {
+NJ_EXTERN int16_t njx_init(NJ_CLASS *context) {
 
-    if (iwnn == NULL) {
+    if (context == NULL) {
         
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_INIT, NJ_ERR_PARAM_ENV_NULL);
     }
 
     
-    set_previous_selection(iwnn, NULL);
+    set_previous_selection(context, NULL);
     return 0;
 }
 
-NJ_EXTERN int16_t njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *buf, uint16_t buf_size) {
+NJ_EXTERN int16_t njx_get_candidate(NJ_CLASS *context, NJ_RESULT *result, NJ_CHAR *buf, uint16_t buf_size) {
     int16_t ret;
 
 
-    if (iwnn == NULL) {
+    if (context == NULL) {
         
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_GET_CANDIDATE, NJ_ERR_PARAM_ENV_NULL);
     }
@@ -85,7 +85,7 @@ NJ_EXTERN int16_t njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *
 
     switch (NJ_GET_RESULT_OP(result->operation_id)) {
     case NJ_OP_SEARCH:
-        ret = njd_get_candidate(iwnn, result, buf, buf_size);
+        ret = njd_get_candidate(context, result, buf, buf_size);
         break;
 
     default:
@@ -97,11 +97,11 @@ NJ_EXTERN int16_t njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *
     return ret;
 }
 
-NJ_EXTERN int16_t njx_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *buf, uint16_t buf_size) {
+NJ_EXTERN int16_t njx_get_stroke(NJ_CLASS *context, NJ_RESULT *result, NJ_CHAR *buf, uint16_t buf_size) {
     int16_t ret;
 
 
-    if (iwnn == NULL) {
+    if (context == NULL) {
         
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_GET_STROKE, NJ_ERR_PARAM_ENV_NULL);
     }
@@ -115,7 +115,7 @@ NJ_EXTERN int16_t njx_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *buf
 
     switch (NJ_GET_RESULT_OP(result->operation_id)) {
     case NJ_OP_SEARCH:
-        ret = njd_get_stroke(iwnn, result, buf, buf_size);
+        ret = njd_get_stroke(context, result, buf, buf_size);
         break;
 
     default:
@@ -127,15 +127,15 @@ NJ_EXTERN int16_t njx_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *buf
 }
 
 
-static int16_t set_previous_selection(NJ_CLASS *iwnn, NJ_RESULT *result) {
+static int16_t set_previous_selection(NJ_CLASS *context, NJ_RESULT *result) {
     int16_t   ret;
-    NJ_PREVIOUS_SELECTION_INFO *prev_info = &(iwnn->previous_selection);
+    NJ_PREVIOUS_SELECTION_INFO *prev_info = &(context->previous_selection);
 
 
     if (result == NULL) {
         prev_info->count = 0;
    } else {
-        ret = set_learn_word_info(iwnn, &(prev_info->selection_data), result);
+        ret = set_learn_word_info(context, &(prev_info->selection_data), result);
         if (ret < 0) {
             
             return ret; 
@@ -147,21 +147,21 @@ static int16_t set_previous_selection(NJ_CLASS *iwnn, NJ_RESULT *result) {
     return 0;
 }
 
-static int16_t set_learn_word_info(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *lword, NJ_RESULT *result)
+static int16_t set_learn_word_info(NJ_CLASS *context, NJ_LEARN_WORD_INFO *lword, NJ_RESULT *result)
 {
     int16_t ret;
-    NJ_DIC_SET *dics = &(iwnn->dic_set);
+    NJ_DIC_SET *dics = &(context->dic_set);
 
 
 
 #if 0
     
-    ret = njx_get_stroke(iwnn, result, lword->yomi, sizeof(lword->yomi));
+    ret = njx_get_stroke(context, result, lword->yomi, sizeof(lword->yomi));
     if (ret < 0) {
         return ret; 
     }
     lword->yomi_len = (uint8_t)ret;
-    ret = njx_get_candidate(iwnn, result, lword->hyouki, sizeof(lword->hyouki));
+    ret = njx_get_candidate(context, result, lword->hyouki, sizeof(lword->hyouki));
     if (ret < 0) {
         return ret; 
     }

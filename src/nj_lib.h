@@ -339,14 +339,14 @@ extern "C" {
 
 #define NJ_EXTERN extern
 
-NJ_EXTERN int16_t njx_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR  *buf, uint16_t buf_size);
-NJ_EXTERN int16_t njx_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR  *buf, uint16_t buf_size);
-NJ_EXTERN int16_t njx_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor);
-NJ_EXTERN int16_t njx_get_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *result);
-NJ_EXTERN int16_t njx_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t restore, uint32_t size);
+NJ_EXTERN int16_t njx_get_stroke(NJ_CLASS *context, NJ_RESULT *result, NJ_CHAR  *buf, uint16_t buf_size);
+NJ_EXTERN int16_t njx_get_candidate(NJ_CLASS *context, NJ_RESULT *result, NJ_CHAR  *buf, uint16_t buf_size);
+NJ_EXTERN int16_t njx_search_word(NJ_CLASS *context, NJ_CURSOR *cursor);
+NJ_EXTERN int16_t njx_get_word(NJ_CLASS *context, NJ_CURSOR *cursor, NJ_RESULT *result);
+NJ_EXTERN int16_t njx_check_dic(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint8_t restore, uint32_t size);
 
-NJ_EXTERN int16_t njx_init(NJ_CLASS *iwnn);
-NJ_EXTERN int16_t njx_select(NJ_CLASS *iwnn, NJ_RESULT *r_result);
+NJ_EXTERN int16_t njx_init(NJ_CLASS *context);
+NJ_EXTERN int16_t njx_select(NJ_CLASS *context, NJ_RESULT *r_result);
 
 #ifdef __cplusplus
 } // extern "C"

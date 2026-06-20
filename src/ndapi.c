@@ -38,19 +38,19 @@
      / (NJ_USER_QUE_SIZE + 2 * NJ_INDEX_SIZE))
 
 
-static int16_t check_search_cursor(NJ_CLASS *iwnn, NJ_CURSOR *cursor);
-static int16_t search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, uint8_t comp_flg, uint8_t *exit_flag);
+static int16_t check_search_cursor(NJ_CLASS *context, NJ_CURSOR *cursor);
+static int16_t search_word(NJ_CLASS *context, NJ_CURSOR *cursor, uint8_t comp_flg, uint8_t *exit_flag);
 static void set_operation_id(NJ_SEARCH_LOCATION *dicinfo, uint8_t reverse, NJ_RESULT *result);
-static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *result, uint8_t comp_flg);
+static int16_t get_word_and_search_next_word(NJ_CLASS *context, NJ_CURSOR *cursor, NJ_RESULT *result, uint8_t comp_flg);
 
-static int16_t njd_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle);
+static int16_t njd_check_dic(NJ_CLASS *context, NJ_DIC_HANDLE handle);
 
-static int16_t check_search_cursor(NJ_CLASS *iwnn, NJ_CURSOR *cursor) {
+static int16_t check_search_cursor(NJ_CLASS *context, NJ_CURSOR *cursor) {
     uint16_t i;
     NJ_DIC_INFO *dicinfo;
     NJ_SEARCH_LOCATION_SET *loctset;
 
-    (void)iwnn;
+    (void)context;
 
     if (cursor->cond.ds == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_CHECK_SEARCH_CURSOR, NJ_ERR_PARAM_DIC_NULL);
@@ -121,7 +121,7 @@ static int16_t check_search_cursor(NJ_CLASS *iwnn, NJ_CURSOR *cursor) {
     return 0;
 }
 
-static int16_t search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, uint8_t comp_flg,
+static int16_t search_word(NJ_CLASS *context, NJ_CURSOR *cursor, uint8_t comp_flg,
                             uint8_t *exit_flag) {
     uint32_t dic_type;
     int16_t i;
@@ -140,14 +140,14 @@ static int16_t search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, uint8_t comp_flg,
 
         dic_type = NJ_GET_DIC_TYPE_EX(loctset->loct.type, loctset->loct.handle);
 #ifdef IWNN_ERR_CHECK
-        if (iwnn->err_check_flg == 12) {
+        if (context->err_check_flg == 12) {
             dic_type = 0x11111111;
         }
 #endif 
         switch (dic_type) {
         case NJ_DIC_TYPE_USER:
         case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
-            ret = njd_l_search_word(iwnn, &cursor->cond, loctset, comp_flg);
+            ret = njd_l_search_word(context, &cursor->cond, loctset, comp_flg);
             break;
 
         default:
@@ -172,7 +172,7 @@ static int16_t search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, uint8_t comp_flg,
     return flag;
 }
 
-static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *result,
+static int16_t get_word_and_search_next_word(NJ_CLASS *context, NJ_CURSOR *cursor, NJ_RESULT *result,
                                               uint8_t comp_flg) {
     int16_t  ret = -1;
     int32_t  i, next, first;
@@ -211,12 +211,12 @@ static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, 
                 (cursor->cond.operation == NJ_CUR_OP_FORE)) {
                 first = 1;
 
-                ret = njd_get_word_data(iwnn, cursor->cond.ds, loctset, (uint16_t)i, &tmp_result.word);
+                ret = njd_get_word_data(context, cursor->cond.ds, loctset, (uint16_t)i, &tmp_result.word);
                 if (ret < 0) {
                     return ret; 
                 }
 
-                ret = njd_get_stroke(iwnn, &tmp_result, tmp_stroke, sizeof(tmp_stroke));
+                ret = njd_get_stroke(context, &tmp_result, tmp_stroke, sizeof(tmp_stroke));
                 if (ret <= 0) {
                     if ((ret == 0) || (NJ_GET_ERR_CODE(ret) == NJ_ERR_BUFFER_NOT_ENOUGH)) { 
                         return NJ_SET_ERR_VAL(NJ_FUNC_GET_WORD_AND_SEARCH_NEXT_WORD, NJ_ERR_INVALID_RESULT); 
@@ -233,7 +233,7 @@ static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, 
                 switch (dic_type) {
                 case NJ_DIC_TYPE_USER:
                 case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
-                    ret = njd_l_search_word(iwnn, &cursor->cond, loctset, comp_flg);
+                    ret = njd_l_search_word(context, &cursor->cond, loctset, comp_flg);
                     break;
 
                 default:
@@ -244,7 +244,7 @@ static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, 
                     return ret; 
                 }
             } else {
-                ret = njd_get_word_data(iwnn, cursor->cond.ds, loctset, (uint16_t)i, &tmp_result.word);
+                ret = njd_get_word_data(context, cursor->cond.ds, loctset, (uint16_t)i, &tmp_result.word);
                 if (ret < 0) {
                     return ret; 
                 }
@@ -265,13 +265,13 @@ static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, 
 
         } else {
             
-            ret = njd_get_word_data(iwnn, cursor->cond.ds, loctset, (uint16_t)i, &(tmp_result.word));
+            ret = njd_get_word_data(context, cursor->cond.ds, loctset, (uint16_t)i, &(tmp_result.word));
             if (ret < 0) {
                 return ret; 
             }
 
             
-            ret = njd_get_stroke(iwnn, &tmp_result, tmp_stroke, sizeof(tmp_stroke));
+            ret = njd_get_stroke(context, &tmp_result, tmp_stroke, sizeof(tmp_stroke));
             if (ret <= 0) {
                 if ((ret == 0) || (NJ_GET_ERR_CODE(ret) == NJ_ERR_BUFFER_NOT_ENOUGH)) { 
                     return NJ_SET_ERR_VAL(NJ_FUNC_GET_WORD_AND_SEARCH_NEXT_WORD, NJ_ERR_INVALID_RESULT); 
@@ -306,7 +306,7 @@ static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, 
         switch (dic_type) {
         case NJ_DIC_TYPE_USER:
         case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
-            ret = njd_l_search_word(iwnn, &cursor->cond, loctset, comp_flg);
+            ret = njd_l_search_word(context, &cursor->cond, loctset, comp_flg);
             break;
 
         default:
@@ -320,7 +320,7 @@ static int16_t get_word_and_search_next_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, 
     return 1;
 }
 
-int16_t njd_get_word_data(NJ_CLASS *iwnn, NJ_DIC_SET *dicset, NJ_SEARCH_LOCATION_SET *loctset, uint16_t dic_idx, NJ_WORD *word) {
+int16_t njd_get_word_data(NJ_CLASS *context, NJ_DIC_SET *dicset, NJ_SEARCH_LOCATION_SET *loctset, uint16_t dic_idx, NJ_WORD *word) {
     int16_t ret = 0;
     uint32_t dic_type;
 
@@ -341,7 +341,7 @@ int16_t njd_get_word_data(NJ_CLASS *iwnn, NJ_DIC_SET *dicset, NJ_SEARCH_LOCATION
     switch (dic_type) {
     case NJ_DIC_TYPE_USER:
     case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
-        ret = njd_l_get_word(iwnn, loctset, word);
+        ret = njd_l_get_word(context, loctset, word);
         break;
 
     default:
@@ -383,31 +383,31 @@ static void set_operation_id(NJ_SEARCH_LOCATION *dicinfo, uint8_t reverse, NJ_RE
         (uint16_t)((uint16_t)NJ_OP_SEARCH | (uint16_t)NJ_FUNC_SEARCH | dictype);
 }
 
-static int16_t njd_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, uint8_t comp_flg,
+static int16_t njd_search_word(NJ_CLASS *context, NJ_CURSOR *cursor, uint8_t comp_flg,
                          uint8_t *exit_flag) {
     int16_t ret;
 
 
-    ret = check_search_cursor(iwnn, cursor);
+    ret = check_search_cursor(context, cursor);
     if (ret != 0) {
         return ret;
     }
     
-    return search_word(iwnn, cursor, comp_flg, exit_flag);
+    return search_word(context, cursor, comp_flg, exit_flag);
 }
 
-static int16_t njd_get_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *result,
+static int16_t njd_get_word(NJ_CLASS *context, NJ_CURSOR *cursor, NJ_RESULT *result,
                       uint8_t comp_flg) {
 
     int16_t    ret;
 
 
-    ret = get_word_and_search_next_word(iwnn, cursor, result, comp_flg);
+    ret = get_word_and_search_next_word(context, cursor, result, comp_flg);
 
     return ret;
 }
 
-int16_t njd_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *stroke, uint16_t size) {
+int16_t njd_get_stroke(NJ_CLASS *context, NJ_RESULT *result, NJ_CHAR *stroke, uint16_t size) {
     int16_t ret = 0;
     uint32_t dictype;
 
@@ -421,7 +421,7 @@ int16_t njd_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *stroke, uint1
     switch (dictype) {
     case NJ_DIC_TYPE_USER:
     case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
-        ret = njd_l_get_stroke(iwnn, &result->word, stroke, size);
+        ret = njd_l_get_stroke(context, &result->word, stroke, size);
         break;
 
     default:
@@ -435,7 +435,7 @@ int16_t njd_get_stroke(NJ_CLASS *iwnn, NJ_RESULT *result, NJ_CHAR *stroke, uint1
 }
 
 
-int16_t njd_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result,
+int16_t njd_get_candidate(NJ_CLASS *context, NJ_RESULT *result,
                            NJ_CHAR *candidate, uint16_t size) {
     int16_t ret = 0;
     uint32_t dictype;
@@ -450,7 +450,7 @@ int16_t njd_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result,
     switch (dictype) {
     case NJ_DIC_TYPE_USER:
     case NJ_DIC_TYPE_CUSTOM_INCOMPRESS:
-        ret = njd_l_get_candidate(iwnn, &result->word, candidate, size);
+        ret = njd_l_get_candidate(context, &result->word, candidate, size);
         break;
 
     default:
@@ -464,7 +464,7 @@ int16_t njd_get_candidate(NJ_CLASS *iwnn, NJ_RESULT *result,
 }
 
 
-static int16_t njd_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle) {
+static int16_t njd_check_dic(NJ_CLASS *context, NJ_DIC_HANDLE handle) {
     const uint8_t *addr;
     uint32_t datasize, extsize;
     uint32_t version;
@@ -532,7 +532,7 @@ static int16_t njd_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle) {
         if (version != (uint32_t)NJ_DIC_VERSION2) {
             return NJ_SET_ERR_VAL(NJ_FUNC_NJD_CHECK_DIC, NJ_ERR_FORMAT_INVALID);
         }
-        return njd_l_check_dic(iwnn, handle);
+        return njd_l_check_dic(context, handle);
 
     default:
         return NJ_SET_ERR_VAL(NJ_FUNC_NJD_CHECK_DIC, NJ_ERR_DIC_TYPE_INVALID);
@@ -541,7 +541,7 @@ static int16_t njd_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle) {
 }
 
 
-NJ_EXTERN int16_t njx_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor) {
+NJ_EXTERN int16_t njx_search_word(NJ_CLASS *context, NJ_CURSOR *cursor) {
 
     NJ_SEARCH_CACHE     *pCache;
     NJ_CHAR             *p_yomi, *p_key;
@@ -555,14 +555,14 @@ NJ_EXTERN int16_t njx_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor) {
     NJ_DIC_HANDLE dhdl;
     NJ_PREVIOUS_SELECTION_INFO *prev_info;
 
-    if (iwnn == NULL) {
+    if (context == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_SEARCH_WORD, NJ_ERR_PARAM_ENV_NULL);
     }
     if (cursor == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_SEARCH_WORD, NJ_ERR_PARAM_CURSOR_NULL);
     }
 
-    prev_info = &(iwnn->previous_selection);
+    prev_info = &(context->previous_selection);
 
     cursor->cond.connection_filter.left_bitmap = NULL;
     cursor->cond.connection_filter.left_count = 0;
@@ -677,16 +677,16 @@ NJ_EXTERN int16_t njx_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor) {
                         &(cursor->cond.connection_filter.left_count), &(cursor->cond.connection_filter.right_count));
     }
 
-    return njd_search_word(iwnn, cursor, 0, &exit_flag);
+    return njd_search_word(context, cursor, 0, &exit_flag);
 }
 
 
-NJ_EXTERN int16_t njx_get_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *result) {
+NJ_EXTERN int16_t njx_get_word(NJ_CLASS *context, NJ_CURSOR *cursor, NJ_RESULT *result) {
     int16_t  ret;
 
 
     
-    if (iwnn == NULL) {
+    if (context == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_GET_WORD, NJ_ERR_PARAM_ENV_NULL);
     }
     if (cursor == NULL) {
@@ -696,18 +696,18 @@ NJ_EXTERN int16_t njx_get_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor, NJ_RESULT *res
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_GET_WORD, NJ_ERR_PARAM_RESULT_NULL);
     }
 
-    ret = njd_get_word(iwnn, cursor, result, 0);
+    ret = njd_get_word(context, cursor, result, 0);
 
     return ret;
 }
 
 
 
-NJ_EXTERN int16_t njx_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t restore, uint32_t size) {
+NJ_EXTERN int16_t njx_check_dic(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint8_t restore, uint32_t size) {
 
     (void)restore;
 
-    if (iwnn == NULL) {
+    if (context == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_CHECK_DIC, NJ_ERR_PARAM_ENV_NULL);
     }
 
@@ -729,7 +729,7 @@ NJ_EXTERN int16_t njx_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint8_t re
         return NJ_SET_ERR_VAL(NJ_FUNC_NJ_CHECK_DIC, NJ_ERR_AREASIZE_INVALID);
     }
 
-    return njd_check_dic(iwnn, handle);
+    return njd_check_dic(context, handle);
 }
 
 int16_t njd_init_search_location_set(NJ_SEARCH_LOCATION_SET* loctset)
