@@ -1,4 +1,4 @@
-﻿stem_offset	yomi	candidate	freq	f_hinsi	b_hinsi	yomi_len	candidate_len
+stem_offset	yomi	candidate	freq	left_connection_id	right_connection_id	yomi_len	candidate_len
 592838656	、	、	1000	232	281	1	1
 592314369	、	、	999	232	281	1	1
 591396866	、	、	997	232	281	1	1

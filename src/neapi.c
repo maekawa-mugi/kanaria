@@ -174,34 +174,34 @@ static int16_t set_learn_word_info(NJ_CLASS *iwnn, NJ_LEARN_WORD_INFO *lword, NJ
 #endif
 
     
-    lword->f_hinsi = NJ_GET_FPOS_FROM_STEM(&(result->word));
-    lword->stem_b_hinsi = NJ_GET_BPOS_FROM_STEM(&(result->word));
-    lword->b_hinsi = NJ_GET_BPOS_FROM_STEM(&(result->word));
+    lword->left_connection_id = NJ_GET_LEFT_CONNECTION_ID_FROM_STEM(&(result->word));
+    lword->stem_right_connection_id = NJ_GET_RIGHT_CONNECTION_ID_FROM_STEM(&(result->word));
+    lword->right_connection_id = NJ_GET_RIGHT_CONNECTION_ID_FROM_STEM(&(result->word));
 
     
-    ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_TANKANJI_F);
-    if ((ret != 0) && (lword->f_hinsi == (uint16_t)ret)) {
-        ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_CHIMEI_F);
+    ret = njd_r_get_connection_id(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SINGLE_KANJI_LEFT);
+    if ((ret != 0) && (lword->left_connection_id == (uint16_t)ret)) {
+        ret = njd_r_get_connection_id(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PLACE_NAME_LEFT);
         if (ret != 0) {
-            lword->f_hinsi = (uint16_t)ret;
+            lword->left_connection_id = (uint16_t)ret;
         }
     }
 
     
-    ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_TANKANJI_B);
-    if ((ret != 0) && (lword->b_hinsi == (uint16_t)ret)) {
-        ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_CHIMEI_B);
+    ret = njd_r_get_connection_id(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SINGLE_KANJI_RIGHT);
+    if ((ret != 0) && (lword->right_connection_id == (uint16_t)ret)) {
+        ret = njd_r_get_connection_id(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PLACE_NAME_RIGHT);
         if (ret != 0) {
-            lword->b_hinsi = (uint16_t)ret;
+            lword->right_connection_id = (uint16_t)ret;
         }
     }
 
     
-    ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_TANKANJI_B);
-    if ((ret != 0) && (lword->stem_b_hinsi == (uint16_t)ret)) {
-        ret = njd_r_get_hinsi(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_CHIMEI_B);
+    ret = njd_r_get_connection_id(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SINGLE_KANJI_RIGHT);
+    if ((ret != 0) && (lword->stem_right_connection_id == (uint16_t)ret)) {
+        ret = njd_r_get_connection_id(dics->rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PLACE_NAME_RIGHT);
         if (ret != 0) {
-            lword->stem_b_hinsi = (uint16_t)ret;
+            lword->stem_right_connection_id = (uint16_t)ret;
         }
     }
 

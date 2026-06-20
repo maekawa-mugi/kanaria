@@ -91,19 +91,19 @@ extern int16_t njd_l_get_candidate(NJ_CLASS *iwnn, NJ_WORD *word,
                                  NJ_CHAR *candidate, uint16_t size);
 extern int16_t njd_l_check_dic(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle);
 
-extern int16_t njd_r_get_hinsi(NJ_DIC_HANDLE rule, uint8_t type);
-extern int16_t njd_r_get_connect(NJ_DIC_HANDLE rule,
-                                  uint16_t hinsi, uint8_t type,
-                                  const uint8_t **connect);
-extern int16_t njd_r_get_count(NJ_DIC_HANDLE rule,
-                                uint16_t *fcount, uint16_t *rcount);
+extern int16_t njd_r_get_connection_id(NJ_DIC_HANDLE rule, uint8_t type);
+extern int16_t njd_r_get_connection_row(NJ_DIC_HANDLE rule,
+                                  uint16_t connection_id, uint8_t type,
+                                  const uint8_t **row);
+extern int16_t njd_r_get_connection_counts(NJ_DIC_HANDLE rule,
+                                uint16_t *left_count, uint16_t *right_count);
 
 extern uint16_t nje_check_string(NJ_CHAR *s, uint16_t max_len);
 extern uint8_t nje_get_top_char_type(NJ_CHAR *s);
 extern int16_t nje_convert_kata_to_hira(NJ_CHAR *kata, NJ_CHAR *hira, uint16_t len, uint16_t max_len, uint8_t type);
 extern int16_t nje_convert_hira_to_kata(NJ_CHAR *hira, NJ_CHAR *kata, uint16_t len);
 
-extern int16_t njd_connect_test(NJ_SEARCH_CONDITION *con, uint16_t hinsiF, uint16_t hinsiR);
+extern int16_t njd_connection_matches(NJ_SEARCH_CONDITION *con, uint16_t left_connection_id, uint16_t right_connection_id);
 
 extern NJ_CHAR  *nj_strcpy(NJ_CHAR *dst, NJ_CHAR *src);
 extern NJ_CHAR  *nj_strncpy(NJ_CHAR *dst, NJ_CHAR *src, uint16_t n);

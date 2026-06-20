@@ -564,12 +564,12 @@ NJ_EXTERN int16_t njx_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor) {
 
     prev_info = &(iwnn->previous_selection);
 
-    cursor->cond.hinsi.fore = NULL;
-    cursor->cond.hinsi.foreSize = 0;
-    cursor->cond.hinsi.foreFlag = 0;
-    cursor->cond.hinsi.rear = NULL;
-    cursor->cond.hinsi.rearSize = 0;
-    cursor->cond.hinsi.rearFlag = 0;
+    cursor->cond.connection_filter.left_bitmap = NULL;
+    cursor->cond.connection_filter.left_count = 0;
+    cursor->cond.connection_filter.invert_left = 0;
+    cursor->cond.connection_filter.right_bitmap = NULL;
+    cursor->cond.connection_filter.right_count = 0;
+    cursor->cond.connection_filter.invert_right = 0;
 
     if (cursor->cond.yomi == NULL) {
         return NJ_SET_ERR_VAL(NJ_FUNC_CHECK_SEARCH_CURSOR, NJ_ERR_PARAM_YOMI_NULL);
@@ -666,15 +666,15 @@ NJ_EXTERN int16_t njx_search_word(NJ_CLASS *iwnn, NJ_CURSOR *cursor) {
     }
 
     if( prev_info->count == 0 ) {
-        cursor->cond.hinsi.yominasi_fore = NULL;
+        cursor->cond.connection_filter.previous_connection_row = NULL;
     } else {
-        int prev_hinsi = prev_info->selection_data.b_hinsi;
+        int previous_connection_id = prev_info->selection_data.right_connection_id;
 
         
-        njd_r_get_connect(cursor->cond.ds->rHandle[NJ_MODE_TYPE_HENKAN], prev_hinsi,
-                          0, &(cursor->cond.hinsi.yominasi_fore));
-        njd_r_get_count(cursor->cond.ds->rHandle[NJ_MODE_TYPE_HENKAN],
-                        &(cursor->cond.hinsi.foreSize), &(cursor->cond.hinsi.rearSize));
+        njd_r_get_connection_row(cursor->cond.ds->rHandle[NJ_MODE_TYPE_HENKAN], previous_connection_id,
+                          0, &(cursor->cond.connection_filter.previous_connection_row));
+        njd_r_get_connection_counts(cursor->cond.ds->rHandle[NJ_MODE_TYPE_HENKAN],
+                        &(cursor->cond.connection_filter.left_count), &(cursor->cond.connection_filter.right_count));
     }
 
     return njd_search_word(iwnn, cursor, 0, &exit_flag);

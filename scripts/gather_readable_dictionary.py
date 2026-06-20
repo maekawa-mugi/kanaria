@@ -12,8 +12,8 @@ INPUT_HEADER = [
     "yomi",
     "candidate",
     "freq",
-    "f_hinsi",
-    "b_hinsi",
+    "left_connection_id",
+    "right_connection_id",
     "yomi_len",
     "candidate_len",
 ]

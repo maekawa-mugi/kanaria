@@ -22,25 +22,25 @@
 #include "njd.h"
 
 
-#define F_HINSI_TOP_ADDR(h) ((h)+nj_read_le32((h)+0x20))
-#define B_HINSI_TOP_ADDR(h) ((h)+nj_read_le32((h)+0x24))
-#define V2_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x28)))
-#define BUN_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x2A)))
-#define TAN_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x30)))
-#define TAN_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x32)))
-#define SUUJI_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x34)))
-#define MEISI_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x36)))
-#define MEISI_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x38)))
-#define JINMEI_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x3A)))
-#define JINMEI_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x3C)))
-#define CHIMEI_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x3E)))
-#define CHIMEI_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x40)))
-#define KIGOU_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x42)))
-#define KIGOU_B_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x44)))
-#define V1_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x52)))
-#define V3_F_HINSI(h) ((uint16_t)(nj_read_le16((h)+0x54)))
+#define LEFT_CONNECTION_TABLE_ADDR(h) ((h)+nj_read_le32((h)+0x20))
+#define RIGHT_CONNECTION_TABLE_ADDR(h) ((h)+nj_read_le32((h)+0x24))
+#define V2_LEFT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x28)))
+#define BUNTOU_RIGHT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x2A)))
+#define SINGLE_KANJI_LEFT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x30)))
+#define SINGLE_KANJI_RIGHT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x32)))
+#define NUMBER_RIGHT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x34)))
+#define NOUN_LEFT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x36)))
+#define NOUN_RIGHT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x38)))
+#define PERSON_NAME_LEFT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x3A)))
+#define PERSON_NAME_RIGHT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x3C)))
+#define PLACE_NAME_LEFT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x3E)))
+#define PLACE_NAME_RIGHT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x40)))
+#define SYMBOL_LEFT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x42)))
+#define SYMBOL_RIGHT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x44)))
+#define V1_LEFT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x52)))
+#define V3_LEFT_CONNECTION_ID(h) ((uint16_t)(nj_read_le16((h)+0x54)))
 
-int16_t njd_r_get_hinsi(NJ_DIC_HANDLE rule, uint8_t type) {
+int16_t njd_r_get_connection_id(NJ_DIC_HANDLE rule, uint8_t type) {
 
     
     if (rule == NULL) {
@@ -48,75 +48,75 @@ int16_t njd_r_get_hinsi(NJ_DIC_HANDLE rule, uint8_t type) {
     }
 
     switch (type) {
-    case NJ_HINSI_V2_F :        
-        return V2_F_HINSI(rule);
-    case NJ_HINSI_BUNTOU_B :    
-        return BUN_B_HINSI(rule);
-    case NJ_HINSI_TANKANJI_F :  
-        return TAN_F_HINSI(rule);
-    case NJ_HINSI_TANKANJI_B :  
-        return TAN_B_HINSI(rule);
-    case NJ_HINSI_SUUJI_B:      
-        return SUUJI_B_HINSI(rule);
-    case NJ_HINSI_MEISI_F :     
-        return MEISI_F_HINSI(rule);
-    case NJ_HINSI_MEISI_B :     
-        return MEISI_B_HINSI(rule);
-    case NJ_HINSI_JINMEI_F :    
-        return JINMEI_F_HINSI(rule);
-    case NJ_HINSI_JINMEI_B :    
-        return JINMEI_B_HINSI(rule);
-    case NJ_HINSI_CHIMEI_F :    
-        return CHIMEI_F_HINSI(rule);
-    case NJ_HINSI_CHIMEI_B :    
-        return CHIMEI_B_HINSI(rule);
-    case NJ_HINSI_KIGOU_F :     
-        return KIGOU_F_HINSI(rule);
-    case NJ_HINSI_KIGOU_B :     
-        return KIGOU_B_HINSI(rule);
-    case NJ_HINSI_V1_F :        
-        return V1_F_HINSI(rule);
-    case NJ_HINSI_V3_F :        
-        return V3_F_HINSI(rule);    default:
+    case NJ_CONNECTION_V2_LEFT :
+        return V2_LEFT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_BUNTOU_RIGHT :
+        return BUNTOU_RIGHT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_SINGLE_KANJI_LEFT :
+        return SINGLE_KANJI_LEFT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_SINGLE_KANJI_RIGHT :
+        return SINGLE_KANJI_RIGHT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_NUMBER_RIGHT:
+        return NUMBER_RIGHT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_NOUN_LEFT :
+        return NOUN_LEFT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_NOUN_RIGHT :
+        return NOUN_RIGHT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_PERSON_NAME_LEFT :
+        return PERSON_NAME_LEFT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_PERSON_NAME_RIGHT :
+        return PERSON_NAME_RIGHT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_PLACE_NAME_LEFT :
+        return PLACE_NAME_LEFT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_PLACE_NAME_RIGHT :
+        return PLACE_NAME_RIGHT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_SYMBOL_LEFT :
+        return SYMBOL_LEFT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_SYMBOL_RIGHT :
+        return SYMBOL_RIGHT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_V1_LEFT :
+        return V1_LEFT_CONNECTION_ID(rule);
+    case NJ_CONNECTION_V3_LEFT :
+        return V3_LEFT_CONNECTION_ID(rule);    default:
     
         return 0; 
     }
 }
 
-int16_t njd_r_get_connect(NJ_DIC_HANDLE rule, uint16_t hinsi, uint8_t type, const uint8_t **connect) {
+int16_t njd_r_get_connection_row(NJ_DIC_HANDLE rule, uint16_t connection_id, uint8_t type, const uint8_t **row) {
     uint16_t i, rec_len;
 
     
     if (rule == NULL) {
         return 0; 
     }
-    if (hinsi < 1) {
+    if (connection_id < 1) {
         return 0;
     }
 
     if (type == NJ_RULE_TYPE_BTOF) {    
-        i = F_HINSI_SET_CNT(rule);      
+        i = LEFT_CONNECTION_COUNT(rule);
         rec_len = (uint16_t)((i + 7) / 8);
                                         
-        *connect = F_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len);
+        *row = LEFT_CONNECTION_TABLE_ADDR(rule) + ((connection_id - 1) * rec_len);
     } else {                            
-        i = B_HINSI_SET_CNT(rule);      
+        i = RIGHT_CONNECTION_COUNT(rule);
         rec_len = (uint16_t)((i + 7) / 8);
                                         
-        *connect = B_HINSI_TOP_ADDR(rule) + ((hinsi - 1) * rec_len);
+        *row = RIGHT_CONNECTION_TABLE_ADDR(rule) + ((connection_id - 1) * rec_len);
     }
     return 0;
 }
 
-int16_t njd_r_get_count(NJ_DIC_HANDLE rule, uint16_t *fcount, uint16_t *rcount) {
+int16_t njd_r_get_connection_counts(NJ_DIC_HANDLE rule, uint16_t *left_count, uint16_t *right_count) {
 
     
     if (rule == NULL) {
         return 0; 
     }
 
-    *fcount = F_HINSI_SET_CNT(rule);
-    *rcount = B_HINSI_SET_CNT(rule);
+    *left_count = LEFT_CONNECTION_COUNT(rule);
+    *right_count = RIGHT_CONNECTION_COUNT(rule);
 
     return 0;
 }

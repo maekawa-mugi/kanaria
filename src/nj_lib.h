@@ -185,14 +185,14 @@ typedef struct {
     NJ_DIC_SET *ds;              
 
     struct {
-        uint8_t *fore;
-        uint16_t foreSize;
-        uint16_t foreFlag;
-        uint8_t *rear;
-        uint16_t rearSize;
-        uint16_t rearFlag;
-        const uint8_t *yominasi_fore;
-    } hinsi;
+        uint8_t *left_bitmap;
+        uint16_t left_count;
+        uint16_t invert_left;
+        uint8_t *right_bitmap;
+        uint16_t right_count;
+        uint16_t invert_right;
+        const uint8_t *previous_connection_row;
+    } connection_filter;
 
     NJ_CHAR  *yomi;
     uint16_t ylen;
@@ -228,12 +228,12 @@ typedef struct {
 
 
 typedef struct {
-    uint8_t hinsi_group;
-#define NJ_HINSI_MEISI          0    
-#define NJ_HINSI_JINMEI         1    
-#define NJ_HINSI_MEISI_NO_CONJ  2    
-#define NJ_HINSI_CHIMEI         2    
-#define NJ_HINSI_KIGOU          3    
+    uint8_t pos_group;
+#define NJ_POS_GROUP_NOUN          0
+#define NJ_POS_GROUP_PERSON_NAME         1
+#define NJ_POS_GROUP_NOUN_NO_CONJ  2
+#define NJ_POS_GROUP_PLACE_NAME         2
+#define NJ_POS_GROUP_SYMBOL          3
 
     NJ_CHAR  yomi[NJ_MAX_LEN + NJ_TERM_LEN];         
     NJ_CHAR  kouho[NJ_MAX_RESULT_LEN + NJ_TERM_LEN]; 
@@ -242,7 +242,7 @@ typedef struct {
     struct {
         uint16_t  yomi_len;
         uint16_t  kouho_len;
-        uint32_t  hinsi;
+        uint32_t  connection_id;
         uint32_t  attr;
         int16_t   freq;
     } stem;
@@ -251,7 +251,7 @@ typedef struct {
     struct {
         uint16_t  yomi_len;
         uint16_t  kouho_len;
-        uint32_t  hinsi;
+        uint32_t  connection_id;
         int16_t   freq;
     } fzk;
 
@@ -279,19 +279,19 @@ typedef struct {
     } fzk;
 } NJ_WORD;
 
-#define NJ_GET_FPOS_FROM_STEM(s) ((uint16_t)((s)->stem.info1 >> 7))
-#define NJ_GET_BPOS_FROM_STEM(s) ((uint16_t)((s)->stem.info2 >> 7))
+#define NJ_GET_LEFT_CONNECTION_ID_FROM_STEM(s) ((uint16_t)((s)->stem.info1 >> 7))
+#define NJ_GET_RIGHT_CONNECTION_ID_FROM_STEM(s) ((uint16_t)((s)->stem.info2 >> 7))
 
 
-#define NJ_SET_FPOS_TO_STEM(s,v) ((s)->stem.info1 = ((s)->stem.info1 & 0x007F) | (uint16_t)((v) << 7))
+#define NJ_SET_LEFT_CONNECTION_ID_TO_STEM(s,v) ((s)->stem.info1 = ((s)->stem.info1 & 0x007F) | (uint16_t)((v) << 7))
 #define NJ_GET_YLEN_FROM_STEM(s) ((uint8_t)((s)->stem.info1 & 0x7F))
 #define NJ_GET_KLEN_FROM_STEM(s) ((uint8_t)((s)->stem.info2 & 0x7F))
 #define NJ_SET_YLEN_TO_STEM(s,v) ((s)->stem.info1 = ((s)->stem.info1 & 0xFF80) | (uint16_t)((v) & 0x7F))
-#define NJ_SET_BPOS_TO_STEM(s,v) ((s)->stem.info2 = ((s)->stem.info2 & 0x007F) | (uint16_t)((v) << 7))
+#define NJ_SET_RIGHT_CONNECTION_ID_TO_STEM(s,v) ((s)->stem.info2 = ((s)->stem.info2 & 0x007F) | (uint16_t)((v) << 7))
 #define NJ_SET_KLEN_TO_STEM(s,v) ((s)->stem.info2 = ((s)->stem.info2 & 0xFF80) | (uint16_t)((v) & 0x7F))
 
 #define NJ_GET_YLEN_FROM_FZK(f) ((uint8_t)((f)->fzk.info1 & 0x7F))
-#define NJ_GET_BPOS_FROM_FZK(f) ((uint16_t)((f)->fzk.info2 >> 7))
+#define NJ_GET_RIGHT_CONNECTION_ID_FROM_FZK(f) ((uint16_t)((f)->fzk.info2 >> 7))
 
 typedef struct {
     

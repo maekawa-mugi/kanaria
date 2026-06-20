@@ -23,28 +23,28 @@
 
 
 
-int16_t njd_connect_test(NJ_SEARCH_CONDITION *con, uint16_t hinsiF, uint16_t hinsiR)
+int16_t njd_connection_matches(NJ_SEARCH_CONDITION *con, uint16_t left_connection_id, uint16_t right_connection_id)
 {
 
     
-    if (con->hinsi.fore != NULL) {
-        if (hinsiF == 0) {
+    if (con->connection_filter.left_bitmap != NULL) {
+        if (left_connection_id == 0) {
             return 0; 
         }
 
-        hinsiF--;
-        if (hinsiF >= con->hinsi.foreSize) {
+        left_connection_id--;
+        if (left_connection_id >= con->connection_filter.left_count) {
             return 0; 
         }
-        if (*(con->hinsi.fore + (hinsiF / 8)) & (0x80 >> (hinsiF % 8))) {
+        if (*(con->connection_filter.left_bitmap + (left_connection_id / 8)) & (0x80 >> (left_connection_id % 8))) {
             
-            if (con->hinsi.foreFlag != 0) {
+            if (con->connection_filter.invert_left != 0) {
                 
                 return 0; 
             }
         } else {
             
-            if (con->hinsi.foreFlag == 0) {
+            if (con->connection_filter.invert_left == 0) {
                 
                 return 0;
             }
@@ -52,24 +52,24 @@ int16_t njd_connect_test(NJ_SEARCH_CONDITION *con, uint16_t hinsiF, uint16_t hin
     }
 
     
-    if (con->hinsi.rear != NULL) {
-        if (hinsiR == 0) {
+    if (con->connection_filter.right_bitmap != NULL) {
+        if (right_connection_id == 0) {
             return 0; 
         }
 
-        hinsiR--;
-        if (hinsiR >= con->hinsi.rearSize) {
+        right_connection_id--;
+        if (right_connection_id >= con->connection_filter.right_count) {
             return 0; 
         }
-        if (*(con->hinsi.rear + (hinsiR / 8)) & (0x80 >> (hinsiR % 8))) {
+        if (*(con->connection_filter.right_bitmap + (right_connection_id / 8)) & (0x80 >> (right_connection_id % 8))) {
             
-            if (con->hinsi.rearFlag != 0) {
+            if (con->connection_filter.invert_right != 0) {
                 
                 return 0; 
             }
         } else {
             
-            if (con->hinsi.rearFlag == 0) {
+            if (con->connection_filter.invert_right == 0) {
                 
                 return 0;
             }

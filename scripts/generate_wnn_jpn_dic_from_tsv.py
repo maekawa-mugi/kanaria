@@ -39,8 +39,8 @@ INPUT_HEADER = [
     "yomi",
     "candidate",
     "freq",
-    "f_hinsi",
-    "b_hinsi",
+    "left_connection_id",
+    "right_connection_id",
     "yomi_len",
     "candidate_len",
 ]
@@ -75,8 +75,8 @@ class Entry:
     yomi: str
     candidate: str
     freq: int
-    f_hinsi: int
-    b_hinsi: int
+    left_connection_id: int
+    right_connection_id: int
 
 
 def u32(value: int) -> bytes:
@@ -112,10 +112,10 @@ def read_entries(path: Path) -> list[Entry]:
                 continue
             if len(row) != len(INPUT_HEADER):
                 raise SystemExit(f"{path}:{lineno}: expected {len(INPUT_HEADER)} columns")
-            _, yomi, candidate, freq, f_hinsi, b_hinsi, _, _ = row
+            _, yomi, candidate, freq, left_connection_id, right_connection_id, _, _ = row
             if not yomi or not candidate:
                 continue
-            out.append(Entry(yomi, candidate, int(freq), int(f_hinsi), int(b_hinsi)))
+            out.append(Entry(yomi, candidate, int(freq), int(left_connection_id), int(right_connection_id)))
     return out
 
 
@@ -138,7 +138,7 @@ def read_grouped_entries(dict_dir: Path) -> dict[str, list[Entry]]:
 def dedupe_entries(entries: list[Entry]) -> list[Entry]:
     best: dict[tuple[str, str, int, int], Entry] = {}
     for entry in entries:
-        key = (entry.yomi, entry.candidate, entry.f_hinsi, entry.b_hinsi)
+        key = (entry.yomi, entry.candidate, entry.left_connection_id, entry.right_connection_id)
         known = best.get(key)
         if known is None or known.freq < entry.freq:
             best[key] = entry
@@ -147,7 +147,7 @@ def dedupe_entries(entries: list[Entry]) -> list[Entry]:
 
 def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
     entries = dedupe_entries(entries)
-    entries.sort(key=lambda e: (e.freq, e.yomi, e.candidate, e.f_hinsi, e.b_hinsi))
+    entries.sort(key=lambda e: (e.freq, e.yomi, e.candidate, e.left_connection_id, e.right_connection_id))
     if len(entries) > NJ_MAX_CUSTOM_WORD_COUNT:
         entries = entries[-NJ_MAX_CUSTOM_WORD_COUNT:]
 
@@ -192,13 +192,13 @@ def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
     for entry, yomi, candidate in encoded:
         if len(yomi) > 0x7F or len(candidate) > 0x7F:
             raise SystemExit(f"entry exceeds OpenWnn queue length field: {entry}")
-        if entry.f_hinsi > 0x1FF or entry.b_hinsi > 0x1FF:
-            raise SystemExit(f"part-of-speech id is too large: {entry}")
+        if entry.left_connection_id > 0x1FF or entry.right_connection_id > 0x1FF:
+            raise SystemExit(f"connection id is too large: {entry}")
 
         record = bytearray(que_size)
         record[0] = que_type
-        record[1:3] = u16((entry.f_hinsi << 7) | len(yomi))
-        record[3:5] = u16((entry.b_hinsi << 7) | len(candidate))
+        record[1:3] = u16((entry.left_connection_id << 7) | len(yomi))
+        record[3:5] = u16((entry.right_connection_id << 7) | len(candidate))
         payload = yomi + candidate
         record[5 : 5 + len(payload)] = payload
         body += record

@@ -42,7 +42,7 @@
 #define NJ_ERR_NO_CANDIDATE_LIST                    (0x1100) 
 #define NJ_ERR_AREASIZE_INVALID                     (0x1300) 
 #define NJ_ERR_BUFFER_NOT_ENOUGH                    (0x1400) 
-#define NJ_ERR_HINSI_GROUP_INVALID                  (0x1500) 
+#define NJ_ERR_POS_GROUP_INVALID                  (0x1500)
 #define NJ_ERR_CREATE_TYPE_INVALID                  (0x1600) 
 #define NJ_ERR_WORD_INFO_NULL                       (0x1700) 
 #define NJ_ERR_DIC_NOT_FOUND                        (0x1800) 

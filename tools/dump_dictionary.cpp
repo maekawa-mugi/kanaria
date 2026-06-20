@@ -115,13 +115,13 @@ struct row_key {
     std::string candidate;
     int freq = 0;
     int dic_index = 0;
-    int f_hinsi = 0;
-    int b_hinsi = 0;
+    int left_connection_id = 0;
+    int right_connection_id = 0;
 
     bool operator<(const row_key& other) const
     {
-        return std::tie(yomi, candidate, freq, dic_index, f_hinsi, b_hinsi)
-            < std::tie(other.yomi, other.candidate, other.freq, other.dic_index, other.f_hinsi, other.b_hinsi);
+        return std::tie(yomi, candidate, freq, dic_index, left_connection_id, right_connection_id)
+            < std::tie(other.yomi, other.candidate, other.freq, other.dic_index, other.left_connection_id, other.right_connection_id);
     }
 };
 
@@ -140,7 +140,7 @@ public:
         }
         std::cout
             << "dic_type\tstem_offset\tyomi\tcandidate\tfreq\t"
-            << "f_hinsi\tb_hinsi\tyomi_len\tcandidate_len\n";
+            << "left_connection_id\tright_connection_id\tyomi_len\tcandidate_len\n";
     }
 
     void dump_all()
@@ -227,9 +227,9 @@ private:
                    const NJ_WORD& word)
     {
         const int freq = word.stem.hindo;
-        const int f_hinsi = NJ_GET_FPOS_FROM_STEM(&word);
-        const int b_hinsi = NJ_GET_BPOS_FROM_STEM(&word);
-        const row_key key { yomi, candidate, freq, dic_index, f_hinsi, b_hinsi };
+        const int left_connection_id = NJ_GET_LEFT_CONNECTION_ID_FROM_STEM(&word);
+        const int right_connection_id = NJ_GET_RIGHT_CONNECTION_ID_FROM_STEM(&word);
+        const row_key key { yomi, candidate, freq, dic_index, left_connection_id, right_connection_id };
         if (dedupe_ && !seen_.insert(key).second) {
             return;
         }
@@ -246,8 +246,8 @@ private:
             << yomi << "\t"
             << candidate << "\t"
             << freq << "\t"
-            << f_hinsi << "\t"
-            << b_hinsi << "\t"
+            << left_connection_id << "\t"
+            << right_connection_id << "\t"
             << utf8_codepoint_count(yomi) << "\t"
             << utf8_codepoint_count(candidate) << "\n";
     }
@@ -266,7 +266,7 @@ private:
         inserted->second << "\xef\xbb\xbf";
         inserted->second
             << "stem_offset\tyomi\tcandidate\tfreq\t"
-            << "f_hinsi\tb_hinsi\tyomi_len\tcandidate_len\n";
+            << "left_connection_id\tright_connection_id\tyomi_len\tcandidate_len\n";
         return inserted->second;
     }
 

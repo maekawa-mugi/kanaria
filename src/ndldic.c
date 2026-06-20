@@ -54,19 +54,19 @@
 
 #define GET_UINT16(ptr) ((((uint16_t)(*((ptr) + 1))) << 8) | (*(ptr) & 0x00ff))
 
-#define GET_FPOS_FROM_DATA(x) ((uint16_t)nj_read_le16((x)+1) >> 7)
+#define GET_LEFT_CONNECTION_ID_FROM_DATA(x) ((uint16_t)nj_read_le16((x)+1) >> 7)
 #define GET_YSIZE_FROM_DATA(x) ((uint8_t)((uint16_t)nj_read_le16((x)+1) & 0x7F))
-#define GET_BPOS_FROM_DATA(x) ((uint16_t)nj_read_le16((x)+3) >> 7)
+#define GET_RIGHT_CONNECTION_ID_FROM_DATA(x) ((uint16_t)nj_read_le16((x)+3) >> 7)
 #define GET_KSIZE_FROM_DATA(x) ((uint8_t)((uint16_t)nj_read_le16((x)+3) & 0x7F))
-#define GET_BPOS_FROM_EXT_DATA(x) ((uint16_t)nj_read_le16(x) >> 7)
+#define GET_RIGHT_CONNECTION_ID_FROM_EXT_DATA(x) ((uint16_t)nj_read_le16(x) >> 7)
 #define GET_YSIZE_FROM_EXT_DATA(x) ((uint8_t)((uint16_t)nj_read_le16(x) & 0x7F))
 
-#define SET_BPOS_AND_YSIZE(x,bpos,ysize)                                \
-    nj_write_le16((x), ((uint16_t)((bpos) << 7) | ((ysize) & 0x7F)))
-#define SET_FPOS_AND_YSIZE(x,fpos,ysize)                                \
-    nj_write_le16(((x)+1), ((uint16_t)((fpos) << 7) | ((ysize) & 0x7F)))
-#define SET_BPOS_AND_KSIZE(x,bpos,ksize)                                \
-    nj_write_le16(((x)+3), ((uint16_t)((bpos) << 7) | ((ksize) & 0x7F)))
+#define SET_RIGHT_CONNECTION_ID_AND_YSIZE(x,connection_id,ysize)                                \
+    nj_write_le16((x), ((uint16_t)((connection_id) << 7) | ((ysize) & 0x7F)))
+#define SET_LEFT_CONNECTION_ID_AND_YSIZE(x,connection_id,ysize)                                \
+    nj_write_le16(((x)+1), ((uint16_t)((connection_id) << 7) | ((ysize) & 0x7F)))
+#define SET_RIGHT_CONNECTION_ID_AND_KSIZE(x,connection_id,ksize)                                \
+    nj_write_le16(((x)+3), ((uint16_t)((connection_id) << 7) | ((ksize) & 0x7F)))
 
 #define GET_TYPE_FROM_DATA(x) (*(x) & 0x03)
 #define GET_UFLG_FROM_DATA(x) (*(x) >> 7)
@@ -122,7 +122,7 @@ static int16_t search_range_by_yomi2(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CH
 static int16_t search_range_by_yomi_multi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t ylen, uint16_t *from, uint16_t *to);
 static int16_t str_que_cmp(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, NJ_CHAR *yomi, uint16_t yomiLen, uint16_t que_id, uint8_t mode);
 static NJ_WQUE *get_que_type_and_next(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
-static NJ_WQUE *get_que_allHinsi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
+static NJ_WQUE *get_queue_connection_ids(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
 static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
 static int16_t continue_cnt(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id);
 
@@ -320,7 +320,7 @@ static NJ_WQUE *get_que_yomiLen_and_hyoukiLen(NJ_CLASS *iwnn, NJ_DIC_HANDLE hand
     return NULL;
 }
 
-static NJ_WQUE *get_que_allHinsi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
+static NJ_WQUE *get_queue_connection_ids(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
                                  uint16_t que_id) {
     const uint8_t *ptr;
     NJ_WQUE *que = &(iwnn->que_tmp);
@@ -333,8 +333,8 @@ static NJ_WQUE *get_que_allHinsi(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle,
     ptr = POS_TO_ADDRESS(handle, que_id);
 
     que->type      = GET_TYPE_FROM_DATA(ptr);
-    que->mae_hinsi = GET_FPOS_FROM_DATA(ptr);
-    que->ato_hinsi = GET_BPOS_FROM_DATA(ptr);
+    que->left_connection_id = GET_LEFT_CONNECTION_ID_FROM_DATA(ptr);
+    que->right_connection_id = GET_RIGHT_CONNECTION_ID_FROM_DATA(ptr);
 
     switch (que->type) {
     case QUE_TYPE_JIRI:
@@ -362,8 +362,8 @@ static NJ_WQUE *get_que(NJ_CLASS *iwnn, NJ_DIC_HANDLE handle, uint16_t que_id) {
 
     que->entry      = que_id;
     que->type       = GET_TYPE_FROM_DATA(ptr);
-    que->mae_hinsi  = GET_FPOS_FROM_DATA(ptr);
-    que->ato_hinsi  = GET_BPOS_FROM_DATA(ptr);
+    que->left_connection_id  = GET_LEFT_CONNECTION_ID_FROM_DATA(ptr);
+    que->right_connection_id  = GET_RIGHT_CONNECTION_ID_FROM_DATA(ptr);
     que->yomi_byte  = GET_YSIZE_FROM_DATA(ptr);
     que->yomi_len   = que->yomi_byte / sizeof(NJ_CHAR);
     que->hyouki_byte= GET_KSIZE_FROM_DATA(ptr);
@@ -1021,8 +1021,8 @@ static int16_t get_cand_by_sequential(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                 
                 
                 
-                que = get_que_allHinsi(iwnn, loctset->loct.handle, que_id);
-                if (njd_connect_test(cond, que->mae_hinsi, que->ato_hinsi)) {
+                que = get_queue_connection_ids(iwnn, loctset->loct.handle, que_id);
+                if (njd_connection_matches(cond, que->left_connection_id, que->right_connection_id)) {
 
                     
                     switch (NJ_GET_DIC_TYPE_EX(loctset->loct.type, loctset->loct.handle)) {
@@ -1166,8 +1166,8 @@ static int16_t get_cand_by_evaluate(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
                     
                     
                     
-                    que = get_que_allHinsi(iwnn, loctset->loct.handle, que_id);
-                    if (njd_connect_test(cond, que->mae_hinsi, que->ato_hinsi)) {
+                    que = get_queue_connection_ids(iwnn, loctset->loct.handle, que_id);
+                    if (njd_connection_matches(cond, que->left_connection_id, que->right_connection_id)) {
                         
                         loctset->loct.current_info = (uint8_t)0x10;
                         loctset->loct.current = i;
@@ -1674,7 +1674,7 @@ int16_t njd_l_get_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD 
     
     word->stem.hindo = loctset->cache_freq;
 
-    NJ_SET_FPOS_TO_STEM(word, que->mae_hinsi);
+    NJ_SET_LEFT_CONNECTION_ID_TO_STEM(word, que->left_connection_id);
     NJ_SET_YLEN_TO_STEM(word, que->yomi_len);
     if (que->hyouki_len > 0) {
         NJ_SET_KLEN_TO_STEM(word, que->hyouki_len);
@@ -1682,7 +1682,7 @@ int16_t njd_l_get_word(NJ_CLASS *iwnn, NJ_SEARCH_LOCATION_SET *loctset, NJ_WORD 
         
         NJ_SET_KLEN_TO_STEM(word, que->yomi_len);
     }
-    NJ_SET_BPOS_TO_STEM(word, que->ato_hinsi);
+    NJ_SET_RIGHT_CONNECTION_ID_TO_STEM(word, que->right_connection_id);
 
     
     word->stem.type = 0;
@@ -2194,8 +2194,8 @@ static int16_t get_cand_by_evaluate2(NJ_CLASS *iwnn, NJ_SEARCH_CONDITION *cond,
 
                         
                         
-                        que = get_que_allHinsi(iwnn, loctset->loct.handle, que_id);
-                        if (njd_connect_test(cond, que->mae_hinsi, que->ato_hinsi)) {
+                        que = get_queue_connection_ids(iwnn, loctset->loct.handle, que_id);
+                        if (njd_connection_matches(cond, que->left_connection_id, que->right_connection_id)) {
                             
                             loctset->loct.current_info = (uint8_t)0x10;
                             loctset->loct.current = i;

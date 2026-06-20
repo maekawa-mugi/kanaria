@@ -28,21 +28,21 @@
 #define NJ_DIC_TYPE_USER                        0x80030000      
 #define NJ_DIC_TYPE_RULE                        0x000F0000      
 
-#define NJ_HINSI_V2_F            0      
-#define NJ_HINSI_SUUJI_B        14      
-#define NJ_HINSI_BUNTOU_B        3      
-#define NJ_HINSI_TANKANJI_F      4      
-#define NJ_HINSI_TANKANJI_B      5      
-#define NJ_HINSI_MEISI_F         6      
-#define NJ_HINSI_MEISI_B         7      
-#define NJ_HINSI_JINMEI_F        8      
-#define NJ_HINSI_JINMEI_B        9      
-#define NJ_HINSI_CHIMEI_F       10      
-#define NJ_HINSI_CHIMEI_B       11      
-#define NJ_HINSI_KIGOU_F        12      
-#define NJ_HINSI_KIGOU_B        13      
-#define NJ_HINSI_V1_F           15      
-#define NJ_HINSI_V3_F           16      
+#define NJ_CONNECTION_V2_LEFT            0
+#define NJ_CONNECTION_NUMBER_RIGHT        14
+#define NJ_CONNECTION_BUNTOU_RIGHT        3
+#define NJ_CONNECTION_SINGLE_KANJI_LEFT      4
+#define NJ_CONNECTION_SINGLE_KANJI_RIGHT      5
+#define NJ_CONNECTION_NOUN_LEFT         6
+#define NJ_CONNECTION_NOUN_RIGHT         7
+#define NJ_CONNECTION_PERSON_NAME_LEFT        8
+#define NJ_CONNECTION_PERSON_NAME_RIGHT        9
+#define NJ_CONNECTION_PLACE_NAME_LEFT       10
+#define NJ_CONNECTION_PLACE_NAME_RIGHT       11
+#define NJ_CONNECTION_SYMBOL_LEFT        12
+#define NJ_CONNECTION_SYMBOL_RIGHT        13
+#define NJ_CONNECTION_V1_LEFT           15
+#define NJ_CONNECTION_V3_LEFT           16
 #define NJ_RULE_TYPE_BTOF       0
 #define NJ_RULE_TYPE_FTOB       1
 
@@ -81,8 +81,8 @@ static inline void nj_write_le16(uint8_t *to, uint16_t from)
 
 #define NJ_GET_DIC_TYPE(h) (nj_read_le32((h)+8))
 
-#define F_HINSI_SET_CNT(h) (nj_read_le16((h)+0x1C))
-#define B_HINSI_SET_CNT(h) (nj_read_le16((h)+0x1E))
+#define LEFT_CONNECTION_COUNT(h) (nj_read_le16((h)+0x1C))
+#define RIGHT_CONNECTION_COUNT(h) (nj_read_le16((h)+0x1E))
 
 
 #endif 

@@ -21,13 +21,13 @@
 #define NJD_MAX_CONNECT_CNT     6
 
 typedef struct {
-    uint16_t f_hinsi;
-    uint16_t b_hinsi;
+    uint16_t left_connection_id;
+    uint16_t right_connection_id;
     uint8_t  yomi_len;
     uint8_t  hyouki_len;
     NJ_CHAR   yomi[NJ_MAX_LEN +NJ_TERM_LEN];           
     NJ_CHAR   hyouki[NJ_MAX_RESULT_LEN + NJ_TERM_LEN]; 
-    uint16_t stem_b_hinsi;
+    uint16_t stem_right_connection_id;
     uint8_t  fzk_yomi_len;
 } NJ_LEARN_WORD_INFO;
 
@@ -35,8 +35,8 @@ typedef struct {
 typedef struct word_que {
     uint16_t  entry;
     uint8_t   type;
-    uint16_t  mae_hinsi;
-    uint16_t  ato_hinsi;
+    uint16_t  left_connection_id;
+    uint16_t  right_connection_id;
     uint8_t   yomi_len;
     uint8_t   hyouki_len;
     uint8_t   yomi_byte;

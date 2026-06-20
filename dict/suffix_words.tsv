@@ -1,4 +1,4 @@
-﻿stem_offset	yomi	candidate	freq	f_hinsi	b_hinsi	yomi_len	candidate_len
+stem_offset	yomi	candidate	freq	left_connection_id	right_connection_id	yomi_len	candidate_len
 0	ふん	分	984	219	80	2	1
 10	がつ	月	984	220	80	2	1
 20	にち	日	984	220	80	2	1

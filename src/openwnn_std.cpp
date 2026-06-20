@@ -469,29 +469,29 @@ static std::optional<word> dictionary_get_next(dictionary_work& d, int length = 
     out.candidate = convert_nj_char_to_string(candidate_text, NJ_MAX_RESULT_LEN);
     out.stroke = convert_nj_char_to_string(stroke, NJ_MAX_LEN);
     out.frequency = d.work.result.word.stem.hindo;
-    out.part_of_speech.left = NJ_GET_FPOS_FROM_STEM(&d.work.result.word);
-    out.part_of_speech.right = NJ_GET_BPOS_FROM_STEM(&d.work.result.word);
+    out.part_of_speech.left = NJ_GET_LEFT_CONNECTION_ID_FROM_STEM(&d.work.result.word);
+    out.part_of_speech.right = NJ_GET_RIGHT_CONNECTION_ID_FROM_STEM(&d.work.result.word);
     return out;
 }
 
 static std::vector<unsigned char> dictionary_get_connect_array(dictionary_work& d, int left_pos)
 {
-    uint16_t lcount = 0;
-    uint16_t rcount = 0;
+    uint16_t left_count = 0;
+    uint16_t right_count = 0;
     if (d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN] == nullptr) {
         return {};
     }
-    njd_r_get_count(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], &lcount, &rcount);
-    if (left_pos < 0 || left_pos > lcount) {
+    njd_r_get_connection_counts(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], &left_count, &right_count);
+    if (left_pos < 0 || left_pos > left_count) {
         return {};
     }
 
-    std::vector<unsigned char> result(static_cast<std::size_t>(rcount) + 1, 0);
-    const uint8_t* connect = nullptr;
+    std::vector<unsigned char> result(static_cast<std::size_t>(right_count) + 1, 0);
+    const uint8_t* row = nullptr;
     if (left_pos > 0) {
-        njd_r_get_connect(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], left_pos, NJ_RULE_TYPE_FTOB, &connect);
-        for (int i = 0; i < rcount; i++) {
-            if (connect[i / 8] & (0x80 >> (i % 8))) {
+        njd_r_get_connection_row(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], left_pos, NJ_RULE_TYPE_FTOB, &row);
+        for (int i = 0; i < right_count; i++) {
+            if (row[i / 8] & (0x80 >> (i % 8))) {
                 result[static_cast<std::size_t>(i) + 1] = 1;
             }
         }
@@ -501,15 +501,15 @@ static std::vector<unsigned char> dictionary_get_connect_array(dictionary_work& 
 
 static std::vector<std::vector<unsigned char>> dictionary_get_connect_matrix(dictionary_work& d)
 {
-    uint16_t lcount = 0;
-    uint16_t rcount = 0;
+    uint16_t left_count = 0;
+    uint16_t right_count = 0;
     if (d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN] == nullptr) {
         return {};
     }
-    njd_r_get_count(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], &lcount, &rcount);
+    njd_r_get_connection_counts(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], &left_count, &right_count);
     std::vector<std::vector<unsigned char>> result;
-    result.reserve(static_cast<std::size_t>(lcount) + 1);
-    for (int i = 0; i < lcount + 1; i++) {
+    result.reserve(static_cast<std::size_t>(left_count) + 1);
+    for (int i = 0; i < left_count + 1; i++) {
         result.push_back(dictionary_get_connect_array(d, i));
     }
     return result;
@@ -521,43 +521,43 @@ static pos dictionary_get_pos(dictionary_work& d, pos_type type)
     pos p;
     switch (type) {
     case pos_type_v1:
-        nj_type = NJ_HINSI_V1_F;
-        p.left = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
+        nj_type = NJ_CONNECTION_V1_LEFT;
+        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
         return p;
     case pos_type_v2:
-        nj_type = NJ_HINSI_V2_F;
-        p.left = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
+        nj_type = NJ_CONNECTION_V2_LEFT;
+        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
         return p;
     case pos_type_v3:
-        nj_type = NJ_HINSI_V3_F;
-        p.left = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
+        nj_type = NJ_CONNECTION_V3_LEFT;
+        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
         return p;
     case pos_type_buntou:
-        nj_type = NJ_HINSI_BUNTOU_B;
-        p.right = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
+        nj_type = NJ_CONNECTION_BUNTOU_RIGHT;
+        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
         return p;
     case pos_type_tankanji:
-        p.left = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_TANKANJI_F);
-        p.right = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_TANKANJI_B);
+        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SINGLE_KANJI_LEFT);
+        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SINGLE_KANJI_RIGHT);
         return p;
     case pos_type_suuji:
-        p.right = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_SUUJI_B);
+        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_NUMBER_RIGHT);
         return p;
     case pos_type_meisi:
-        p.left = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_MEISI_F);
-        p.right = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_MEISI_B);
+        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_NOUN_LEFT);
+        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_NOUN_RIGHT);
         return p;
     case pos_type_jinmei:
-        p.left = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_JINMEI_F);
-        p.right = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_JINMEI_B);
+        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PERSON_NAME_LEFT);
+        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PERSON_NAME_RIGHT);
         return p;
     case pos_type_chimei:
-        p.left = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_CHIMEI_F);
-        p.right = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_CHIMEI_B);
+        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PLACE_NAME_LEFT);
+        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PLACE_NAME_RIGHT);
         return p;
     case pos_type_kigou:
-        p.left = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_KIGOU_F);
-        p.right = njd_r_get_hinsi(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_HINSI_KIGOU_B);
+        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SYMBOL_LEFT);
+        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SYMBOL_RIGHT);
         return p;
     }
     return p;
