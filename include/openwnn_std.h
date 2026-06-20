@@ -16,9 +16,9 @@
 
 namespace openwnn {
 
-struct pos {
-    int left = 0;
-    int right = 0;
+struct connector {
+    int left_id = 0;
+    int right_id = 0;
 };
 
 struct word {
@@ -26,7 +26,7 @@ struct word {
     std::string candidate;
     std::string stroke;
     int frequency = 0;
-    pos part_of_speech;
+    connector connection;
     int attribute = 0;
 };
 
@@ -43,7 +43,7 @@ struct candidate {
     std::string candidate;
     std::string stroke;
     int frequency = 0;
-    pos part_of_speech;
+    connector connection;
     int attribute = 0;
 };
 

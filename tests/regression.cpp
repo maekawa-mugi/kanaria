@@ -30,6 +30,10 @@ int main()
     const auto today = openwnn::engine_convert(*engine, "きょう", 20);
     ok &= expect(!today.empty() && today.front().candidate == "今日",
                  "dictionary candidate did not rank ahead of raw hiragana");
+    ok &= expect(!today.empty()
+                     && today.front().connection.left_id > 0
+                     && today.front().connection.right_id > 0,
+                 "candidate connection identifiers were not exposed");
 
     const std::string sentence = "きょうはいいてんき";
     const auto converted_sentence = openwnn::engine_convert(*engine, sentence, 20);

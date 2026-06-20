@@ -63,17 +63,17 @@ enum search_order {
     order_by_key,
 };
 
-enum pos_type {
-    pos_type_v1,
-    pos_type_v2,
-    pos_type_v3,
-    pos_type_buntou,
-    pos_type_tankanji,
-    pos_type_suuji,
-    pos_type_meisi,
-    pos_type_jinmei,
-    pos_type_chimei,
-    pos_type_kigou,
+enum connector_type {
+    connector_type_v1,
+    connector_type_v2,
+    connector_type_v3,
+    connector_type_sentence_start,
+    connector_type_single_kanji,
+    connector_type_number,
+    connector_type_noun,
+    connector_type_person_name,
+    connector_type_place_name,
+    connector_type_symbol,
 };
 
 struct nj_work {
@@ -102,10 +102,10 @@ struct clause_converter {
     std::map<std::string, std::vector<word>> all_indep_word_bag;
     std::map<std::string, std::vector<word>> fzk_patterns;
     std::vector<std::vector<unsigned char>> connect_matrix;
-    pos pos_default;
-    pos pos_end_clause_1;
-    pos pos_end_clause_2;
-    pos pos_end_clause_3;
+    connector default_connector;
+    connector end_clause_connector_1;
+    connector end_clause_connector_2;
+    connector end_clause_connector_3;
 };
 
 static std::size_t utf8_codepoint_count(const std::string& s)
@@ -469,8 +469,8 @@ static std::optional<word> dictionary_get_next(dictionary_work& d, int length = 
     out.candidate = convert_nj_char_to_string(candidate_text, NJ_MAX_RESULT_LEN);
     out.stroke = convert_nj_char_to_string(stroke, NJ_MAX_LEN);
     out.frequency = d.work.result.word.stem.hindo;
-    out.part_of_speech.left = NJ_GET_LEFT_CONNECTION_ID_FROM_STEM(&d.work.result.word);
-    out.part_of_speech.right = NJ_GET_RIGHT_CONNECTION_ID_FROM_STEM(&d.work.result.word);
+    out.connection.left_id = NJ_GET_LEFT_CONNECTION_ID_FROM_STEM(&d.work.result.word);
+    out.connection.right_id = NJ_GET_RIGHT_CONNECTION_ID_FROM_STEM(&d.work.result.word);
     return out;
 }
 
@@ -515,52 +515,52 @@ static std::vector<std::vector<unsigned char>> dictionary_get_connect_matrix(dic
     return result;
 }
 
-static pos dictionary_get_pos(dictionary_work& d, pos_type type)
+static connector dictionary_get_connector(dictionary_work& d, connector_type type)
 {
     uint8_t nj_type = 0;
-    pos p;
+    connector result;
     switch (type) {
-    case pos_type_v1:
+    case connector_type_v1:
         nj_type = NJ_CONNECTION_V1_LEFT;
-        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
-        return p;
-    case pos_type_v2:
+        result.left_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
+        return result;
+    case connector_type_v2:
         nj_type = NJ_CONNECTION_V2_LEFT;
-        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
-        return p;
-    case pos_type_v3:
+        result.left_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
+        return result;
+    case connector_type_v3:
         nj_type = NJ_CONNECTION_V3_LEFT;
-        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
-        return p;
-    case pos_type_buntou:
+        result.left_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
+        return result;
+    case connector_type_sentence_start:
         nj_type = NJ_CONNECTION_BUNTOU_RIGHT;
-        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
-        return p;
-    case pos_type_tankanji:
-        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SINGLE_KANJI_LEFT);
-        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SINGLE_KANJI_RIGHT);
-        return p;
-    case pos_type_suuji:
-        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_NUMBER_RIGHT);
-        return p;
-    case pos_type_meisi:
-        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_NOUN_LEFT);
-        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_NOUN_RIGHT);
-        return p;
-    case pos_type_jinmei:
-        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PERSON_NAME_LEFT);
-        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PERSON_NAME_RIGHT);
-        return p;
-    case pos_type_chimei:
-        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PLACE_NAME_LEFT);
-        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PLACE_NAME_RIGHT);
-        return p;
-    case pos_type_kigou:
-        p.left = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SYMBOL_LEFT);
-        p.right = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SYMBOL_RIGHT);
-        return p;
+        result.right_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], nj_type);
+        return result;
+    case connector_type_single_kanji:
+        result.left_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SINGLE_KANJI_LEFT);
+        result.right_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SINGLE_KANJI_RIGHT);
+        return result;
+    case connector_type_number:
+        result.right_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_NUMBER_RIGHT);
+        return result;
+    case connector_type_noun:
+        result.left_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_NOUN_LEFT);
+        result.right_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_NOUN_RIGHT);
+        return result;
+    case connector_type_person_name:
+        result.left_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PERSON_NAME_LEFT);
+        result.right_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PERSON_NAME_RIGHT);
+        return result;
+    case connector_type_place_name:
+        result.left_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PLACE_NAME_LEFT);
+        result.right_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_PLACE_NAME_RIGHT);
+        return result;
+    case connector_type_symbol:
+        result.left_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SYMBOL_LEFT);
+        result.right_id = njd_r_get_connection_id(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], NJ_CONNECTION_SYMBOL_RIGHT);
+        return result;
     }
-    return p;
+    return result;
 }
 
 static word make_clause_word(const std::string& stroke, const word& stem)
@@ -576,7 +576,7 @@ static word make_clause_word(const std::string& stroke, const word& stem, const 
     out.id = stem.id;
     out.candidate = stem.candidate + fzk.candidate;
     out.stroke = stroke;
-    out.part_of_speech = { stem.part_of_speech.left, fzk.part_of_speech.right };
+    out.connection = { stem.connection.left_id, fzk.connection.right_id };
     out.frequency = stem.frequency
         + stem_length_bonus * static_cast<int>(utf8_codepoint_count(stem.stroke))
         - fzk_length_penalty * static_cast<int>(utf8_codepoint_count(fzk.stroke));
@@ -599,8 +599,8 @@ static bool same_clause_word(const word& lhs, const word& rhs)
 {
     return lhs.candidate == rhs.candidate
         && lhs.stroke == rhs.stroke
-        && lhs.part_of_speech.left == rhs.part_of_speech.left
-        && lhs.part_of_speech.right == rhs.part_of_speech.right;
+        && lhs.connection.left_id == rhs.connection.left_id
+        && lhs.connection.right_id == rhs.connection.right_id;
 }
 
 static bool insert_clause(std::vector<clause>& clause_list, const clause& cl, std::size_t limit)
@@ -636,15 +636,15 @@ static bool insert_clause(std::vector<clause>& clause_list, const clause& cl, st
 }
 
 static bool add_clause(clause_converter& c, std::vector<clause>& clause_list, const std::string& input,
-                       const word& stem, const word* fzk, const pos& terminal, bool all)
+                       const word& stem, const word* fzk, const connector& terminal, bool all)
 {
     std::optional<word> w;
     if (fzk == nullptr) {
-        if (connectible(c, stem.part_of_speech.right, terminal.left)) {
+        if (connectible(c, stem.connection.right_id, terminal.left_id)) {
             w = make_clause_word(input, stem);
         }
-    } else if (connectible(c, stem.part_of_speech.right, fzk->part_of_speech.left)
-               && connectible(c, fzk->part_of_speech.right, terminal.left)) {
+    } else if (connectible(c, stem.connection.right_id, fzk->connection.left_id)
+               && connectible(c, fzk->connection.right_id, terminal.left_id)) {
         w = make_clause_word(input, stem, *fzk);
     }
 
@@ -657,7 +657,7 @@ static bool add_clause(clause_converter& c, std::vector<clause>& clause_list, co
 }
 
 static bool single_clause_convert(clause_converter& c, std::vector<clause>& clause_list,
-                                  const std::string& input, const pos& terminal, bool all)
+                                  const std::string& input, const connector& terminal, bool all)
 {
     bool ret = false;
     auto stems = get_independent_words(c, input, all);
@@ -731,11 +731,11 @@ static std::vector<word> get_ancillary_pattern(clause_converter& c, const std::s
             dictionary_search(dict, search_exact, order_by_frequency, utf8_mid(input, start, end - start));
             while (auto w = dictionary_get_next(dict)) {
                 for (const auto& follow : follow_it->second) {
-                    if (connectible(c, w->part_of_speech.right, follow.part_of_speech.left)) {
+                    if (connectible(c, w->connection.right_id, follow.connection.left_id)) {
                         word combined;
                         combined.candidate = key;
                         combined.stroke = key;
-                        combined.part_of_speech = { w->part_of_speech.left, follow.part_of_speech.right };
+                        combined.connection = { w->connection.left_id, follow.connection.right_id };
                         fzks.push_back(combined);
                     }
                 }
@@ -778,7 +778,7 @@ static std::vector<word> get_independent_words(clause_converter& c, const std::s
         while (auto w = dictionary_get_next(dict)) {
             if (w->stroke == input) {
                 bool found = std::any_of(words.begin(), words.end(), [&](const word& known) {
-                    return known.part_of_speech.right == w->part_of_speech.right;
+                    return known.connection.right_id == w->connection.right_id;
                 });
                 if (!found) {
                     words.push_back(*w);
@@ -799,7 +799,7 @@ static word default_clause_word(const clause_converter& c, const std::string& in
     word w;
     w.candidate = input;
     w.stroke = input;
-    w.part_of_speech = c.pos_default;
+    w.connection = c.default_connector;
     w.frequency = (clause_cost - 1) * static_cast<int>(utf8_codepoint_count(input));
     return w;
 }
@@ -858,9 +858,9 @@ static std::optional<sentence> consecutive_clause_convert(clause_converter& c, c
             std::string key = utf8_mid(input, start, end - start);
             std::vector<clause> clauses;
             if (end == input_len) {
-                single_clause_convert(c, clauses, key, c.pos_end_clause_1, false);
+                single_clause_convert(c, clauses, key, c.end_clause_connector_1, false);
             } else {
-                single_clause_convert(c, clauses, key, c.pos_end_clause_3, false);
+                single_clause_convert(c, clauses, key, c.end_clause_connector_3, false);
             }
             if (clauses.empty()) {
                 clauses.push_back(clause{ default_clause_word(c, key) });
@@ -882,7 +882,7 @@ static std::optional<sentence> consecutive_clause_convert(clause_converter& c, c
                     ws.value.candidate += best.value.candidate;
                     ws.value.stroke += best.value.stroke;
                     ws.value.frequency += best.value.frequency;
-                    ws.value.part_of_speech.right = best.value.part_of_speech.right;
+                    ws.value.connection.right_id = best.value.connection.right_id;
                     ws.value.attribute = 2;
                     ws.elements.push_back(best);
                     ws.value.frequency += clause_cost;
@@ -910,10 +910,10 @@ static void clause_converter_init(clause_converter& c, dictionary_work& dict)
     c.dictionary = &dict;
     c.connect_matrix = dictionary_get_connect_matrix(dict);
     clear_clause_caches(c);
-    c.pos_default = dictionary_get_pos(dict, pos_type_meisi);
-    c.pos_end_clause_1 = dictionary_get_pos(dict, pos_type_v1);
-    c.pos_end_clause_2 = dictionary_get_pos(dict, pos_type_v2);
-    c.pos_end_clause_3 = dictionary_get_pos(dict, pos_type_v3);
+    c.default_connector = dictionary_get_connector(dict, connector_type_noun);
+    c.end_clause_connector_1 = dictionary_get_connector(dict, connector_type_v1);
+    c.end_clause_connector_2 = dictionary_get_connector(dict, connector_type_v2);
+    c.end_clause_connector_3 = dictionary_get_connector(dict, connector_type_v3);
 }
 
 static std::vector<candidate> words_to_candidates(const std::vector<word>& words, std::size_t limit)
@@ -928,7 +928,7 @@ static std::vector<candidate> words_to_candidates(const std::vector<word>& words
         if (!seen.insert(w.candidate).second) {
             continue;
         }
-        out.push_back({ w.candidate, w.stroke, w.frequency, w.part_of_speech, w.attribute });
+        out.push_back({ w.candidate, w.stroke, w.frequency, w.connection, w.attribute });
         if (out.size() >= limit) {
             break;
         }
@@ -1063,7 +1063,7 @@ std::vector<candidate> engine_convert(engine& e, const std::string& utf8_hiragan
     }
 
     std::vector<clause> single_clauses;
-    single_clause_convert(e.converter, single_clauses, utf8_hiragana, e.converter.pos_end_clause_2, true);
+    single_clause_convert(e.converter, single_clauses, utf8_hiragana, e.converter.end_clause_connector_2, true);
     for (const auto& cl : single_clauses) {
         words.push_back(cl.value);
     }
@@ -1071,7 +1071,7 @@ std::vector<candidate> engine_convert(engine& e, const std::string& utf8_hiragan
     word raw;
     raw.candidate = utf8_hiragana;
     raw.stroke = utf8_hiragana;
-    raw.part_of_speech = e.converter.pos_default;
+    raw.connection = e.converter.default_connector;
     raw.frequency = (clause_cost - 1) * static_cast<int>(*input_len);
     words.push_back(raw);
 
