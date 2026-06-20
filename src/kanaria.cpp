@@ -1,12 +1,12 @@
 /*
- * Std C++23 porting layer for the Qt OpenWnn library.
+ * Std C++23 porting layer for the Qt Kanaria library.
  *
  * Copyright (C) 2015 The Qt Company
  * Copyright (C) 2008-2012 OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0.
  */
-#include "openwnn_std.h"
+#include "kanaria.h"
 
 extern "C" {
 #include "nj_lib.h"
@@ -28,7 +28,7 @@ extern const uint8_t *const con_data[];
 #include <unordered_map>
 #include <unordered_set>
 
-namespace openwnn {
+namespace kanaria {
 namespace {
 
 static_assert(sizeof(NJ_CHAR) == sizeof(char32_t));
@@ -1121,4 +1121,4 @@ std::string romaji_to_hiragana(const std::string& ascii_romaji)
     return out;
 }
 
-} // namespace openwnn
+} // namespace kanaria

@@ -1,13 +1,13 @@
-﻿# OpenWnn std C++23 Port
+# Kanaria
 
-This is a Qt-free C++23 porting layer for Qt's bundled OpenWnn source.
+Kanaria is a Qt-free Japanese conversion engine with a standard C++23 API.
 
 The original dictionary engine remains C. The new public API is intentionally
 function-oriented and uses only standard C++ types such as `std::string`,
 `std::vector`, and `std::unique_ptr`.
 
 The bundled Japanese dictionary source lives in human-readable TSV files under
-`dict/`. CMake packs those TSV files into a generated `WnnJpnDic.c` under the
+`dict/`. CMake packs those TSV files into a generated `KanariaDictionary.c` under the
 build directory before compiling the library.
 
 Human-readable dictionary dumps live in `dict/`, split by dictionary role:
@@ -28,14 +28,14 @@ for compatibility with dictionary dumps.
 The dump tool can regenerate split TSV files from a compiled dictionary:
 
 ```sh
-./build/openwnn_dump_dictionary --split-dir dict
+./build/kanaria_dump_dictionary --split-dir dict
 ```
 
 ```cpp
-#include "openwnn_std.h"
+#include "kanaria.h"
 
-auto engine = openwnn::engine_create();
-auto candidates = openwnn::engine_convert(*engine, "きょうはいいてんき");
+auto engine = kanaria::engine_create();
+auto candidates = kanaria::engine_convert(*engine, "きょうはいいてんき");
 ```
 
 Build:
@@ -43,9 +43,9 @@ Build:
 ```sh
 cmake -S . -B build
 cmake --build build
-./build/openwnn_smoke
-./build/openwnn_smoke きょうはいいてんき
-./build/openwnn_smoke --romaji kyouha
+./build/kanaria_smoke
+./build/kanaria_smoke きょうはいいてんき
+./build/kanaria_smoke --romaji kyouha
 ```
 
 If `python3` is not visible to CMake, pass the interpreter explicitly:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Generate WnnJpnDic.c from human-readable dictionary TSV files.
+"""Generate KanariaDictionary.c from human-readable dictionary TSV files.
 
-The generated word dictionaries use OpenWnn's uncompressed custom dictionary
+The generated word dictionaries use Kanaria's uncompressed custom dictionary
 layout.  This keeps the source of truth in dict/*.tsv while still feeding the
 existing C dictionary engine a native binary dictionary image.
 """
@@ -90,7 +90,7 @@ def u16(value: int) -> bytes:
 def nj_chars(text: str) -> bytes:
     data = text.encode("utf-32-le")
     if len(data) > NJ_MAX_LEN * 4 and text:
-        raise SystemExit(f"entry is too long for OpenWnn NJ_CHAR storage: {text!r}")
+        raise SystemExit(f"entry is too long for Kanaria NJ_CHAR storage: {text!r}")
     return data
 
 
@@ -164,7 +164,7 @@ def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
     word_count = len(encoded)
     que_size = max(32, 5 + max_yomi_bytes + max_candidate_bytes)
     if que_size > 255:
-        raise SystemExit(f"queue record size {que_size} exceeds OpenWnn's 8-bit copy path")
+        raise SystemExit(f"queue record size {que_size} exceeds Kanaria's 8-bit copy path")
 
     index_offset = NJ_LEARN_DIC_HEADER_SIZE
     index_offset2 = index_offset + word_count * 2
@@ -191,7 +191,7 @@ def build_word_dictionary(entries: list[Entry], que_type: int) -> bytes:
 
     for entry, yomi, candidate in encoded:
         if len(yomi) > 0x7F or len(candidate) > 0x7F:
-            raise SystemExit(f"entry exceeds OpenWnn queue length field: {entry}")
+            raise SystemExit(f"entry exceeds Kanaria queue length field: {entry}")
         if entry.left_connection_id > 0x1FF or entry.right_connection_id > 0x1FF:
             raise SystemExit(f"connection id is too large: {entry}")
 

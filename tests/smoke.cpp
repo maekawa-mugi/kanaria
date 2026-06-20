@@ -1,4 +1,4 @@
-#include "openwnn_std.h"
+#include "kanaria.h"
 
 #include <iostream>
 #include <string>
@@ -69,12 +69,12 @@ int run_smoke(const std::vector<std::string>& args)
     }
 
     if (romaji) {
-        input = openwnn::romaji_to_hiragana(input);
+        input = kanaria::romaji_to_hiragana(input);
         std::cout << "hiragana=" << input << "\n";
     }
 
-    auto engine = openwnn::engine_create();
-    auto candidates = openwnn::engine_convert(*engine, input, 20);
+    auto engine = kanaria::engine_create();
+    auto candidates = kanaria::engine_convert(*engine, input, 20);
     std::cout << "count=" << candidates.size() << "\n";
     for (const auto& c : candidates) {
         std::cout << c.candidate << "\t" << c.stroke << "\t" << c.frequency << "\n";

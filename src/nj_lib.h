@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define NJ_VERSION "iWnn Version 1.1.2"
+#define NJ_VERSION "Kanaria 1.0"
 
 #ifndef _NJ_LIB_H_
 #define _NJ_LIB_H_

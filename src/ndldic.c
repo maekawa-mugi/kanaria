@@ -406,7 +406,7 @@ static int16_t is_continued(NJ_CLASS *context, NJ_DIC_HANDLE handle, uint16_t qu
         }
 
         que = get_que_type_and_next(context, handle, que_id);
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
         if (context->err_check_flg == 1) {
             que = NULL;
         }
@@ -627,7 +627,7 @@ static int16_t que_strcmp_include(NJ_CLASS *context, NJ_DIC_HANDLE handle,
         que_id = search_next_que(handle, que_id);
 
         str = get_string(context, handle, que_id, &slen);
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
         if (context->err_check_flg == 2) {
             str = NULL;
         }
@@ -1241,7 +1241,7 @@ static int16_t search_range_by_yomi(NJ_CLASS *context, NJ_DIC_HANDLE handle, uin
         que_id = GET_UINT16(p);
         str = get_string(context, handle, que_id, &slen);
 
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
         if (context->err_check_flg == 3) {
             str = NULL;
         }
@@ -1299,7 +1299,7 @@ static int16_t search_range_by_yomi(NJ_CLASS *context, NJ_DIC_HANDLE handle, uin
             que_id = GET_UINT16(p);
             str = get_string(context, handle, que_id, &slen);
 
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
             if (context->err_check_flg == 4) {
                 str = NULL;
             }
@@ -1340,7 +1340,7 @@ static int16_t search_range_by_yomi(NJ_CLASS *context, NJ_DIC_HANDLE handle, uin
     printf("  >> from:(%d)\n", *from);
 #endif 
 
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
     if (context->err_check_flg == 5) {
         mid = max - 2;
     }
@@ -1355,7 +1355,7 @@ static int16_t search_range_by_yomi(NJ_CLASS *context, NJ_DIC_HANDLE handle, uin
             que_id = GET_UINT16(p);
             str = get_string(context, handle, que_id, &slen);
 
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
             if (context->err_check_flg == 5) {
                 str = NULL;
             }
@@ -1537,7 +1537,7 @@ static int16_t str_que_cmp(NJ_CLASS *context, NJ_DIC_HANDLE handle, NJ_CHAR *yom
     uint16_t i;
 
 
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
     if (context->err_check_flg == 6) {
         que_id = GET_LEARN_MAX_WORD_COUNT(handle);
     }
@@ -1548,7 +1548,7 @@ static int16_t str_que_cmp(NJ_CLASS *context, NJ_DIC_HANDLE handle, NJ_CHAR *yom
     }
 
     queYomi = get_string(context, handle, que_id, &queYomiLen);
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
     if (context->err_check_flg == 7) {
         return NJ_SET_ERR_VAL(NJ_FUNC_STR_QUE_CMP, NJ_ERR_DIC_BROKEN);
     }
@@ -1711,7 +1711,7 @@ int16_t njd_l_get_stroke(NJ_CLASS *context, NJ_WORD *word, NJ_CHAR *stroke, uint
     }
     str = get_string(context, word->stem.loc.handle, que_id, &slen);
 
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
     if (context->err_check_flg == 9) {
         str = NULL;
     }
@@ -1745,7 +1745,7 @@ int16_t njd_l_get_candidate(NJ_CLASS *context, NJ_WORD *word,
         return NJ_SET_ERR_VAL(NJ_FUNC_NJD_L_GET_CANDIDATE, NJ_ERR_BUFFER_NOT_ENOUGH);
     }
     str = get_hyouki(context, word->stem.loc.handle, que_id, &slen);
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
     if (context->err_check_flg == 10) {
         str = NULL;
     }

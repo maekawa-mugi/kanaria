@@ -1,4 +1,4 @@
-#include "openwnn_std.h"
+#include "kanaria.h"
 
 #include <iostream>
 #include <algorithm>
@@ -18,16 +18,16 @@ bool expect(bool condition, const std::string& message)
 
 int main()
 {
-    auto engine = openwnn::engine_create();
+    auto engine = kanaria::engine_create();
     bool ok = true;
 
-    const auto prediction2 = openwnn::engine_predict(*engine, "きょう", 2);
+    const auto prediction2 = kanaria::engine_predict(*engine, "きょう", 2);
     ok &= expect(prediction2.size() == 2, "prediction limit 2 was not filled");
 
-    const auto prediction5 = openwnn::engine_predict(*engine, "きょう", 5);
+    const auto prediction5 = kanaria::engine_predict(*engine, "きょう", 5);
     ok &= expect(prediction5.size() == 5, "prediction limit 5 was not filled");
 
-    const auto today = openwnn::engine_convert(*engine, "きょう", 20);
+    const auto today = kanaria::engine_convert(*engine, "きょう", 20);
     ok &= expect(!today.empty() && today.front().candidate == "今日",
                  "dictionary candidate did not rank ahead of raw hiragana");
     ok &= expect(!today.empty()
@@ -36,7 +36,7 @@ int main()
                  "candidate connection identifiers were not exposed");
 
     const std::string sentence = "きょうはいいてんき";
-    const auto converted_sentence = openwnn::engine_convert(*engine, sentence, 20);
+    const auto converted_sentence = kanaria::engine_convert(*engine, sentence, 20);
     ok &= expect(std::all_of(converted_sentence.begin(), converted_sentence.end(), [&](const auto& item) {
         return item.stroke == sentence;
     }), "clause fragments leaked into full-sentence candidates");

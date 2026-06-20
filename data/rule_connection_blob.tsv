@@ -1,4 +1,4 @@
-# OpenWnn rule connection blob stored in little-endian dictionary format
+# Kanaria rule connection blob stored in little-endian dictionary format
 # Columns: record, name, offset_decimal, hex_bytes
 meta	con_01_data	size	18817
 data	con_01_data	0	43 44 4a 4e 01 00 02 00 00 00 0f 00 2b 49 00 00

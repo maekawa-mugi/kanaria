@@ -139,7 +139,7 @@ static int16_t search_word(NJ_CLASS *context, NJ_CURSOR *cursor, uint8_t comp_fl
         }
 
         dic_type = NJ_GET_DIC_TYPE_EX(loctset->loct.type, loctset->loct.handle);
-#ifdef IWNN_ERR_CHECK
+#ifdef KANARIA_ERR_CHECK
         if (context->err_check_flg == 12) {
             dic_type = 0x11111111;
         }

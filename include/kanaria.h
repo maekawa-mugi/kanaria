@@ -1,20 +1,20 @@
 /*
- * Std C++23 porting layer for the Qt OpenWnn library.
+ * Std C++23 porting layer for the Qt Kanaria library.
  *
  * Copyright (C) 2015 The Qt Company
  * Copyright (C) 2008-2012 OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0.
  */
-#ifndef OPENWNN_STD_H
-#define OPENWNN_STD_H
+#ifndef KANARIA_H
+#define KANARIA_H
 
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace openwnn {
+namespace kanaria {
 
 struct connector {
     int left_id = 0;
@@ -65,6 +65,6 @@ std::vector<candidate> engine_convert(engine& e, const std::string& utf8_hiragan
 
 std::string romaji_to_hiragana(const std::string& ascii_romaji);
 
-} // namespace openwnn
+} // namespace kanaria
 
-#endif // OPENWNN_STD_H
+#endif // KANARIA_H
