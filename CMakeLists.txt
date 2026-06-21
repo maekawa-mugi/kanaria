@@ -85,9 +85,13 @@ add_executable(kanaria_dump_dictionary tools/dump_dictionary.cpp)
 target_link_libraries(kanaria_dump_dictionary PRIVATE kanaria)
 target_include_directories(kanaria_dump_dictionary PRIVATE src)
 
+add_executable(kanaria_benchmark tests/benchmark.cpp)
+target_link_libraries(kanaria_benchmark PRIVATE kanaria)
+
 if (MSVC)
     target_compile_options(kanaria_smoke PRIVATE /utf-8)
     target_compile_options(kanaria_dump_dictionary PRIVATE /utf-8)
+    target_compile_options(kanaria_benchmark PRIVATE /utf-8)
     if (BUILD_TESTING)
         target_compile_options(kanaria_regression PRIVATE /utf-8)
     endif()

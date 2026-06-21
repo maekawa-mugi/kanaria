@@ -35,6 +35,25 @@ auto engine = kanaria::engine_create();
 auto candidates = kanaria::engine_convert(*engine, "きょうはいいてんき");
 ```
 
+`engine_convert` is the best-sentence convenience wrapper and returns at most
+one candidate. The explicit OpenWnn-compatible workflow is:
+
+```cpp
+auto sentence = kanaria::engine_convert_best(*engine, "きょうはいいてんき");
+auto clauses = kanaria::engine_get_clause_candidates(*engine,
+                                                     "きょうはいいてんき", 0, 3);
+auto resized = kanaria::engine_resize_clause(*engine,
+                                             "きょうはいいてんき", 0, 3);
+```
+
+User and learned words remain inside the same frequency and connector model:
+
+```cpp
+kanaria::word entry{0, "カナリア", "かなりあ", 500, {190, 37}, 0};
+kanaria::engine_add_user_word(*engine, entry);
+kanaria::engine_learn_candidate(*engine, candidates.front());
+```
+
 Build:
 
 ```sh
@@ -43,6 +62,7 @@ cmake --build build
 ./build/kanaria_smoke
 ./build/kanaria_smoke きょうはいいてんき
 ./build/kanaria_smoke --romaji kyouha
+./build/kanaria_benchmark
 ```
 
 If `python3` is not visible to CMake, pass the interpreter explicitly:
