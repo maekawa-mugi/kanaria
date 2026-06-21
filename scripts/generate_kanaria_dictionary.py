@@ -45,7 +45,6 @@ INPUT_HEADER = [
 
 DICTIONARY_SLOTS = [
     ("prediction", QUE_TYPE_JIRI),
-    ("prediction", QUE_TYPE_JIRI),
     ("uncompressed", QUE_TYPE_JIRI),
     ("suffix_words", QUE_TYPE_JIRI),
     ("single_kanji", QUE_TYPE_JIRI),

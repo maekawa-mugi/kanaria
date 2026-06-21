@@ -23,9 +23,11 @@ extern const uint8_t *const con_data[];
 #include <algorithm>
 #include <array>
 #include <bit>
+#include <cstdint>
 #include <cstring>
-#include <map>
+#include <limits>
 #include <optional>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -50,10 +52,13 @@ constexpr int freq_user = 500;
 constexpr int max_input_length = 50;
 constexpr int max_output_length = 50;
 constexpr int clause_cost = -1000;
-constexpr std::size_t clause_beam_width = 8;
-constexpr std::size_t sentence_beam_width = 8;
-constexpr int stem_length_bonus = 24;
-constexpr int fzk_length_penalty = 8;
+constexpr std::size_t max_cache_entries = 4096;
+
+constexpr int dictionary_prediction = 0;
+constexpr int dictionary_suffix = 2;
+constexpr int dictionary_single_kanji = 3;
+constexpr int dictionary_independent = 4;
+constexpr int dictionary_ancillary = 5;
 
 enum search_operation {
     search_exact,
@@ -99,16 +104,58 @@ struct dictionary_work {
     nj_work work{};
 };
 
+struct connection_table {
+    std::size_t right_count = 0;
+    std::vector<unsigned char> allowed;
+};
+
 struct clause_converter {
     dictionary_work* dictionary = nullptr;
-    std::map<std::string, std::vector<word>> indep_word_bag;
-    std::map<std::string, std::vector<word>> all_indep_word_bag;
-    std::map<std::string, std::vector<word>> fzk_patterns;
-    std::vector<std::vector<unsigned char>> connect_matrix;
+    std::unordered_map<std::string, std::vector<word>> indep_word_bag;
+    std::unordered_map<std::string, std::vector<word>> all_indep_word_bag;
+    std::unordered_map<std::string, std::vector<word>> fzk_patterns;
+    connection_table connect_matrix;
+    const std::vector<word>* user_words = nullptr;
+    const std::vector<word>* learned_words = nullptr;
+    std::uint64_t cache_version = 0;
     connector default_connector;
     connector end_clause_connector_1;
     connector end_clause_connector_2;
     connector end_clause_connector_3;
+};
+
+struct utf8_input_view {
+    std::string_view bytes;
+    std::vector<std::uint32_t> offsets;
+
+    explicit utf8_input_view(const std::string& input) : bytes(input)
+    {
+        offsets.reserve(input.size() + 1);
+        offsets.push_back(0);
+        for (std::size_t i = 0; i < input.size();) {
+            const unsigned char c = static_cast<unsigned char>(input[i]);
+            std::size_t step = 1;
+            if ((c & 0xE0) == 0xC0) {
+                step = 2;
+            } else if ((c & 0xF0) == 0xE0) {
+                step = 3;
+            } else if ((c & 0xF8) == 0xF0) {
+                step = 4;
+            }
+            i = std::min(i + step, input.size());
+            offsets.push_back(static_cast<std::uint32_t>(i));
+        }
+    }
+
+    std::size_t size() const { return offsets.size() - 1; }
+
+    std::string span(std::size_t begin, std::size_t end) const
+    {
+        if (begin >= end || end > size()) {
+            return {};
+        }
+        return std::string(bytes.substr(offsets[begin], offsets[end] - offsets[begin]));
+    }
 };
 
 static std::size_t utf8_codepoint_count(const std::string& s)
@@ -187,41 +234,6 @@ static std::optional<std::size_t> validated_utf8_code_unit_count(const std::stri
         count += codepoint > 0xFFFF ? 2 : 1;
     }
     return count;
-}
-
-static std::vector<std::size_t> utf8_offsets(const std::string& s)
-{
-    std::vector<std::size_t> offsets;
-    offsets.reserve(s.size() + 1);
-    offsets.push_back(0);
-    for (std::size_t i = 0; i < s.size();) {
-        unsigned char c = static_cast<unsigned char>(s[i]);
-        std::size_t step = 1;
-        if ((c & 0x80) == 0x00) {
-            step = 1;
-        } else if ((c & 0xE0) == 0xC0) {
-            step = 2;
-        } else if ((c & 0xF0) == 0xE0) {
-            step = 3;
-        } else if ((c & 0xF8) == 0xF0) {
-            step = 4;
-        }
-        i = std::min(i + step, s.size());
-        offsets.push_back(i);
-    }
-    return offsets;
-}
-
-static std::string utf8_mid(const std::string& s, std::size_t first, std::size_t len = static_cast<std::size_t>(-1))
-{
-    auto offsets = utf8_offsets(s);
-    if (first >= offsets.size() - 1) {
-        return {};
-    }
-    std::size_t last = len == static_cast<std::size_t>(-1)
-        ? offsets.size() - 1
-        : std::min(first + len, offsets.size() - 1);
-    return s.substr(offsets[first], offsets[last] - offsets[first]);
 }
 
 static std::string to_ascii_lower(std::string s)
@@ -518,7 +530,7 @@ static std::vector<unsigned char> dictionary_get_connect_array(dictionary_work& 
     return result;
 }
 
-static std::vector<std::vector<unsigned char>> dictionary_get_connect_matrix(dictionary_work& d)
+static connection_table dictionary_get_connect_matrix(dictionary_work& d)
 {
     uint16_t left_count = 0;
     uint16_t right_count = 0;
@@ -526,10 +538,12 @@ static std::vector<std::vector<unsigned char>> dictionary_get_connect_matrix(dic
         return {};
     }
     njd_r_get_connection_counts(d.work.dic_set.rHandle[NJ_MODE_TYPE_HENKAN], &left_count, &right_count);
-    std::vector<std::vector<unsigned char>> result;
-    result.reserve(static_cast<std::size_t>(left_count) + 1);
+    connection_table result;
+    result.right_count = static_cast<std::size_t>(right_count) + 1;
+    result.allowed.reserve((static_cast<std::size_t>(left_count) + 1) * result.right_count);
     for (int i = 0; i < left_count + 1; i++) {
-        result.push_back(dictionary_get_connect_array(d, i));
+        auto row = dictionary_get_connect_array(d, i);
+        result.allowed.insert(result.allowed.end(), row.begin(), row.end());
     }
     return result;
 }
@@ -596,9 +610,7 @@ static word make_clause_word(const std::string& stroke, const word& stem, const 
     out.candidate = stem.candidate + fzk.candidate;
     out.stroke = stroke;
     out.connection = { stem.connection.left_id, fzk.connection.right_id };
-    out.frequency = stem.frequency
-        + stem_length_bonus * static_cast<int>(utf8_codepoint_count(stem.stroke))
-        - fzk_length_penalty * static_cast<int>(utf8_codepoint_count(fzk.stroke));
+    out.frequency = stem.frequency;
     out.attribute = 1;
     return out;
 }
@@ -606,13 +618,17 @@ static word make_clause_word(const std::string& stroke, const word& stem, const 
 static bool connectible(const clause_converter& c, int right, int left)
 {
     return left >= 0 && right >= 0
-        && static_cast<std::size_t>(left) < c.connect_matrix.size()
-        && static_cast<std::size_t>(right) < c.connect_matrix[static_cast<std::size_t>(left)].size()
-        && c.connect_matrix[static_cast<std::size_t>(left)][static_cast<std::size_t>(right)] != 0;
+        && c.connect_matrix.right_count != 0
+        && static_cast<std::size_t>(right) < c.connect_matrix.right_count
+        && (static_cast<std::size_t>(left) * c.connect_matrix.right_count
+            + static_cast<std::size_t>(right)) < c.connect_matrix.allowed.size()
+        && c.connect_matrix.allowed[static_cast<std::size_t>(left) * c.connect_matrix.right_count
+                                    + static_cast<std::size_t>(right)] != 0;
 }
 
-static std::vector<word> get_independent_words(clause_converter& c, const std::string& input, bool all);
-static std::vector<word> get_ancillary_pattern(clause_converter& c, const std::string& input);
+static const std::vector<word>& get_independent_words(clause_converter& c, const std::string& input, bool all);
+static const std::vector<word>& get_ancillary_pattern(clause_converter& c, const std::string& input);
+static word default_clause_word(const clause_converter& c, const std::string& input);
 
 static bool same_clause_word(const word& lhs, const word& rhs)
 {
@@ -672,29 +688,30 @@ static bool add_clause(clause_converter& c, std::vector<clause>& clause_list, co
     }
 
     clause cl{ *w };
-    return insert_clause(clause_list, cl, all ? 0 : clause_beam_width);
+    return insert_clause(clause_list, cl, all ? 0 : 1);
 }
 
 static bool single_clause_convert(clause_converter& c, std::vector<clause>& clause_list,
                                   const std::string& input, const connector& terminal, bool all)
 {
     bool ret = false;
-    auto stems = get_independent_words(c, input, all);
-    for (const auto& stem : stems) {
+    const auto& direct_stems = get_independent_words(c, input, all);
+    for (const auto& stem : direct_stems) {
         if (add_clause(c, clause_list, input, stem, nullptr, terminal, all)) {
             ret = true;
         }
     }
 
-    const std::size_t input_len = utf8_codepoint_count(input);
+    const utf8_input_view input_view(input);
+    const std::size_t input_len = input_view.size();
     for (std::size_t split = 1; split < input_len; split++) {
-        auto fzks = get_ancillary_pattern(c, utf8_mid(input, split));
+        const auto& fzks = get_ancillary_pattern(c, input_view.span(split, input_len));
         if (fzks.empty()) {
             continue;
         }
 
-        const std::string stem_key = utf8_mid(input, 0, split);
-        stems = get_independent_words(c, stem_key, all);
+        const std::string stem_key = input_view.span(0, split);
+        const auto& stems = get_independent_words(c, stem_key, all);
         if (stems.empty()) {
             if (dictionary_search(*c.dictionary, search_prefix, order_by_frequency, stem_key) <= 0) {
                 break;
@@ -713,24 +730,28 @@ static bool single_clause_convert(clause_converter& c, std::vector<clause>& clau
     return ret;
 }
 
-static std::vector<word> get_ancillary_pattern(clause_converter& c, const std::string& input)
+static const std::vector<word>& get_ancillary_pattern(clause_converter& c, const std::string& input)
 {
-    if (input.empty()) {
-        return {};
-    }
     if (auto it = c.fzk_patterns.find(input); it != c.fzk_patterns.end()) {
         return it->second;
+    }
+    if (c.fzk_patterns.size() >= max_cache_entries) {
+        c.fzk_patterns.clear();
+    }
+    if (input.empty()) {
+        return c.fzk_patterns.try_emplace(input).first->second;
     }
 
     auto& dict = *c.dictionary;
     dictionary_clear(dict);
     dictionary_clear_approx(dict);
-    dictionary_set(dict, 6, 400, 500);
+    dictionary_set(dict, dictionary_ancillary, 400, 500);
 
-    const std::size_t input_len = utf8_codepoint_count(input);
+    const utf8_input_view input_view(input);
+    const std::size_t input_len = input_view.size();
     for (std::size_t start_rev = input_len; start_rev > 0; --start_rev) {
         std::size_t start = start_rev - 1;
-        std::string key = utf8_mid(input, start);
+        std::string key = input_view.span(start, input_len);
         if (c.fzk_patterns.contains(key)) {
             continue;
         }
@@ -742,17 +763,17 @@ static std::vector<word> get_ancillary_pattern(clause_converter& c, const std::s
         }
 
         for (std::size_t end = input_len - 1; end > start; --end) {
-            std::string follow_key = utf8_mid(input, end);
+            std::string follow_key = input_view.span(end, input_len);
             auto follow_it = c.fzk_patterns.find(follow_key);
             if (follow_it == c.fzk_patterns.end() || follow_it->second.empty()) {
                 continue;
             }
-            dictionary_search(dict, search_exact, order_by_frequency, utf8_mid(input, start, end - start));
+            dictionary_search(dict, search_exact, order_by_frequency, input_view.span(start, end));
             while (auto w = dictionary_get_next(dict)) {
                 for (const auto& follow : follow_it->second) {
                     if (connectible(c, w->connection.right_id, follow.connection.left_id)) {
                         word combined;
-                        combined.candidate = key;
+                        combined.candidate = w->candidate + follow.candidate;
                         combined.stroke = key;
                         combined.connection = { w->connection.left_id, follow.connection.right_id };
                         fzks.push_back(combined);
@@ -761,56 +782,86 @@ static std::vector<word> get_ancillary_pattern(clause_converter& c, const std::s
             }
         }
 
-        c.fzk_patterns[key] = fzks;
+        c.fzk_patterns.insert_or_assign(key, std::move(fzks));
     }
-    return c.fzk_patterns[input];
+    return c.fzk_patterns.find(input)->second;
 }
 
-static std::vector<word> get_independent_words(clause_converter& c, const std::string& input, bool all)
+static void merge_word(std::vector<word>& words, const word& value)
 {
-    if (input.empty()) {
-        return {};
+    auto same = std::find_if(words.begin(), words.end(), [&](const word& known) {
+        return same_clause_word(known, value);
+    });
+    if (same == words.end()) {
+        words.push_back(value);
+    } else if (same->frequency < value.frequency) {
+        *same = value;
     }
+}
 
+static const std::vector<word>& get_independent_words(clause_converter& c, const std::string& input, bool all)
+{
     auto& bag = all ? c.all_indep_word_bag : c.indep_word_bag;
     if (auto it = bag.find(input); it != bag.end()) {
         return it->second;
+    }
+    if (bag.size() >= max_cache_entries) {
+        bag.clear();
+    }
+    if (input.empty()) {
+        return bag.try_emplace(input).first->second;
     }
 
     std::vector<word> words;
     auto& dict = *c.dictionary;
     dictionary_clear(dict);
     dictionary_clear_approx(dict);
-    dictionary_set(dict, 4, 0, 10);
-    dictionary_set(dict, 5, 400, 500);
-    dictionary_set(dict, -1, freq_user, freq_user);
-    dictionary_set(dict, -2, freq_learn, freq_learn);
+    dictionary_set(dict, dictionary_single_kanji, 0, 10);
+    dictionary_set(dict, dictionary_independent, 400, 500);
 
     dictionary_search(dict, search_exact, order_by_frequency, input);
     if (all) {
         while (auto w = dictionary_get_next(dict)) {
             if (w->stroke == input) {
-                words.push_back(*w);
+                merge_word(words, *w);
             }
         }
     } else {
         while (auto w = dictionary_get_next(dict)) {
             if (w->stroke == input) {
-                bool found = std::any_of(words.begin(), words.end(), [&](const word& known) {
-                    return known.connection.right_id == w->connection.right_id;
+                auto known = std::find_if(words.begin(), words.end(), [&](const word& value) {
+                    return value.connection.right_id == w->connection.right_id;
                 });
-                if (!found) {
-                    words.push_back(*w);
-                }
-                if (w->frequency < 400) {
-                    break;
+                if (known == words.end()) {
+                    merge_word(words, *w);
+                } else if (known->frequency < w->frequency) {
+                    *known = *w;
                 }
             }
         }
     }
 
-    bag[input] = words;
-    return words;
+    const auto merge_dynamic_words = [&](const std::vector<word>* dynamic_words) {
+        if (dynamic_words == nullptr) {
+            return;
+        }
+        for (const auto& entry : *dynamic_words) {
+            if (entry.stroke == input) {
+                merge_word(words, entry);
+            }
+        }
+    };
+    merge_dynamic_words(c.user_words);
+    merge_dynamic_words(c.learned_words);
+
+    // OpenWnn injects its autogenerated raw candidate at independent-word
+    // lookup time so it participates in clauses, ancillary expansion, and DP.
+    merge_word(words, default_clause_word(c, input));
+    std::stable_sort(words.begin(), words.end(), [](const word& lhs, const word& rhs) {
+        return lhs.frequency > rhs.frequency;
+    });
+
+    return bag.emplace(input, std::move(words)).first->second;
 }
 
 static word default_clause_word(const clause_converter& c, const std::string& input)
@@ -823,61 +874,58 @@ static word default_clause_word(const clause_converter& c, const std::string& in
     return w;
 }
 
-static bool same_sentence_word(const sentence& lhs, const sentence& rhs)
+struct sentence_node {
+    clause element;
+    int frequency = std::numeric_limits<int>::min();
+    int previous_end = -1;
+};
+
+static bool span_is_allowed(std::size_t begin, std::size_t end,
+                            const std::optional<std::pair<std::size_t, std::size_t>>& forced)
 {
-    return same_clause_word(lhs.value, rhs.value);
+    if (!forced) {
+        return true;
+    }
+    const auto [forced_begin, forced_end] = *forced;
+    if (end <= forced_begin || begin >= forced_end) {
+        return true;
+    }
+    return begin == forced_begin && end == forced_end;
 }
 
-static void insert_sentence(std::vector<sentence>& list, const sentence& value)
+static std::optional<sentence> consecutive_clause_convert(
+    clause_converter& c, const std::string& input,
+    const std::optional<std::pair<std::size_t, std::size_t>>& forced = std::nullopt)
 {
-    auto same = std::find_if(list.begin(), list.end(), [&](const sentence& x) {
-        return same_sentence_word(x, value);
-    });
-    if (same != list.end()) {
-        if (same->value.frequency >= value.value.frequency) {
-            return;
-        }
-        list.erase(same);
-    }
-
-    auto it = std::find_if(list.begin(), list.end(), [&](const sentence& x) {
-        return x.value.frequency < value.value.frequency;
-    });
-    list.insert(it, value);
-    if (list.size() > sentence_beam_width) {
-        list.resize(sentence_beam_width);
-    }
-}
-
-static std::optional<sentence> consecutive_clause_convert(clause_converter& c, const std::string& input)
-{
-    const std::size_t input_len = utf8_codepoint_count(input);
+    const utf8_input_view input_view(input);
+    const std::size_t input_len = input_view.size();
     if (input_len == 0) {
         return std::nullopt;
     }
 
-    std::vector<std::vector<sentence>> sentences(input_len);
+    std::vector<std::optional<sentence_node>> nodes(input_len);
     for (std::size_t start = 0; start < input_len; start++) {
-        if (start != 0 && sentences[start - 1].empty()) {
+        if (start != 0 && !nodes[start - 1]) {
             continue;
         }
 
         std::size_t end = std::min(input_len, start + 20);
         for (; end > start; --end) {
+            if (!span_is_allowed(start, end, forced)) {
+                continue;
+            }
             std::size_t idx = end - 1;
-            if (!sentences[idx].empty()) {
-                int base = (start != 0 && !sentences[start - 1].empty())
-                    ? sentences[start - 1].front().value.frequency
-                    : 0;
-                if (sentences[idx].front().value.frequency > base + clause_cost + freq_learn) {
+            const int base = start == 0 ? 0 : nodes[start - 1]->frequency;
+            if (nodes[idx]) {
+                if (nodes[idx]->frequency > base + clause_cost + freq_learn) {
                     break;
                 }
             }
 
-            std::string key = utf8_mid(input, start, end - start);
+            std::string key = input_view.span(start, end);
             std::vector<clause> clauses;
             if (end == input_len) {
-                single_clause_convert(c, clauses, key, c.end_clause_connector_1, false);
+                single_clause_convert(c, clauses, key, c.end_clause_connector_2, false);
             } else {
                 single_clause_convert(c, clauses, key, c.end_clause_connector_3, false);
             }
@@ -885,36 +933,35 @@ static std::optional<sentence> consecutive_clause_convert(clause_converter& c, c
                 clauses.push_back(clause{ default_clause_word(c, key) });
             }
 
-            for (const auto& best : clauses) {
-                if (start == 0) {
-                    sentence ws;
-                    ws.value = best.value;
-                    ws.value.stroke = key;
-                    ws.elements.push_back(best);
-                    ws.value.frequency += clause_cost;
-                    insert_sentence(sentences[idx], ws);
-                    continue;
-                }
-
-                for (const auto& prev : sentences[start - 1]) {
-                    sentence ws = prev;
-                    ws.value.candidate += best.value.candidate;
-                    ws.value.stroke += best.value.stroke;
-                    ws.value.frequency += best.value.frequency;
-                    ws.value.connection.right_id = best.value.connection.right_id;
-                    ws.value.attribute = 2;
-                    ws.elements.push_back(best);
-                    ws.value.frequency += clause_cost;
-                    insert_sentence(sentences[idx], ws);
-                }
+            const clause& best = clauses.front();
+            const int frequency = base + best.value.frequency + clause_cost;
+            if (!nodes[idx] || frequency > nodes[idx]->frequency) {
+                nodes[idx] = sentence_node{ best, frequency,
+                    start == 0 ? -1 : static_cast<int>(start - 1) };
             }
         }
     }
 
-    if (sentences[input_len - 1].empty()) {
+    if (!nodes[input_len - 1]) {
         return std::nullopt;
     }
-    return sentences[input_len - 1].front();
+
+    sentence result;
+    result.value.frequency = nodes[input_len - 1]->frequency;
+    for (int index = static_cast<int>(input_len - 1); index >= 0;) {
+        const sentence_node& node = *nodes[static_cast<std::size_t>(index)];
+        result.elements.push_back(node.element);
+        index = node.previous_end;
+    }
+    std::reverse(result.elements.begin(), result.elements.end());
+    result.value.stroke = input;
+    result.value.connection.left_id = result.elements.front().value.connection.left_id;
+    result.value.connection.right_id = result.elements.back().value.connection.right_id;
+    result.value.attribute = result.elements.size() > 1 ? 2 : result.elements.front().value.attribute;
+    for (const auto& element : result.elements) {
+        result.value.candidate += element.value.candidate;
+    }
+    return result;
 }
 
 static void clear_clause_caches(clause_converter& c)
@@ -922,6 +969,14 @@ static void clear_clause_caches(clause_converter& c)
     c.indep_word_bag.clear();
     c.all_indep_word_bag.clear();
     c.fzk_patterns.clear();
+}
+
+static void synchronize_clause_caches(clause_converter& c, std::uint64_t dictionary_version)
+{
+    if (c.cache_version != dictionary_version) {
+        clear_clause_caches(c);
+        c.cache_version = dictionary_version;
+    }
 }
 
 static void clause_converter_init(clause_converter& c, dictionary_work& dict)
@@ -960,18 +1015,10 @@ static void set_dictionary_for_prediction(dictionary_work& dict, std::size_t inp
     dictionary_clear(dict);
     dictionary_clear_approx(dict);
     if (input_len == 0) {
-        dictionary_set(dict, 2, 245, 245);
-        dictionary_set(dict, 3, 100, 244);
-        dictionary_set(dict, -2, freq_learn, freq_learn);
+        dictionary_set(dict, dictionary_suffix, 100, 245);
     } else {
-        dictionary_set(dict, 0, 100, 400);
-        if (input_len > 1) {
-            dictionary_set(dict, 1, 100, 400);
-        }
-        dictionary_set(dict, 2, 245, 245);
-        dictionary_set(dict, 3, 100, 244);
-        dictionary_set(dict, -1, freq_user, freq_user);
-        dictionary_set(dict, -2, freq_learn, freq_learn);
+        dictionary_set(dict, dictionary_prediction, 100, 400);
+        dictionary_set(dict, dictionary_suffix, 100, 245);
     }
 }
 
@@ -1017,6 +1064,9 @@ static const std::unordered_map<std::string, std::string>& romaji_table()
 struct engine {
     dictionary_work dictionary;
     clause_converter converter;
+    std::vector<word> user_words;
+    std::vector<word> learned_words;
+    std::uint64_t dictionary_version = 1;
 };
 
 void engine_deleter::operator()(engine* e) const noexcept
@@ -1031,15 +1081,24 @@ engine_ptr engine_create()
     dictionary_clear(e->dictionary);
     dictionary_clear_approx(e->dictionary);
     clause_converter_init(e->converter, e->dictionary);
+    e->converter.user_words = &e->user_words;
+    e->converter.learned_words = &e->learned_words;
+    e->converter.cache_version = e->dictionary_version;
     return e;
 }
 
 void engine_reset(engine& e)
 {
+    e.user_words.clear();
+    e.learned_words.clear();
+    ++e.dictionary_version;
     dictionary_init(e.dictionary);
     dictionary_clear(e.dictionary);
     dictionary_clear_approx(e.dictionary);
     clause_converter_init(e.converter, e.dictionary);
+    e.converter.user_words = &e.user_words;
+    e.converter.learned_words = &e.learned_words;
+    e.converter.cache_version = e.dictionary_version;
 }
 
 std::vector<candidate> engine_predict(engine& e, const std::string& utf8_hiragana, std::size_t limit)
@@ -1064,41 +1123,160 @@ std::vector<candidate> engine_predict(engine& e, const std::string& utf8_hiragan
             break;
         }
     }
+    const auto append_dynamic = [&](const std::vector<word>& dynamic_words) {
+        for (const auto& value : dynamic_words) {
+            if (value.stroke.starts_with(utf8_hiragana)) {
+                words.push_back(value);
+            }
+        }
+    };
+    append_dynamic(e.user_words);
+    append_dynamic(e.learned_words);
+    std::stable_sort(words.begin(), words.end(), [](const word& lhs, const word& rhs) {
+        return lhs.frequency > rhs.frequency;
+    });
     return words_to_candidates(words, limit);
+}
+
+std::optional<sentence> engine_convert_best(engine& e, const std::string& utf8_hiragana)
+{
+    auto input_len = validated_utf8_code_unit_count(utf8_hiragana);
+    if (!input_len || *input_len == 0 || *input_len > max_input_length) {
+        return std::nullopt;
+    }
+    synchronize_clause_caches(e.converter, e.dictionary_version);
+    return consecutive_clause_convert(e.converter, utf8_hiragana);
+}
+
+std::vector<candidate> engine_get_clause_candidates(engine& e,
+                                                    const std::string& utf8_hiragana,
+                                                    std::size_t clause_position,
+                                                    std::size_t clause_length,
+                                                    std::size_t limit)
+{
+    auto input_len = validated_utf8_code_unit_count(utf8_hiragana);
+    const utf8_input_view input_view(utf8_hiragana);
+    if (!input_len || *input_len == 0 || *input_len > max_input_length || limit == 0
+        || clause_length == 0 || clause_position > input_view.size()
+        || clause_length > input_view.size() - clause_position) {
+        return {};
+    }
+    synchronize_clause_caches(e.converter, e.dictionary_version);
+    const std::string selected = input_view.span(clause_position, clause_position + clause_length);
+    std::vector<clause> clauses;
+    single_clause_convert(e.converter, clauses, selected, e.converter.end_clause_connector_2, true);
+    std::vector<word> words;
+    words.reserve(clauses.size());
+    for (const auto& value : clauses) {
+        words.push_back(value.value);
+    }
+    return words_to_candidates(words, limit);
+}
+
+std::optional<sentence> engine_resize_clause(engine& e,
+                                             const std::string& utf8_hiragana,
+                                             std::size_t clause_position,
+                                             std::size_t clause_length)
+{
+    auto input_len = validated_utf8_code_unit_count(utf8_hiragana);
+    const utf8_input_view input_view(utf8_hiragana);
+    if (!input_len || *input_len == 0 || *input_len > max_input_length
+        || clause_length == 0 || clause_position > input_view.size()
+        || clause_length > input_view.size() - clause_position) {
+        return std::nullopt;
+    }
+    synchronize_clause_caches(e.converter, e.dictionary_version);
+    return consecutive_clause_convert(e.converter, utf8_hiragana,
+        std::pair{ clause_position, clause_position + clause_length });
 }
 
 std::vector<candidate> engine_convert(engine& e, const std::string& utf8_hiragana, std::size_t limit)
 {
-    auto input_len = validated_utf8_code_unit_count(utf8_hiragana);
-    if (!input_len || *input_len == 0 || limit == 0 || *input_len > max_input_length) {
+    if (limit == 0) {
         return {};
     }
-
-    clear_clause_caches(e.converter);
-
-    std::vector<word> words;
-    if (auto s = consecutive_clause_convert(e.converter, utf8_hiragana)) {
-        words.push_back(s->value);
+    auto best = engine_convert_best(e, utf8_hiragana);
+    if (!best) {
+        return {};
     }
+    return { candidate{ best->value.candidate, best->value.stroke, best->value.frequency,
+                        best->value.connection, best->value.attribute } };
+}
 
-    std::vector<clause> single_clauses;
-    single_clause_convert(e.converter, single_clauses, utf8_hiragana, e.converter.end_clause_connector_2, true);
-    for (const auto& cl : single_clauses) {
-        words.push_back(cl.value);
+static bool valid_dynamic_word(const word& value)
+{
+    auto stroke_len = validated_utf8_code_unit_count(value.stroke);
+    auto candidate_len = validated_utf8_code_unit_count(value.candidate);
+    return stroke_len && candidate_len && *stroke_len > 0 && *candidate_len > 0
+        && *stroke_len <= max_input_length && *candidate_len <= max_output_length
+        && value.connection.left_id >= 0 && value.connection.right_id >= 0;
+}
+
+bool engine_add_user_word(engine& e, const word& entry)
+{
+    if (!valid_dynamic_word(entry)) {
+        return false;
     }
+    word value = entry;
+    if (value.frequency == 0) {
+        value.frequency = freq_user;
+    }
+    merge_word(e.user_words, value);
+    ++e.dictionary_version;
+    return true;
+}
 
-    word raw;
-    raw.candidate = utf8_hiragana;
-    raw.stroke = utf8_hiragana;
-    raw.connection = e.converter.default_connector;
-    raw.frequency = (clause_cost - 1) * static_cast<int>(*input_len);
-    words.push_back(raw);
-
-    std::stable_sort(words.begin(), words.end(), [](const word& lhs, const word& rhs) {
-        return lhs.frequency > rhs.frequency;
+bool engine_remove_user_word(engine& e, const word& entry)
+{
+    auto it = std::find_if(e.user_words.begin(), e.user_words.end(), [&](const word& value) {
+        return same_clause_word(value, entry);
     });
+    if (it == e.user_words.end()) {
+        return false;
+    }
+    e.user_words.erase(it);
+    ++e.dictionary_version;
+    return true;
+}
 
-    return words_to_candidates(words, limit);
+void engine_clear_user_words(engine& e)
+{
+    if (!e.user_words.empty()) {
+        e.user_words.clear();
+        ++e.dictionary_version;
+    }
+}
+
+bool engine_learn_candidate(engine& e, const candidate& selected, int frequency_delta)
+{
+    word value;
+    value.candidate = selected.candidate;
+    value.stroke = selected.stroke;
+    value.frequency = selected.frequency;
+    value.connection = selected.connection;
+    value.attribute = selected.attribute;
+    if (frequency_delta <= 0 || !valid_dynamic_word(value)) {
+        return false;
+    }
+    auto it = std::find_if(e.learned_words.begin(), e.learned_words.end(), [&](const word& known) {
+        return same_clause_word(known, value);
+    });
+    if (it == e.learned_words.end()) {
+        value.frequency = std::max(freq_learn, value.frequency) + frequency_delta;
+        e.learned_words.push_back(std::move(value));
+    } else {
+        it->frequency += frequency_delta;
+    }
+    ++e.dictionary_version;
+    return true;
+}
+
+void engine_clear_learning(engine& e)
+{
+    if (!e.learned_words.empty()) {
+        e.learned_words.clear();
+        ++e.dictionary_version;
+    }
 }
 
 std::string romaji_to_hiragana(const std::string& ascii_romaji)

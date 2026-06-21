@@ -58,13 +58,12 @@ const char* dic_type_name(uint32_t type)
 const char* dictionary_file_name(int dic_index, uint32_t type)
 {
     switch (dic_index) {
-    case 0:
-    case 1: return "prediction";
-    case 2: return "uncompressed";
-    case 3: return "suffix_words";
-    case 4: return "single_kanji";
-    case 5: return "independent_words";
-    case 6: return "ancillary_words";
+    case 0: return "prediction";
+    case 1: return "uncompressed";
+    case 2: return "suffix_words";
+    case 3: return "single_kanji";
+    case 4: return "independent_words";
+    case 5: return "ancillary_words";
     default: return type == NJ_DIC_TYPE_USER ? "user" : "unknown";
     }
 }
