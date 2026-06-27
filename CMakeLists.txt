@@ -88,6 +88,27 @@ target_include_directories(kanaria_dump_dictionary PRIVATE src)
 add_executable(kanaria_benchmark tests/benchmark.cpp)
 target_link_libraries(kanaria_benchmark PRIVATE kanaria)
 
+if (WIN32)
+    add_library(kanaria_tsf SHARED
+        src/tsf/kanaria_tsf.cpp
+        src/tsf/kanaria_tsf.def
+    )
+    target_link_libraries(kanaria_tsf
+        PRIVATE
+            kanaria
+            ole32
+            oleaut32
+            uuid
+            advapi32
+            user32
+            gdi32
+    )
+    target_compile_definitions(kanaria_tsf PRIVATE UNICODE _UNICODE)
+    if (MSVC)
+        target_compile_options(kanaria_tsf PRIVATE /utf-8)
+    endif()
+endif()
+
 if (MSVC)
     target_compile_options(kanaria_smoke PRIVATE /utf-8)
     target_compile_options(kanaria_dump_dictionary PRIVATE /utf-8)

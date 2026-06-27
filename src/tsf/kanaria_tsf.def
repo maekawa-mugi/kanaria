@@ -1,0 +1,7 @@
+LIBRARY kanaria_tsf
+
+EXPORTS
+    DllCanUnloadNow
+    DllGetClassObject
+    DllRegisterServer
+    DllUnregisterServer
