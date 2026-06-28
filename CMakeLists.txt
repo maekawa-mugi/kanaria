@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+include(GNUInstallDirs)
+
 find_program(PYTHON3_EXECUTABLE NAMES python3 python py REQUIRED)
 
 set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
@@ -106,6 +108,35 @@ if (WIN32)
     target_compile_definitions(kanaria_tsf PRIVATE UNICODE _UNICODE)
     if (MSVC)
         target_compile_options(kanaria_tsf PRIVATE /utf-8)
+    endif()
+endif()
+
+option(KANARIA_BUILD_IBUS "Build the ibus-kanaria frontend when ibus-1.0 is available" ON)
+
+if (KANARIA_BUILD_IBUS AND NOT WIN32)
+    find_package(PkgConfig QUIET)
+    if (PkgConfig_FOUND)
+        pkg_check_modules(IBUS QUIET IMPORTED_TARGET ibus-1.0)
+    endif()
+
+    if (IBUS_FOUND)
+        add_executable(ibus-kanaria src/ibus/kanaria_ibus.cpp)
+        target_link_libraries(ibus-kanaria PRIVATE kanaria PkgConfig::IBUS)
+
+        configure_file(
+            src/ibus/kanaria.xml.in
+            "${CMAKE_CURRENT_BINARY_DIR}/ibus-kanaria.xml"
+            @ONLY
+        )
+
+        install(TARGETS ibus-kanaria
+            RUNTIME DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}"
+        )
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ibus-kanaria.xml"
+            DESTINATION "${CMAKE_INSTALL_DATADIR}/ibus/component"
+        )
+    else()
+        message(STATUS "ibus-1.0 was not found; skipping ibus-kanaria")
     endif()
 endif()
 

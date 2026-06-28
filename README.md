@@ -71,4 +71,17 @@ If `python3` is not visible to CMake, pass the interpreter explicitly:
 cmake -S . -B build -DPYTHON3_EXECUTABLE=/path/to/python3
 ```
 
+IBus frontend on Linux:
+
+```sh
+cmake -S . -B build -DKANARIA_BUILD_IBUS=ON
+cmake --build build --target ibus-kanaria
+cmake --install build
+ibus restart
+```
+
+`ibus-kanaria` is built only when `pkg-config` can find the `ibus-1.0`
+development package. The installed IBus component registers the `kanaria`
+engine for Japanese input.
+
 The API accepts and returns UTF-8 strings.

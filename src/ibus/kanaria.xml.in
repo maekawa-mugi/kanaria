@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component>
+  <name>org.freedesktop.IBus.Kanaria</name>
+  <description>Kanaria Japanese input engine</description>
+  <exec>@CMAKE_INSTALL_FULL_LIBEXECDIR@/ibus-kanaria --ibus</exec>
+  <version>0.1.0</version>
+  <author>Kanaria contributors</author>
+  <license>Apache-2.0</license>
+  <engines>
+    <engine>
+      <name>kanaria</name>
+      <longname>Kanaria</longname>
+      <description>Kanaria Japanese input engine</description>
+      <language>ja</language>
+      <license>Apache-2.0</license>
+      <author>Kanaria contributors</author>
+      <icon>ibus-engine</icon>
+      <layout>default</layout>
+      <rank>50</rank>
+      <symbol>K</symbol>
+    </engine>
+  </engines>
+</component>
