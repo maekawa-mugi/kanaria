@@ -69,6 +69,16 @@ target_include_directories(kanaria
     PRIVATE src
 )
 
+add_library(kanaria_frontend STATIC
+    src/frontend/kanaria_input_state.cpp
+)
+target_link_libraries(kanaria_frontend PUBLIC kanaria)
+target_include_directories(kanaria_frontend PUBLIC src/frontend)
+
+if (NOT WIN32)
+    set_target_properties(kanaria kanaria_frontend PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
 if (MSVC)
     target_compile_options(kanaria PRIVATE /utf-8)
 endif()
@@ -132,7 +142,7 @@ if (KANARIA_BUILD_IBUS AND NOT WIN32)
 
     if (IBUS_FOUND)
         add_executable(ibus-kanaria src/ibus/kanaria_ibus.cpp)
-        target_link_libraries(ibus-kanaria PRIVATE kanaria PkgConfig::IBUS)
+        target_link_libraries(ibus-kanaria PRIVATE kanaria_frontend PkgConfig::IBUS)
 
         configure_file(
             src/ibus/kanaria.xml.in
@@ -148,6 +158,51 @@ if (KANARIA_BUILD_IBUS AND NOT WIN32)
         )
     else()
         message(STATUS "ibus-1.0 was not found; skipping ibus-kanaria")
+    endif()
+endif()
+
+option(KANARIA_BUILD_FCITX5 "Build the fcitx5-kanaria frontend when Fcitx5Core is available" ON)
+
+if (KANARIA_BUILD_FCITX5 AND NOT WIN32)
+    find_package(Fcitx5Core QUIET)
+
+    if (Fcitx5Core_FOUND)
+        if (COMMAND add_fcitx5_addon)
+            add_fcitx5_addon(fcitx5-kanaria src/fcitx5/kanaria_fcitx5.cpp)
+        else()
+            add_library(fcitx5-kanaria MODULE src/fcitx5/kanaria_fcitx5.cpp)
+        endif()
+
+        target_link_libraries(fcitx5-kanaria PRIVATE kanaria_frontend Fcitx5::Core)
+
+        configure_file(
+            src/fcitx5/kanaria-addon.conf.in
+            "${CMAKE_CURRENT_BINARY_DIR}/fcitx5-kanaria-addon.conf"
+            @ONLY
+        )
+        configure_file(
+            src/fcitx5/kanaria.conf.in
+            "${CMAKE_CURRENT_BINARY_DIR}/fcitx5-kanaria.conf"
+            @ONLY
+        )
+
+        if (NOT DEFINED FCITX_INSTALL_PKGDATADIR)
+            set(FCITX_INSTALL_PKGDATADIR "${CMAKE_INSTALL_DATADIR}/fcitx5")
+        endif()
+
+        install(TARGETS fcitx5-kanaria
+            LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5"
+        )
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/fcitx5-kanaria-addon.conf"
+            RENAME kanaria.conf
+            DESTINATION "${FCITX_INSTALL_PKGDATADIR}/addon"
+        )
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/fcitx5-kanaria.conf"
+            RENAME kanaria.conf
+            DESTINATION "${CMAKE_INSTALL_DATADIR}/fcitx5/inputmethod"
+        )
+    else()
+        message(STATUS "Fcitx5Core was not found; skipping fcitx5-kanaria")
     endif()
 endif()
 

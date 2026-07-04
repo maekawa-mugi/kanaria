@@ -1,205 +1,13 @@
-#include "kanaria.h"
+#include "kanaria_input_state.h"
 
 #include <ibus.h>
 
-#include <algorithm>
-#include <cctype>
 #include <clocale>
-#include <cstddef>
-#include <memory>
 #include <string>
-#include <vector>
 
 namespace {
 
 constexpr guint lookup_page_size = 9;
-
-static std::size_t utf8_codepoint_count(const std::string& s)
-{
-    std::size_t n = 0;
-    for (unsigned char c : s) {
-        if ((c & 0xc0) != 0x80) {
-            ++n;
-        }
-    }
-    return n;
-}
-
-static void pop_utf8_char(std::string& s)
-{
-    if (s.empty()) {
-        return;
-    }
-    std::size_t pos = s.size() - 1;
-    while (pos > 0 && (static_cast<unsigned char>(s[pos]) & 0xc0) == 0x80) {
-        --pos;
-    }
-    s.erase(pos);
-}
-
-class KanariaInputState {
-public:
-    KanariaInputState() : engine_(kanaria::engine_create()) {}
-
-    bool ready() const { return engine_ != nullptr; }
-
-    bool key_ascii(unsigned int ch)
-    {
-        if (!ready() || ch < 0x20 || ch > 0x7e) {
-            return false;
-        }
-        roman_.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
-        clear_conversion();
-        return true;
-    }
-
-    bool backspace()
-    {
-        if (converting_) {
-            clear_conversion();
-            return true;
-        }
-        if (!kana_utf8_.empty() && roman_.empty()) {
-            pop_utf8_char(kana_utf8_);
-            return true;
-        }
-        if (roman_.empty()) {
-            return false;
-        }
-        roman_.pop_back();
-        kana_utf8_.clear();
-        clear_conversion();
-        return true;
-    }
-
-    void cancel()
-    {
-        roman_.clear();
-        kana_utf8_.clear();
-        clear_conversion();
-    }
-
-    bool start_conversion()
-    {
-        clear_conversion();
-        if (!make_kana()) {
-            return false;
-        }
-
-        const std::size_t len = utf8_codepoint_count(kana_utf8_);
-        if (len > 0) {
-            candidates_ = kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, 0, len, 64);
-        }
-        if (candidates_.empty()) {
-            auto best = kanaria::engine_convert_best(*engine_, kana_utf8_);
-            if (best) {
-                candidates_.push_back(kanaria::candidate{best->value.candidate,
-                                                         best->value.stroke,
-                                                         best->value.frequency,
-                                                         best->value.connection,
-                                                         best->value.attribute});
-            }
-        }
-        if (candidates_.empty()) {
-            candidates_.push_back(kanaria::candidate{kana_utf8_, kana_utf8_, 0, {}, 0});
-        }
-        candidate_index_ = 0;
-        converting_ = true;
-        return true;
-    }
-
-    bool next_candidate()
-    {
-        if (candidates_.empty()) {
-            return false;
-        }
-        candidate_index_ = (candidate_index_ + 1) % static_cast<int>(candidates_.size());
-        converting_ = true;
-        return true;
-    }
-
-    bool prev_candidate()
-    {
-        if (candidates_.empty()) {
-            return false;
-        }
-        candidate_index_ = (candidate_index_ + static_cast<int>(candidates_.size()) - 1)
-            % static_cast<int>(candidates_.size());
-        converting_ = true;
-        return true;
-    }
-
-    bool select_candidate(int index)
-    {
-        if (index < 0 || index >= static_cast<int>(candidates_.size())) {
-            return false;
-        }
-        candidate_index_ = index;
-        converting_ = true;
-        return true;
-    }
-
-    std::string preedit()
-    {
-        if (converting_ && !candidates_.empty()) {
-            return candidates_[static_cast<std::size_t>(candidate_index_)].candidate;
-        }
-        if (!make_kana()) {
-            return {};
-        }
-        return kana_utf8_;
-    }
-
-    std::string commit()
-    {
-        std::string text;
-        if (converting_ && !candidates_.empty()) {
-            const kanaria::candidate& selected = candidates_[static_cast<std::size_t>(candidate_index_)];
-            text = selected.candidate;
-            kanaria::engine_learn_candidate(*engine_, selected);
-        } else if (make_kana()) {
-            text = kana_utf8_;
-        }
-        cancel();
-        return text;
-    }
-
-    int candidate_count() const { return static_cast<int>(candidates_.size()); }
-    int candidate_index() const { return candidate_index_; }
-    bool is_converting() const { return converting_; }
-    bool has_text() const { return !roman_.empty() || !kana_utf8_.empty() || converting_; }
-
-    std::string candidate(int index) const
-    {
-        if (index < 0 || index >= static_cast<int>(candidates_.size())) {
-            return {};
-        }
-        return candidates_[static_cast<std::size_t>(index)].candidate;
-    }
-
-private:
-    void clear_conversion()
-    {
-        candidates_.clear();
-        candidate_index_ = 0;
-        converting_ = false;
-    }
-
-    bool make_kana()
-    {
-        if (!roman_.empty()) {
-            kana_utf8_ = kanaria::romaji_to_hiragana(roman_);
-        }
-        return !kana_utf8_.empty();
-    }
-
-    kanaria::engine_ptr engine_;
-    std::string roman_;
-    std::string kana_utf8_;
-    std::vector<kanaria::candidate> candidates_;
-    int candidate_index_ = 0;
-    bool converting_ = false;
-};
 
 } // namespace
 
@@ -208,7 +16,7 @@ typedef struct _KanariaIBusEngineClass KanariaIBusEngineClass;
 
 struct _KanariaIBusEngine {
     IBusEngine parent;
-    KanariaInputState* state;
+    kanaria_frontend::InputState* state;
 };
 
 struct _KanariaIBusEngineClass {
@@ -234,11 +42,11 @@ static void update_preedit(KanariaIBusEngine* self)
                                    IBUS_ATTR_TYPE_UNDERLINE,
                                    IBUS_ATTR_UNDERLINE_SINGLE,
                                    0,
-                                   static_cast<guint>(utf8_codepoint_count(preedit)));
+                                   static_cast<guint>(kanaria_frontend::utf8_codepoint_count(preedit)));
     }
     ibus_engine_update_preedit_text(IBUS_ENGINE(self),
                                     text,
-                                    static_cast<guint>(utf8_codepoint_count(preedit)),
+                                    static_cast<guint>(kanaria_frontend::utf8_codepoint_count(preedit)),
                                     !preedit.empty());
 }
 
@@ -464,7 +272,7 @@ static void kanaria_ibus_engine_class_init(KanariaIBusEngineClass* klass)
 
 static void kanaria_ibus_engine_init(KanariaIBusEngine* self)
 {
-    self->state = new KanariaInputState();
+    self->state = new kanaria_frontend::InputState();
 }
 
 static void bus_disconnected_cb(IBusBus* bus, gpointer user_data)

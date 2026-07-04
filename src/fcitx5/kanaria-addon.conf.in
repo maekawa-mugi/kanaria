@@ -1,0 +1,7 @@
+[Addon]
+Name=kanaria
+Category=InputMethod
+Version=0.1.0
+Library=libfcitx5-kanaria
+Type=SharedLibrary
+OnDemand=True
