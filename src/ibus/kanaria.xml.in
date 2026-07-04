@@ -14,7 +14,7 @@
       <language>ja</language>
       <license>Apache-2.0</license>
       <author>Kanaria contributors</author>
-      <icon>ibus-engine</icon>
+      <icon>kanaria</icon>
       <layout>default</layout>
       <rank>50</rank>
       <symbol>K</symbol>

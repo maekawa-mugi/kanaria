@@ -90,6 +90,17 @@ target_include_directories(kanaria_dump_dictionary PRIVATE src)
 add_executable(kanaria_benchmark tests/benchmark.cpp)
 target_link_libraries(kanaria_benchmark PRIVATE kanaria)
 
+set(KANARIA_ICON_SIZES 16 22 24 32 48 64 128 256 512)
+foreach(KANARIA_ICON_SIZE IN LISTS KANARIA_ICON_SIZES)
+    install(FILES
+        "artwork/icons/hicolor/${KANARIA_ICON_SIZE}x${KANARIA_ICON_SIZE}/apps/kanaria.png"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${KANARIA_ICON_SIZE}x${KANARIA_ICON_SIZE}/apps"
+    )
+endforeach()
+install(FILES "artwork/icons/hicolor/scalable/apps/kanaria.svg"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps"
+)
+
 if (WIN32)
     add_library(kanaria_tsf SHARED
         src/tsf/kanaria_tsf.cpp
