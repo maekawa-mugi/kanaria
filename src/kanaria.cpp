@@ -24,9 +24,12 @@ extern const uint8_t *const con_data[];
 #include <array>
 #include <bit>
 #include <cstdint>
+#include <ctime>
 #include <cstring>
+#include <iomanip>
 #include <limits>
 #include <optional>
+#include <sstream>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
@@ -52,6 +55,7 @@ constexpr int freq_user = 500;
 constexpr int max_input_length = 50;
 constexpr int max_output_length = 50;
 constexpr int clause_cost = -1000;
+constexpr int special_candidate_frequency = 650;
 constexpr std::size_t max_cache_entries = 4096;
 
 constexpr int dictionary_prediction = 0;
@@ -874,6 +878,76 @@ static word default_clause_word(const clause_converter& c, const std::string& in
     return w;
 }
 
+static std::tm local_date_offset(int days)
+{
+    std::time_t now = std::time(nullptr);
+    now += static_cast<std::time_t>(days) * 24 * 60 * 60;
+    std::tm local {};
+#if defined(_WIN32)
+    localtime_s(&local, &now);
+#else
+    localtime_r(&now, &local);
+#endif
+    return local;
+}
+
+static std::vector<std::string> date_candidates(int days)
+{
+    const std::tm local = local_date_offset(days);
+    const int year = local.tm_year + 1900;
+    const int month = local.tm_mon + 1;
+    const int day = local.tm_mday;
+
+    std::vector<std::string> out;
+    out.reserve(4);
+    out.push_back(std::to_string(year) + "年" + std::to_string(month) + "月"
+                  + std::to_string(day) + "日");
+    if (year >= 2019) {
+        out.push_back("令和" + std::to_string(year - 2018) + "年"
+                      + std::to_string(month) + "月" + std::to_string(day) + "日");
+    }
+
+    std::ostringstream dashed;
+    dashed << std::setfill('0') << std::setw(4) << year << '-'
+           << std::setw(2) << month << '-' << std::setw(2) << day;
+    out.push_back(dashed.str());
+
+    std::ostringstream slashed;
+    slashed << std::setfill('0') << std::setw(4) << year << '/'
+            << std::setw(2) << month << '/' << std::setw(2) << day;
+    out.push_back(slashed.str());
+    return out;
+}
+
+static word make_special_word(const clause_converter& c, const std::string& stroke,
+                              const std::string& candidate, int index)
+{
+    word w;
+    w.candidate = candidate;
+    w.stroke = stroke;
+    w.connection = c.default_connector;
+    w.frequency = special_candidate_frequency - index;
+    return w;
+}
+
+static void append_special_clause_words(clause_converter& c, std::vector<word>& words,
+                                        const std::string& input)
+{
+    std::vector<std::string> candidates;
+    if (input == "ばーじょん") {
+        candidates.push_back("Kanaria-0.1");
+    } else if (input == "きょう") {
+        candidates = date_candidates(0);
+    } else if (input == "あした") {
+        candidates = date_candidates(1);
+    }
+
+    int index = 0;
+    for (const auto& candidate : candidates) {
+        merge_word(words, make_special_word(c, input, candidate, index++));
+    }
+}
+
 struct sentence_node {
     clause element;
     int frequency = std::numeric_limits<int>::min();
@@ -1025,6 +1099,7 @@ static void set_dictionary_for_prediction(dictionary_work& dict, std::size_t inp
 static const std::unordered_map<std::string, std::string>& romaji_table()
 {
     static const std::unordered_map<std::string, std::string> table = {
+        {"zh", "←"}, {"zj", "↓"}, {"zk", "↑"}, {"zl", "→"},
         {"a", "あ"}, {"i", "い"}, {"u", "う"}, {"e", "え"}, {"o", "お"},
         {"ka", "か"}, {"ki", "き"}, {"ku", "く"}, {"ke", "け"}, {"ko", "こ"},
         {"sa", "さ"}, {"shi", "し"}, {"si", "し"}, {"su", "す"}, {"se", "せ"}, {"so", "そ"},
@@ -1166,7 +1241,8 @@ std::vector<candidate> engine_get_clause_candidates(engine& e,
     std::vector<clause> clauses;
     single_clause_convert(e.converter, clauses, selected, e.converter.end_clause_connector_2, true);
     std::vector<word> words;
-    words.reserve(clauses.size());
+    words.reserve(clauses.size() + 8);
+    append_special_clause_words(e.converter, words, selected);
     for (const auto& value : clauses) {
         words.push_back(value.value);
     }
