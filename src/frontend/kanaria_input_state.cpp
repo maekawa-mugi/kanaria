@@ -17,6 +17,212 @@ void append_candidate_unique(std::vector<kanaria::candidate>& candidates,
     }
 }
 
+void append_utf8(std::string& out, char32_t codepoint)
+{
+    if (codepoint <= 0x7f) {
+        out.push_back(static_cast<char>(codepoint));
+    } else if (codepoint <= 0x7ff) {
+        out.push_back(static_cast<char>(0xc0 | (codepoint >> 6)));
+        out.push_back(static_cast<char>(0x80 | (codepoint & 0x3f)));
+    } else if (codepoint <= 0xffff) {
+        out.push_back(static_cast<char>(0xe0 | (codepoint >> 12)));
+        out.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f)));
+        out.push_back(static_cast<char>(0x80 | (codepoint & 0x3f)));
+    } else {
+        out.push_back(static_cast<char>(0xf0 | (codepoint >> 18)));
+        out.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3f)));
+        out.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f)));
+        out.push_back(static_cast<char>(0x80 | (codepoint & 0x3f)));
+    }
+}
+
+std::vector<char32_t> utf8_to_codepoints(const std::string& text)
+{
+    std::vector<char32_t> out;
+    for (std::size_t i = 0; i < text.size();) {
+        const unsigned char c = static_cast<unsigned char>(text[i]);
+        if (c <= 0x7f) {
+            out.push_back(c);
+            ++i;
+        } else if ((c & 0xe0) == 0xc0 && i + 1 < text.size()) {
+            out.push_back(((c & 0x1f) << 6)
+                          | (static_cast<unsigned char>(text[i + 1]) & 0x3f));
+            i += 2;
+        } else if ((c & 0xf0) == 0xe0 && i + 2 < text.size()) {
+            out.push_back(((c & 0x0f) << 12)
+                          | ((static_cast<unsigned char>(text[i + 1]) & 0x3f) << 6)
+                          | (static_cast<unsigned char>(text[i + 2]) & 0x3f));
+            i += 3;
+        } else if ((c & 0xf8) == 0xf0 && i + 3 < text.size()) {
+            out.push_back(((c & 0x07) << 18)
+                          | ((static_cast<unsigned char>(text[i + 1]) & 0x3f) << 12)
+                          | ((static_cast<unsigned char>(text[i + 2]) & 0x3f) << 6)
+                          | (static_cast<unsigned char>(text[i + 3]) & 0x3f));
+            i += 4;
+        } else {
+            ++i;
+        }
+    }
+    return out;
+}
+
+std::string hiragana_to_katakana(const std::string& text)
+{
+    std::string out;
+    for (char32_t codepoint : utf8_to_codepoints(text)) {
+        if (codepoint >= 0x3041 && codepoint <= 0x3096) {
+            codepoint += 0x60;
+        } else if (codepoint == 0x309d || codepoint == 0x309e) {
+            codepoint += 0x60;
+        }
+        append_utf8(out, codepoint);
+    }
+    return out;
+}
+
+std::string halfwidth_katakana_char(char32_t codepoint)
+{
+    switch (codepoint) {
+    case U'。': return "｡";
+    case U'、': return "､";
+    case U'・': return "･";
+    case U'ー': return "ｰ";
+    case U'「': return "｢";
+    case U'」': return "｣";
+    case U'ァ': return "ｧ";
+    case U'ア': return "ｱ";
+    case U'ィ': return "ｨ";
+    case U'イ': return "ｲ";
+    case U'ゥ': return "ｩ";
+    case U'ウ': return "ｳ";
+    case U'ヴ': return "ｳﾞ";
+    case U'ェ': return "ｪ";
+    case U'エ': return "ｴ";
+    case U'ォ': return "ｫ";
+    case U'オ': return "ｵ";
+    case U'カ': return "ｶ";
+    case U'ガ': return "ｶﾞ";
+    case U'キ': return "ｷ";
+    case U'ギ': return "ｷﾞ";
+    case U'ク': return "ｸ";
+    case U'グ': return "ｸﾞ";
+    case U'ケ': return "ｹ";
+    case U'ゲ': return "ｹﾞ";
+    case U'コ': return "ｺ";
+    case U'ゴ': return "ｺﾞ";
+    case U'サ': return "ｻ";
+    case U'ザ': return "ｻﾞ";
+    case U'シ': return "ｼ";
+    case U'ジ': return "ｼﾞ";
+    case U'ス': return "ｽ";
+    case U'ズ': return "ｽﾞ";
+    case U'セ': return "ｾ";
+    case U'ゼ': return "ｾﾞ";
+    case U'ソ': return "ｿ";
+    case U'ゾ': return "ｿﾞ";
+    case U'タ': return "ﾀ";
+    case U'ダ': return "ﾀﾞ";
+    case U'チ': return "ﾁ";
+    case U'ヂ': return "ﾁﾞ";
+    case U'ッ': return "ｯ";
+    case U'ツ': return "ﾂ";
+    case U'ヅ': return "ﾂﾞ";
+    case U'テ': return "ﾃ";
+    case U'デ': return "ﾃﾞ";
+    case U'ト': return "ﾄ";
+    case U'ド': return "ﾄﾞ";
+    case U'ナ': return "ﾅ";
+    case U'ニ': return "ﾆ";
+    case U'ヌ': return "ﾇ";
+    case U'ネ': return "ﾈ";
+    case U'ノ': return "ﾉ";
+    case U'ハ': return "ﾊ";
+    case U'バ': return "ﾊﾞ";
+    case U'パ': return "ﾊﾟ";
+    case U'ヒ': return "ﾋ";
+    case U'ビ': return "ﾋﾞ";
+    case U'ピ': return "ﾋﾟ";
+    case U'フ': return "ﾌ";
+    case U'ブ': return "ﾌﾞ";
+    case U'プ': return "ﾌﾟ";
+    case U'ヘ': return "ﾍ";
+    case U'ベ': return "ﾍﾞ";
+    case U'ペ': return "ﾍﾟ";
+    case U'ホ': return "ﾎ";
+    case U'ボ': return "ﾎﾞ";
+    case U'ポ': return "ﾎﾟ";
+    case U'マ': return "ﾏ";
+    case U'ミ': return "ﾐ";
+    case U'ム': return "ﾑ";
+    case U'メ': return "ﾒ";
+    case U'モ': return "ﾓ";
+    case U'ャ': return "ｬ";
+    case U'ヤ': return "ﾔ";
+    case U'ュ': return "ｭ";
+    case U'ユ': return "ﾕ";
+    case U'ョ': return "ｮ";
+    case U'ヨ': return "ﾖ";
+    case U'ラ': return "ﾗ";
+    case U'リ': return "ﾘ";
+    case U'ル': return "ﾙ";
+    case U'レ': return "ﾚ";
+    case U'ロ': return "ﾛ";
+    case U'ヮ': return "ﾜ";
+    case U'ワ': return "ﾜ";
+    case U'ヰ': return "ｲ";
+    case U'ヱ': return "ｴ";
+    case U'ヲ': return "ｦ";
+    case U'ン': return "ﾝ";
+    case U'ヵ': return "ｶ";
+    case U'ヶ': return "ｹ";
+    default:
+        std::string out;
+        append_utf8(out, codepoint);
+        return out;
+    }
+}
+
+std::string katakana_to_halfwidth(const std::string& text)
+{
+    std::string out;
+    for (char32_t codepoint : utf8_to_codepoints(text)) {
+        out += halfwidth_katakana_char(codepoint);
+    }
+    return out;
+}
+
+std::string ascii_to_fullwidth(const std::string& text)
+{
+    std::string out;
+    for (unsigned char ch : text) {
+        if (ch == ' ') {
+            append_utf8(out, 0x3000);
+        } else if (ch >= 0x21 && ch <= 0x7e) {
+            append_utf8(out, 0xff01 + (ch - 0x21));
+        } else {
+            out.push_back(static_cast<char>(ch));
+        }
+    }
+    return out;
+}
+
+void append_output_variants(std::vector<kanaria::candidate>& candidates,
+                            const std::string& kana_utf8,
+                            const std::string& roman)
+{
+    const std::string katakana = hiragana_to_katakana(kana_utf8);
+    append_candidate_unique(candidates, kanaria::candidate{katakana, kana_utf8, 0, {}, 0});
+    append_candidate_unique(candidates,
+                            kanaria::candidate{katakana_to_halfwidth(katakana),
+                                               kana_utf8, 0, {}, 0});
+    if (!roman.empty()) {
+        append_candidate_unique(candidates,
+                                kanaria::candidate{ascii_to_fullwidth(roman),
+                                                   kana_utf8, 0, {}, 0});
+        append_candidate_unique(candidates, kanaria::candidate{roman, kana_utf8, 0, {}, 0});
+    }
+}
+
 } // namespace
 
 std::size_t utf8_codepoint_count(const std::string& s)
@@ -107,6 +313,7 @@ bool InputState::start_conversion()
             append_candidate_unique(candidates_, value);
         }
     }
+    append_output_variants(candidates_, kana_utf8_, roman_);
     if (candidates_.empty()) {
         candidates_.push_back(kanaria::candidate{kana_utf8_, kana_utf8_, 0, {}, 0});
     }
