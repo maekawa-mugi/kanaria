@@ -1,8 +1,23 @@
 #include "kanaria_input_state.h"
 
+#include <algorithm>
 #include <cctype>
 
 namespace kanaria_frontend {
+namespace {
+
+void append_candidate_unique(std::vector<kanaria::candidate>& candidates,
+                             const kanaria::candidate& value)
+{
+    const auto same = std::find_if(candidates.begin(), candidates.end(), [&](const auto& known) {
+        return known.candidate == value.candidate;
+    });
+    if (same == candidates.end()) {
+        candidates.push_back(value);
+    }
+}
+
+} // namespace
 
 std::size_t utf8_codepoint_count(const std::string& s)
 {
@@ -74,18 +89,22 @@ bool InputState::start_conversion()
         return false;
     }
 
+    auto best = kanaria::engine_convert_best(*engine_, kana_utf8_);
+    if (best) {
+        append_candidate_unique(candidates_,
+                                kanaria::candidate{best->value.candidate,
+                                                   best->value.stroke,
+                                                   best->value.frequency,
+                                                   best->value.connection,
+                                                   best->value.attribute});
+    }
+
     const std::size_t len = utf8_codepoint_count(kana_utf8_);
     if (len > 0) {
-        candidates_ = kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, 0, len, 64);
-    }
-    if (candidates_.empty()) {
-        auto best = kanaria::engine_convert_best(*engine_, kana_utf8_);
-        if (best) {
-            candidates_.push_back(kanaria::candidate{best->value.candidate,
-                                                     best->value.stroke,
-                                                     best->value.frequency,
-                                                     best->value.connection,
-                                                     best->value.attribute});
+        auto clause_candidates =
+            kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, 0, len, 64);
+        for (const auto& value : clause_candidates) {
+            append_candidate_unique(candidates_, value);
         }
     }
     if (candidates_.empty()) {
