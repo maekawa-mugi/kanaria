@@ -119,15 +119,14 @@ KanariaCandidateList::KanariaCandidateList(KanariaEngine* engine) : engine_(engi
     setCursorMovable(this);
     setCursorModifiable(this);
 
-    const int count = engine_->state().candidate_count();
+    const int count = engine_->state().visible_candidate_count();
+    const int page_start = engine_->state().candidate_page_start();
     for (int i = 0; i < count; ++i) {
         candidate_words_.push_back(
-            std::make_unique<KanariaCandidateWord>(engine_, engine_->state().candidate(i), i));
-        if (i < lookup_page_size) {
-            labels_.push_back(Text(std::to_string(i + 1) + "."));
-        } else {
-            labels_.push_back(Text());
-        }
+            std::make_unique<KanariaCandidateWord>(engine_,
+                                                   engine_->state().visible_candidate(i),
+                                                   page_start + i));
+        labels_.push_back(Text(std::to_string(i + 1) + "."));
     }
 }
 
@@ -148,7 +147,7 @@ int KanariaCandidateList::size() const
 
 int KanariaCandidateList::cursorIndex() const
 {
-    return engine_->state().candidate_index();
+    return engine_->state().candidate_page_index();
 }
 
 CandidateLayoutHint KanariaCandidateList::layoutHint() const
@@ -172,7 +171,7 @@ void KanariaCandidateList::nextCandidate()
 
 void KanariaCandidateList::setCursorIndex(int cursor)
 {
-    engine_->state().select_candidate(cursor);
+    engine_->state().select_visible_candidate(cursor);
 }
 
 void KanariaCandidateWord::select(InputContext* input_context) const
@@ -255,7 +254,7 @@ void KanariaEngine::keyEvent(const InputMethodEntry& entry, KeyEvent& key_event)
 
     if (state_.is_converting()) {
         const int index = key_to_candidate_index(key);
-        if (state_.select_candidate(index)) {
+        if (state_.select_visible_candidate(index)) {
             commit_current(input_context);
             handled = true;
         }
@@ -282,6 +281,15 @@ void KanariaEngine::keyEvent(const InputMethodEntry& entry, KeyEvent& key_event)
             }
             handled = true;
         }
+    } else if (!handled && (key.check(FcitxKey_Tab) || key.check(FcitxKey_ISO_Left_Tab))) {
+        if (state_.is_converting()) {
+            if (key.states().test(KeyState::Shift) || key.check(FcitxKey_ISO_Left_Tab)) {
+                state_.prev_candidate();
+            } else {
+                state_.next_candidate();
+            }
+            handled = true;
+        }
     } else if (!handled && key.check(FcitxKey_Right)) {
         if (state_.is_converting()) {
             handled = state_.next_clause();
@@ -291,15 +299,24 @@ void KanariaEngine::keyEvent(const InputMethodEntry& entry, KeyEvent& key_event)
             handled = state_.prev_clause();
         }
     } else if (!handled
-               && (key.check(FcitxKey_Down) || key.check(FcitxKey_Page_Down))) {
+               && key.check(FcitxKey_Down)) {
         if (state_.is_converting()) {
             state_.next_candidate();
             handled = true;
         }
-    } else if (!handled
-               && (key.check(FcitxKey_Up) || key.check(FcitxKey_Page_Up))) {
+    } else if (!handled && key.check(FcitxKey_Up)) {
         if (state_.is_converting()) {
             state_.prev_candidate();
+            handled = true;
+        }
+    } else if (!handled && key.check(FcitxKey_Page_Down)) {
+        if (state_.is_converting()) {
+            state_.next_page();
+            handled = true;
+        }
+    } else if (!handled && key.check(FcitxKey_Page_Up)) {
+        if (state_.is_converting()) {
+            state_.prev_page();
             handled = true;
         }
     }

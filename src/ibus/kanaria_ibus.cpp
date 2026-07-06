@@ -59,12 +59,12 @@ static void update_preedit(KanariaIBusEngine* self)
 static void update_lookup_table(KanariaIBusEngine* self)
 {
     IBusLookupTable* table = ibus_lookup_table_new(lookup_page_size, 0, TRUE, TRUE);
-    ibus_lookup_table_set_cursor_pos(table, static_cast<guint>(self->state->candidate_index()));
+    ibus_lookup_table_set_cursor_pos(table, static_cast<guint>(self->state->candidate_page_index()));
     ibus_lookup_table_set_orientation(table, IBUS_ORIENTATION_VERTICAL);
 
-    const int count = self->state->candidate_count();
+    const int count = self->state->visible_candidate_count();
     for (int i = 0; i < count; ++i) {
-        const std::string candidate = self->state->candidate(i);
+        const std::string candidate = self->state->visible_candidate(i);
         if (!candidate.empty()) {
             ibus_lookup_table_append_candidate(table, ibus_text_new_from_string(candidate.c_str()));
         }
@@ -126,7 +126,7 @@ static gboolean kanaria_ibus_engine_process_key_event(IBusEngine* engine,
 
     if (self->state->is_converting()) {
         const int index = keyval_to_candidate_index(keyval);
-        if (self->state->select_candidate(index)) {
+        if (self->state->select_visible_candidate(index)) {
             commit_current(self);
             update_user_interface(self);
             return TRUE;
@@ -170,6 +170,19 @@ static gboolean kanaria_ibus_engine_process_key_event(IBusEngine* engine,
         }
         return FALSE;
 
+    case IBUS_KEY_Tab:
+    case IBUS_KEY_ISO_Left_Tab:
+        if (self->state->is_converting()) {
+            if ((modifiers & IBUS_SHIFT_MASK) != 0 || keyval == IBUS_KEY_ISO_Left_Tab) {
+                self->state->prev_candidate();
+            } else {
+                self->state->next_candidate();
+            }
+            update_user_interface(self);
+            return TRUE;
+        }
+        return FALSE;
+
     case IBUS_KEY_Right:
         if (self->state->is_converting()) {
             self->state->next_clause();
@@ -187,7 +200,6 @@ static gboolean kanaria_ibus_engine_process_key_event(IBusEngine* engine,
         return FALSE;
 
     case IBUS_KEY_Down:
-    case IBUS_KEY_Page_Down:
         if (self->state->is_converting()) {
             self->state->next_candidate();
             update_user_interface(self);
@@ -196,9 +208,24 @@ static gboolean kanaria_ibus_engine_process_key_event(IBusEngine* engine,
         return FALSE;
 
     case IBUS_KEY_Up:
-    case IBUS_KEY_Page_Up:
         if (self->state->is_converting()) {
             self->state->prev_candidate();
+            update_user_interface(self);
+            return TRUE;
+        }
+        return FALSE;
+
+    case IBUS_KEY_Page_Down:
+        if (self->state->is_converting()) {
+            self->state->next_page();
+            update_user_interface(self);
+            return TRUE;
+        }
+        return FALSE;
+
+    case IBUS_KEY_Page_Up:
+        if (self->state->is_converting()) {
+            self->state->prev_page();
             update_user_interface(self);
             return TRUE;
         }
@@ -262,7 +289,7 @@ static void kanaria_ibus_engine_candidate_clicked(IBusEngine* engine,
         return;
     }
     KanariaIBusEngine* self = KANARIA_IBUS_ENGINE(engine);
-    if (self->state->select_candidate(static_cast<int>(index))) {
+    if (self->state->select_visible_candidate(static_cast<int>(index))) {
         commit_current(self);
         update_user_interface(self);
     }

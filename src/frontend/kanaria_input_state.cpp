@@ -6,6 +6,8 @@
 namespace kanaria_frontend {
 namespace {
 
+constexpr int candidate_page_size = 9;
+
 void append_candidate_unique(std::vector<kanaria::candidate>& candidates,
                              const kanaria::candidate& value)
 {
@@ -323,6 +325,7 @@ bool InputState::next_candidate()
         return false;
     }
     candidate_index_ = (candidate_index_ + 1) % static_cast<int>(candidates_.size());
+    ensure_candidate_visible();
     converting_ = true;
     return true;
 }
@@ -334,6 +337,29 @@ bool InputState::prev_candidate()
     }
     candidate_index_ = (candidate_index_ + static_cast<int>(candidates_.size()) - 1)
         % static_cast<int>(candidates_.size());
+    ensure_candidate_visible();
+    converting_ = true;
+    return true;
+}
+
+bool InputState::next_page()
+{
+    if (candidates_.empty() || page_start_ + candidate_page_size >= candidate_count()) {
+        return false;
+    }
+    page_start_ += candidate_page_size;
+    candidate_index_ = page_start_;
+    converting_ = true;
+    return true;
+}
+
+bool InputState::prev_page()
+{
+    if (candidates_.empty() || page_start_ == 0) {
+        return false;
+    }
+    page_start_ = std::max(0, page_start_ - candidate_page_size);
+    candidate_index_ = page_start_;
     converting_ = true;
     return true;
 }
@@ -344,6 +370,17 @@ bool InputState::select_candidate(int index)
         return false;
     }
     candidate_index_ = index;
+    ensure_candidate_visible();
+    converting_ = true;
+    return true;
+}
+
+bool InputState::select_visible_candidate(int index)
+{
+    if (index < 0 || index >= visible_candidate_count()) {
+        return false;
+    }
+    candidate_index_ = page_start_ + index;
     converting_ = true;
     return true;
 }
@@ -397,6 +434,15 @@ std::string InputState::commit()
 
 int InputState::candidate_count() const { return static_cast<int>(candidates_.size()); }
 int InputState::candidate_index() const { return candidate_index_; }
+int InputState::candidate_page_start() const { return page_start_; }
+int InputState::candidate_page_index() const { return candidate_index_ - page_start_; }
+int InputState::visible_candidate_count() const
+{
+    if (page_start_ < 0 || page_start_ >= candidate_count()) {
+        return 0;
+    }
+    return std::min(candidate_page_size, candidate_count() - page_start_);
+}
 bool InputState::is_converting() const { return converting_; }
 bool InputState::has_text() const { return !roman_.empty() || !kana_utf8_.empty() || converting_; }
 
@@ -406,6 +452,14 @@ std::string InputState::candidate(int index) const
         return {};
     }
     return candidates_[static_cast<std::size_t>(index)].candidate;
+}
+
+std::string InputState::visible_candidate(int index) const
+{
+    if (index < 0 || index >= visible_candidate_count()) {
+        return {};
+    }
+    return candidate(page_start_ + index);
 }
 
 std::size_t InputState::active_clause_begin() const
@@ -502,6 +556,7 @@ bool InputState::refresh_clause_candidates()
 {
     candidates_.clear();
     candidate_index_ = 0;
+    page_start_ = 0;
 
     if (!ensure_engine()) {
         return false;
@@ -542,7 +597,24 @@ bool InputState::refresh_clause_candidates()
             candidates_.push_back(kanaria::candidate{kana_utf8_, kana_utf8_, 0, {}, 0});
         }
     }
+    ensure_candidate_visible();
     return true;
+}
+
+void InputState::ensure_candidate_visible()
+{
+    if (candidates_.empty()) {
+        page_start_ = 0;
+        candidate_index_ = 0;
+        return;
+    }
+
+    const int count = candidate_count();
+    candidate_index_ = std::clamp(candidate_index_, 0, count - 1);
+    page_start_ = std::clamp(page_start_, 0, ((count - 1) / candidate_page_size) * candidate_page_size);
+    if (candidate_index_ < page_start_ || candidate_index_ >= page_start_ + candidate_page_size) {
+        page_start_ = (candidate_index_ / candidate_page_size) * candidate_page_size;
+    }
 }
 
 void InputState::clear_conversion()
@@ -550,6 +622,7 @@ void InputState::clear_conversion()
     clauses_.clear();
     candidates_.clear();
     candidate_index_ = 0;
+    page_start_ = 0;
     clause_index_ = 0;
     converting_ = false;
 }

@@ -70,6 +70,19 @@ int main()
     ok &= expect(version_state.start_conversion(), "version conversion did not start");
     ok &= expect(version_state.candidate(version_state.candidate_count() - 1) == "Kanaria-0.1",
                  "version candidate was not ordered last");
+    ok &= expect(version_state.visible_candidate_count() <= 9,
+                 "frontend exposed too many candidates on one page");
+    if (version_state.candidate_count() > 9) {
+        const std::string first_page_candidate = version_state.visible_candidate(0);
+        ok &= expect(version_state.next_page(), "frontend did not move to the next candidate page");
+        ok &= expect(version_state.candidate_page_start() == 9,
+                     "frontend candidate page did not advance by one page");
+        ok &= expect(version_state.visible_candidate(0) != first_page_candidate,
+                     "frontend candidate page did not refresh visible candidates");
+        ok &= expect(version_state.prev_page(), "frontend did not move back to the previous page");
+        ok &= expect(version_state.candidate_page_start() == 0,
+                     "frontend candidate page did not return to the first page");
+    }
 
     return ok ? 0 : 1;
 }
