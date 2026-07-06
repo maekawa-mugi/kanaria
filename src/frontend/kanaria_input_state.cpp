@@ -248,13 +248,21 @@ void pop_utf8_char(std::string& s)
     s.erase(pos);
 }
 
-InputState::InputState() : engine_(kanaria::engine_create()) {}
+InputState::InputState() = default;
 
-bool InputState::ready() const { return engine_ != nullptr; }
+bool InputState::ready() const { return true; }
+
+bool InputState::ensure_engine()
+{
+    if (!engine_) {
+        engine_ = kanaria::engine_create();
+    }
+    return engine_ != nullptr;
+}
 
 bool InputState::key_ascii(unsigned int ch)
 {
-    if (!ready() || ch < 0x20 || ch > 0x7e) {
+    if (ch < 0x20 || ch > 0x7e) {
         return false;
     }
     roman_.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
@@ -292,6 +300,9 @@ bool InputState::start_conversion()
 {
     clear_conversion();
     if (!make_kana()) {
+        return false;
+    }
+    if (!ensure_engine()) {
         return false;
     }
 
@@ -375,7 +386,9 @@ std::string InputState::commit()
     if (converting_ && !candidates_.empty()) {
         const kanaria::candidate& selected = candidates_[static_cast<std::size_t>(candidate_index_)];
         text = selected.candidate;
-        kanaria::engine_learn_candidate(*engine_, selected);
+        if (ensure_engine()) {
+            kanaria::engine_learn_candidate(*engine_, selected);
+        }
     } else if (make_kana()) {
         text = kana_utf8_;
     }

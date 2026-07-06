@@ -35,6 +35,7 @@ public:
     std::string candidate(int index) const;
 
 private:
+    bool ensure_engine();
     void clear_conversion();
     bool make_kana();
 
