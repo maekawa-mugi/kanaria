@@ -42,8 +42,18 @@ int main()
     ok &= expect(sentence_state.candidate_count() > 0, "frontend conversion returned no candidates");
     const std::string first_clause_candidate = sentence_state.candidate(0);
     const std::string sentence_preedit = sentence_state.preedit();
+    const std::size_t first_clause_end = sentence_state.active_clause_end();
     ok &= expect(first_clause_candidate != sentence_preedit,
                  "frontend mixed the sentence candidate into clause candidates");
+    ok &= expect(first_clause_end > 0 && first_clause_end < sentence_preedit.size(),
+                 "frontend did not expose an active first-clause range");
+    ok &= expect(sentence_state.next_clause(), "frontend did not move to the next clause");
+    ok &= expect(sentence_state.active_clause_begin() == first_clause_end,
+                 "frontend did not move the active-clause range to the next clause");
+    ok &= expect(sentence_state.candidate(0) != first_clause_candidate,
+                 "frontend did not refresh candidates for the next clause");
+    ok &= expect(sentence_state.preedit() != sentence_state.candidate(0),
+                 "frontend preedit stopped composing the whole sentence after clause movement");
     ok &= expect(sentence_state.commit() != first_clause_candidate,
                  "frontend committed a clause candidate instead of the full sentence");
 

@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -221,7 +222,11 @@ void KanariaEngine::update_ui(InputContext* input_context)
     if (!preedit_string.empty()) {
         Text preedit;
         preedit.append(preedit_string, TextFormatFlag::Underline);
-        preedit.setCursor(preedit_string.size());
+        std::size_t cursor = preedit_string.size();
+        if (state_.is_converting()) {
+            cursor = std::min(state_.active_clause_end(), preedit_string.size());
+        }
+        preedit.setCursor(cursor);
         if (input_context->capabilityFlags().test(CapabilityFlag::Preedit)) {
             input_context->inputPanel().setClientPreedit(preedit);
         } else {
@@ -277,16 +282,22 @@ void KanariaEngine::keyEvent(const InputMethodEntry& entry, KeyEvent& key_event)
             }
             handled = true;
         }
+    } else if (!handled && key.check(FcitxKey_Right)) {
+        if (state_.is_converting()) {
+            handled = state_.next_clause();
+        }
+    } else if (!handled && key.check(FcitxKey_Left)) {
+        if (state_.is_converting()) {
+            handled = state_.prev_clause();
+        }
     } else if (!handled
-               && (key.check(FcitxKey_Down) || key.check(FcitxKey_Right)
-                   || key.check(FcitxKey_Page_Down))) {
+               && (key.check(FcitxKey_Down) || key.check(FcitxKey_Page_Down))) {
         if (state_.is_converting()) {
             state_.next_candidate();
             handled = true;
         }
     } else if (!handled
-               && (key.check(FcitxKey_Up) || key.check(FcitxKey_Left)
-                   || key.check(FcitxKey_Page_Up))) {
+               && (key.check(FcitxKey_Up) || key.check(FcitxKey_Page_Up))) {
         if (state_.is_converting()) {
             state_.prev_candidate();
             handled = true;

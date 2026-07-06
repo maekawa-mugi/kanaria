@@ -23,6 +23,8 @@ public:
     bool start_conversion();
     bool next_candidate();
     bool prev_candidate();
+    bool next_clause();
+    bool prev_clause();
     bool select_candidate(int index);
 
     std::string preedit();
@@ -33,10 +35,16 @@ public:
     bool is_converting() const;
     bool has_text() const;
     std::string candidate(int index) const;
+    std::size_t active_clause_begin() const;
+    std::size_t active_clause_end() const;
 
 private:
     bool ensure_engine();
+    void apply_current_candidate_to_clause();
     std::string composed_candidate() const;
+    bool refresh_clause_candidates();
+    std::size_t clause_position() const;
+    std::size_t clause_length() const;
     void clear_conversion();
     bool make_kana();
 

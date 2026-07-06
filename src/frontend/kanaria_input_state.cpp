@@ -306,40 +306,13 @@ bool InputState::start_conversion()
         return false;
     }
 
-    const std::size_t input_len = utf8_codepoint_count(kana_utf8_);
-    std::size_t clause_len = input_len;
-
     auto best = kanaria::engine_convert_best(*engine_, kana_utf8_);
-    if (best) {
+    if (best && !best->elements.empty()) {
         clauses_ = best->elements;
-        if (!best->elements.empty()) {
-            clause_len = utf8_codepoint_count(best->elements.front().value.stroke);
-        }
     }
 
-    if (clause_len > 0) {
-        auto clause_candidates =
-            kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, 0, clause_len, 64);
-        std::vector<kanaria::candidate> deferred_candidates;
-        for (const auto& value : clause_candidates) {
-            if (value.candidate == "Kanaria-0.1") {
-                deferred_candidates.push_back(value);
-                continue;
-            }
-            append_candidate_unique(candidates_, value);
-        }
-        append_output_variants(candidates_, kana_utf8_, roman_);
-        for (const auto& value : deferred_candidates) {
-            append_candidate_unique(candidates_, value);
-        }
-    } else {
-        append_output_variants(candidates_, kana_utf8_, roman_);
-    }
-    if (candidates_.empty()) {
-        candidates_.push_back(kanaria::candidate{kana_utf8_, kana_utf8_, 0, {}, 0});
-    }
-    candidate_index_ = 0;
     clause_index_ = 0;
+    refresh_clause_candidates();
     converting_ = true;
     return true;
 }
@@ -373,6 +346,26 @@ bool InputState::select_candidate(int index)
     candidate_index_ = index;
     converting_ = true;
     return true;
+}
+
+bool InputState::next_clause()
+{
+    if (!converting_ || clauses_.empty() || clause_index_ + 1 >= clauses_.size()) {
+        return false;
+    }
+    apply_current_candidate_to_clause();
+    ++clause_index_;
+    return refresh_clause_candidates();
+}
+
+bool InputState::prev_clause()
+{
+    if (!converting_ || clauses_.empty() || clause_index_ == 0) {
+        return false;
+    }
+    apply_current_candidate_to_clause();
+    --clause_index_;
+    return refresh_clause_candidates();
 }
 
 std::string InputState::preedit()
@@ -415,6 +408,57 @@ std::string InputState::candidate(int index) const
     return candidates_[static_cast<std::size_t>(index)].candidate;
 }
 
+std::size_t InputState::active_clause_begin() const
+{
+    if (!converting_ || clauses_.empty() || clause_index_ >= clauses_.size()) {
+        return 0;
+    }
+
+    std::size_t offset = 0;
+    for (std::size_t i = 0; i < clause_index_; ++i) {
+        offset += clauses_[i].value.candidate.size();
+    }
+    return offset;
+}
+
+std::size_t InputState::active_clause_end() const
+{
+    if (!converting_) {
+        return 0;
+    }
+    if (clauses_.empty() || clause_index_ >= clauses_.size()) {
+        if (candidates_.empty()) {
+            return 0;
+        }
+        return candidates_[static_cast<std::size_t>(candidate_index_)].candidate.size();
+    }
+
+    const std::size_t begin = active_clause_begin();
+    if (candidates_.empty()) {
+        return begin + clauses_[clause_index_].value.candidate.size();
+    }
+    return begin + candidates_[static_cast<std::size_t>(candidate_index_)].candidate.size();
+}
+
+void InputState::apply_current_candidate_to_clause()
+{
+    if (clauses_.empty() || clause_index_ >= clauses_.size() || candidates_.empty()) {
+        return;
+    }
+
+    const kanaria::candidate& selected = candidates_[static_cast<std::size_t>(candidate_index_)];
+    if (selected.stroke == kana_utf8_ && clauses_.size() > 1) {
+        return;
+    }
+
+    auto& value = clauses_[clause_index_].value;
+    value.candidate = selected.candidate;
+    value.stroke = selected.stroke;
+    value.frequency = selected.frequency;
+    value.connection = selected.connection;
+    value.attribute = selected.attribute;
+}
+
 std::string InputState::composed_candidate() const
 {
     if (candidates_.empty()) {
@@ -435,6 +479,70 @@ std::string InputState::composed_candidate() const
         }
     }
     return text;
+}
+
+std::size_t InputState::clause_position() const
+{
+    std::size_t position = 0;
+    for (std::size_t i = 0; i < clause_index_ && i < clauses_.size(); ++i) {
+        position += utf8_codepoint_count(clauses_[i].value.stroke);
+    }
+    return position;
+}
+
+std::size_t InputState::clause_length() const
+{
+    if (clauses_.empty() || clause_index_ >= clauses_.size()) {
+        return utf8_codepoint_count(kana_utf8_);
+    }
+    return utf8_codepoint_count(clauses_[clause_index_].value.stroke);
+}
+
+bool InputState::refresh_clause_candidates()
+{
+    candidates_.clear();
+    candidate_index_ = 0;
+
+    if (!ensure_engine()) {
+        return false;
+    }
+
+    const std::size_t position = clause_position();
+    const std::size_t length = clause_length();
+    if (length > 0) {
+        auto clause_candidates =
+            kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, position, length, 64);
+        std::vector<kanaria::candidate> deferred_candidates;
+        for (const auto& value : clause_candidates) {
+            if (value.candidate == "Kanaria-0.1") {
+                deferred_candidates.push_back(value);
+                continue;
+            }
+            append_candidate_unique(candidates_, value);
+        }
+        if (clause_index_ == 0) {
+            append_output_variants(candidates_, kana_utf8_, roman_);
+        }
+        for (const auto& value : deferred_candidates) {
+            append_candidate_unique(candidates_, value);
+        }
+    } else if (clause_index_ == 0) {
+        append_output_variants(candidates_, kana_utf8_, roman_);
+    }
+
+    if (candidates_.empty()) {
+        if (!clauses_.empty() && clause_index_ < clauses_.size()) {
+            const auto& value = clauses_[clause_index_].value;
+            candidates_.push_back(kanaria::candidate{value.candidate,
+                                                     value.stroke,
+                                                     value.frequency,
+                                                     value.connection,
+                                                     value.attribute});
+        } else {
+            candidates_.push_back(kanaria::candidate{kana_utf8_, kana_utf8_, 0, {}, 0});
+        }
+    }
+    return true;
 }
 
 void InputState::clear_conversion()

@@ -2,6 +2,7 @@
 
 #include <ibus.h>
 
+#include <algorithm>
 #include <clocale>
 #include <string>
 
@@ -44,9 +45,14 @@ static void update_preedit(KanariaIBusEngine* self)
                                    0,
                                    static_cast<guint>(kanaria_frontend::utf8_codepoint_count(preedit)));
     }
+    std::size_t cursor_bytes = preedit.size();
+    if (self->state->is_converting()) {
+        cursor_bytes = std::min(self->state->active_clause_end(), preedit.size());
+    }
     ibus_engine_update_preedit_text(IBUS_ENGINE(self),
                                     text,
-                                    static_cast<guint>(kanaria_frontend::utf8_codepoint_count(preedit)),
+                                    static_cast<guint>(kanaria_frontend::utf8_codepoint_count(
+                                        preedit.substr(0, cursor_bytes))),
                                     !preedit.empty());
 }
 
@@ -164,8 +170,23 @@ static gboolean kanaria_ibus_engine_process_key_event(IBusEngine* engine,
         }
         return FALSE;
 
-    case IBUS_KEY_Down:
     case IBUS_KEY_Right:
+        if (self->state->is_converting()) {
+            self->state->next_clause();
+            update_user_interface(self);
+            return TRUE;
+        }
+        return FALSE;
+
+    case IBUS_KEY_Left:
+        if (self->state->is_converting()) {
+            self->state->prev_clause();
+            update_user_interface(self);
+            return TRUE;
+        }
+        return FALSE;
+
+    case IBUS_KEY_Down:
     case IBUS_KEY_Page_Down:
         if (self->state->is_converting()) {
             self->state->next_candidate();
@@ -175,7 +196,6 @@ static gboolean kanaria_ibus_engine_process_key_event(IBusEngine* engine,
         return FALSE;
 
     case IBUS_KEY_Up:
-    case IBUS_KEY_Left:
     case IBUS_KEY_Page_Up:
         if (self->state->is_converting()) {
             self->state->prev_candidate();
