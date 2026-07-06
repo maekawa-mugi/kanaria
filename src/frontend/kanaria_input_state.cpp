@@ -311,12 +311,7 @@ bool InputState::start_conversion()
 
     auto best = kanaria::engine_convert_best(*engine_, kana_utf8_);
     if (best) {
-        append_candidate_unique(candidates_,
-                                kanaria::candidate{best->value.candidate,
-                                                   best->value.stroke,
-                                                   best->value.frequency,
-                                                   best->value.connection,
-                                                   best->value.attribute});
+        clauses_ = best->elements;
         if (!best->elements.empty()) {
             clause_len = utf8_codepoint_count(best->elements.front().value.stroke);
         }
@@ -334,6 +329,7 @@ bool InputState::start_conversion()
         candidates_.push_back(kanaria::candidate{kana_utf8_, kana_utf8_, 0, {}, 0});
     }
     candidate_index_ = 0;
+    clause_index_ = 0;
     converting_ = true;
     return true;
 }
@@ -372,7 +368,7 @@ bool InputState::select_candidate(int index)
 std::string InputState::preedit()
 {
     if (converting_ && !candidates_.empty()) {
-        return candidates_[static_cast<std::size_t>(candidate_index_)].candidate;
+        return composed_candidate();
     }
     if (!make_kana()) {
         return {};
@@ -385,7 +381,7 @@ std::string InputState::commit()
     std::string text;
     if (converting_ && !candidates_.empty()) {
         const kanaria::candidate& selected = candidates_[static_cast<std::size_t>(candidate_index_)];
-        text = selected.candidate;
+        text = composed_candidate();
         if (ensure_engine()) {
             kanaria::engine_learn_candidate(*engine_, selected);
         }
@@ -409,10 +405,34 @@ std::string InputState::candidate(int index) const
     return candidates_[static_cast<std::size_t>(index)].candidate;
 }
 
+std::string InputState::composed_candidate() const
+{
+    if (candidates_.empty()) {
+        return {};
+    }
+
+    const kanaria::candidate& selected = candidates_[static_cast<std::size_t>(candidate_index_)];
+    if (clauses_.empty() || selected.stroke == kana_utf8_) {
+        return selected.candidate;
+    }
+
+    std::string text;
+    for (std::size_t i = 0; i < clauses_.size(); ++i) {
+        if (i == clause_index_) {
+            text += selected.candidate;
+        } else {
+            text += clauses_[i].value.candidate;
+        }
+    }
+    return text;
+}
+
 void InputState::clear_conversion()
 {
+    clauses_.clear();
     candidates_.clear();
     candidate_index_ = 0;
+    clause_index_ = 0;
     converting_ = false;
 }
 

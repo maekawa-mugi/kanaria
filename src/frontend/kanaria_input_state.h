@@ -36,14 +36,17 @@ public:
 
 private:
     bool ensure_engine();
+    std::string composed_candidate() const;
     void clear_conversion();
     bool make_kana();
 
     kanaria::engine_ptr engine_;
     std::string roman_;
     std::string kana_utf8_;
+    std::vector<kanaria::clause> clauses_;
     std::vector<kanaria::candidate> candidates_;
     int candidate_index_ = 0;
+    std::size_t clause_index_ = 0;
     bool converting_ = false;
 };
 

@@ -40,8 +40,12 @@ int main()
     type_ascii(sentence_state, "watashinonamaehanakanodesu");
     ok &= expect(sentence_state.start_conversion(), "frontend conversion did not start");
     ok &= expect(sentence_state.candidate_count() > 0, "frontend conversion returned no candidates");
-    ok &= expect(sentence_state.candidate(0) != "わたしのなまえはなかのです",
-                 "frontend returned raw hiragana before sentence conversion");
+    const std::string first_clause_candidate = sentence_state.candidate(0);
+    const std::string sentence_preedit = sentence_state.preedit();
+    ok &= expect(first_clause_candidate != sentence_preedit,
+                 "frontend mixed the sentence candidate into clause candidates");
+    ok &= expect(sentence_state.commit() != first_clause_candidate,
+                 "frontend committed a clause candidate instead of the full sentence");
 
     kanaria_frontend::InputState variant_state;
     type_ascii(variant_state, "kyou");
