@@ -55,5 +55,11 @@ int main()
     ok &= expect(has_candidate(variant_state, "ｋｙｏｕ"), "full-width alnum candidate was missing");
     ok &= expect(has_candidate(variant_state, "kyou"), "half-width alnum candidate was missing");
 
+    kanaria_frontend::InputState version_state;
+    type_ascii(version_state, "ba-jonn");
+    ok &= expect(version_state.start_conversion(), "version conversion did not start");
+    ok &= expect(version_state.candidate(version_state.candidate_count() - 1) == "Kanaria-0.1",
+                 "version candidate was not ordered last");
+
     return ok ? 0 : 1;
 }

@@ -320,11 +320,21 @@ bool InputState::start_conversion()
     if (clause_len > 0) {
         auto clause_candidates =
             kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, 0, clause_len, 64);
+        std::vector<kanaria::candidate> deferred_candidates;
         for (const auto& value : clause_candidates) {
+            if (value.candidate == "Kanaria-0.1") {
+                deferred_candidates.push_back(value);
+                continue;
+            }
             append_candidate_unique(candidates_, value);
         }
+        append_output_variants(candidates_, kana_utf8_, roman_);
+        for (const auto& value : deferred_candidates) {
+            append_candidate_unique(candidates_, value);
+        }
+    } else {
+        append_output_variants(candidates_, kana_utf8_, roman_);
     }
-    append_output_variants(candidates_, kana_utf8_, roman_);
     if (candidates_.empty()) {
         candidates_.push_back(kanaria::candidate{kana_utf8_, kana_utf8_, 0, {}, 0});
     }
