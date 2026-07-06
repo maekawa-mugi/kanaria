@@ -295,6 +295,9 @@ bool InputState::start_conversion()
         return false;
     }
 
+    const std::size_t input_len = utf8_codepoint_count(kana_utf8_);
+    std::size_t clause_len = input_len;
+
     auto best = kanaria::engine_convert_best(*engine_, kana_utf8_);
     if (best) {
         append_candidate_unique(candidates_,
@@ -303,12 +306,14 @@ bool InputState::start_conversion()
                                                    best->value.frequency,
                                                    best->value.connection,
                                                    best->value.attribute});
+        if (!best->elements.empty()) {
+            clause_len = utf8_codepoint_count(best->elements.front().value.stroke);
+        }
     }
 
-    const std::size_t len = utf8_codepoint_count(kana_utf8_);
-    if (len > 0) {
+    if (clause_len > 0) {
         auto clause_candidates =
-            kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, 0, len, 64);
+            kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, 0, clause_len, 64);
         for (const auto& value : clause_candidates) {
             append_candidate_unique(candidates_, value);
         }
