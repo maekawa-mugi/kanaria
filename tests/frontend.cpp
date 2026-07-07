@@ -49,10 +49,43 @@ int main()
     ok &= expect(kana_backspace_state.preedit() == kanaria::romaji_to_hiragana("ari"),
                  "frontend backspace reverted to raw romaji instead of kana");
 
+    kanaria_frontend::InputState yoon_backspace_state;
+    type_ascii(yoon_backspace_state, "pikatyu");
+    ok &= expect(yoon_backspace_state.preedit() == kanaria::romaji_to_hiragana("pikatyu"),
+                 "frontend did not compose pikatyu as kana");
+    ok &= expect(yoon_backspace_state.backspace(), "frontend did not backspace composed yoon kana");
+    ok &= expect(yoon_backspace_state.preedit() == kanaria::romaji_to_hiragana("pikachi"),
+                 "frontend yoon backspace did not leave the base kana");
+    ok &= expect(yoon_backspace_state.backspace(), "frontend did not backspace yoon base kana");
+    ok &= expect(yoon_backspace_state.preedit() == kanaria::romaji_to_hiragana("pika"),
+                 "frontend yoon backspace left stale romaji behind");
+    type_ascii(yoon_backspace_state, "tyuu");
+    ok &= expect(yoon_backspace_state.preedit() == kanaria::romaji_to_hiragana("pikatyuu"),
+                 "frontend did not recompose yoon kana after repeated backspace");
+    ok &= expect(yoon_backspace_state.start_conversion(),
+                 "frontend did not convert recomposed yoon kana");
+    ok &= expect(has_candidate(yoon_backspace_state, "pikatyuu"),
+                 "frontend lost the expected romaji candidate after yoon backspace");
+    ok &= expect(!has_candidate(yoon_backspace_state, "pikattyuu"),
+                 "frontend kept stale romaji after yoon backspace");
+    ok &= expect(!has_candidate(yoon_backspace_state, "pikatttyuu"),
+                 "frontend accumulated stale romaji after repeated yoon backspace");
+
     kanaria_frontend::InputState pending_roman_state;
     type_ascii(pending_roman_state, "na");
     ok &= expect(pending_roman_state.preedit() == kanaria::romaji_to_hiragana("na"),
                  "frontend did not preserve pending n for na composition");
+
+    kanaria_frontend::InputState literal_ascii_state;
+    type_ascii(literal_ascii_state, "a");
+    ok &= expect(literal_ascii_state.key_ascii_literal('K'),
+                 "frontend rejected literal shifted ASCII input");
+    ok &= expect(literal_ascii_state.preedit() == kanaria::romaji_to_hiragana("a") + "K",
+                 "frontend converted shifted ASCII through romaji table");
+    ok &= expect(literal_ascii_state.start_conversion(),
+                 "frontend did not convert literal shifted ASCII input");
+    ok &= expect(has_candidate(literal_ascii_state, "aK"),
+                 "frontend did not keep shifted ASCII available as a conversion candidate");
 
     kanaria_frontend::InputState tya_state;
     type_ascii(tya_state, "TYA-TYU-TYO");

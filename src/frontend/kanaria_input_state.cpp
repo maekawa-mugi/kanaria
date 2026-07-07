@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <utility>
 
 namespace kanaria_frontend {
 namespace {
@@ -83,6 +84,64 @@ bool has_longer_romaji_prefix(const std::string& text)
 bool has_romaji_key(const std::string& text)
 {
     return std::find(romaji_keys().begin(), romaji_keys().end(), text) != romaji_keys().end();
+}
+
+const std::vector<std::pair<std::string, std::string>>& hiragana_romaji_entries()
+{
+    static const std::vector<std::pair<std::string, std::string>> entries = [] {
+        std::vector<std::pair<std::string, std::string>> values;
+        values.reserve(romaji_keys().size());
+        for (const auto& key : romaji_keys()) {
+            values.emplace_back(kanaria::romaji_to_hiragana(key), key);
+        }
+        std::stable_sort(values.begin(), values.end(), [](const auto& lhs, const auto& rhs) {
+            return lhs.first.size() > rhs.first.size();
+        });
+        return values;
+    }();
+    return entries;
+}
+
+std::size_t utf8_char_size(unsigned char c)
+{
+    if (c <= 0x7f) {
+        return 1;
+    }
+    if ((c & 0xe0) == 0xc0) {
+        return 2;
+    }
+    if ((c & 0xf0) == 0xe0) {
+        return 3;
+    }
+    if ((c & 0xf8) == 0xf0) {
+        return 4;
+    }
+    return 1;
+}
+
+std::string romaji_from_hiragana(const std::string& text)
+{
+    std::string out;
+    for (std::size_t i = 0; i < text.size();) {
+        bool matched = false;
+        for (const auto& [kana, roman] : hiragana_romaji_entries()) {
+            if (!kana.empty() && text.compare(i, kana.size(), kana) == 0) {
+                out += roman;
+                i += kana.size();
+                matched = true;
+                break;
+            }
+        }
+        if (matched) {
+            continue;
+        }
+
+        const std::size_t step = std::min(utf8_char_size(static_cast<unsigned char>(text[i])),
+                                          text.size() - i);
+        out.append(text, i, step);
+        i += step;
+    }
+    return out;
 }
 
 void append_utf8(std::string& out, char32_t codepoint)
@@ -395,6 +454,20 @@ bool InputState::key_ascii(unsigned int ch)
     return true;
 }
 
+bool InputState::key_ascii_literal(unsigned int ch)
+{
+    if (ch <= 0x20 || ch > 0x7e) {
+        return false;
+    }
+    flush_pending_roman(true);
+    const char value = static_cast<char>(ch);
+    roman_.push_back(value);
+    kana_utf8_.push_back(value);
+    clear_conversion();
+    refresh_predictions();
+    return true;
+}
+
 bool InputState::backspace()
 {
     if (converting_) {
@@ -405,12 +478,14 @@ bool InputState::backspace()
     if (pending_roman_.empty() && kana_utf8_.empty()) {
         return false;
     }
-    if (!pending_roman_.empty()) {
+    const bool erased_pending = !pending_roman_.empty();
+    if (erased_pending) {
         pending_roman_.pop_back();
     } else {
         pop_utf8_char(kana_utf8_);
+        roman_ = romaji_from_hiragana(kana_utf8_);
     }
-    if (!roman_.empty()) {
+    if (erased_pending && !roman_.empty()) {
         roman_.pop_back();
     }
     clear_conversion();

@@ -102,6 +102,11 @@ static unsigned int ascii_from_keyval(guint keyval, guint modifiers)
     return static_cast<unsigned int>(ch);
 }
 
+static bool is_shifted_ascii_upper(unsigned int ch, guint modifiers)
+{
+    return (modifiers & IBUS_SHIFT_MASK) != 0 && ch >= 'A' && ch <= 'Z';
+}
+
 static int keyval_to_candidate_index(guint keyval)
 {
     if (keyval >= IBUS_KEY_1 && keyval <= IBUS_KEY_9) {
@@ -181,19 +186,32 @@ static gboolean kanaria_ibus_engine_process_key_event(IBusEngine* engine,
             update_user_interface(self);
             return TRUE;
         }
+        if (self->state->has_text()) {
+            self->state->start_conversion();
+            update_user_interface(self);
+            return TRUE;
+        }
         return FALSE;
 
     case IBUS_KEY_Right:
-        if (self->state->is_converting()) {
-            self->state->next_clause();
+        if (self->state->has_candidate_window()) {
+            if (self->state->is_converting()) {
+                self->state->next_clause();
+            } else {
+                self->state->next_candidate();
+            }
             update_user_interface(self);
             return TRUE;
         }
         return FALSE;
 
     case IBUS_KEY_Left:
-        if (self->state->is_converting()) {
-            self->state->prev_clause();
+        if (self->state->has_candidate_window()) {
+            if (self->state->is_converting()) {
+                self->state->prev_clause();
+            } else {
+                self->state->prev_candidate();
+            }
             update_user_interface(self);
             return TRUE;
         }
@@ -236,7 +254,9 @@ static gboolean kanaria_ibus_engine_process_key_event(IBusEngine* engine,
     }
 
     const unsigned int ch = ascii_from_keyval(keyval, modifiers);
-    if (ch != 0 && self->state->key_ascii(ch)) {
+    if (ch != 0
+        && (is_shifted_ascii_upper(ch, modifiers) ? self->state->key_ascii_literal(ch)
+                                                  : self->state->key_ascii(ch))) {
         update_user_interface(self);
         return TRUE;
     }

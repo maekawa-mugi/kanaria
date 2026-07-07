@@ -56,6 +56,11 @@ unsigned int ascii_from_key(const Key& key)
     return static_cast<unsigned int>(ch);
 }
 
+bool is_shifted_ascii_upper(const Key& key, unsigned int ch)
+{
+    return key.states().test(KeyState::Shift) && ch >= 'A' && ch <= 'Z';
+}
+
 } // namespace
 
 class KanariaEngine;
@@ -343,14 +348,27 @@ void KanariaEngine::keyEvent(const InputMethodEntry& entry, KeyEvent& key_event)
                 state_.next_candidate();
             }
             handled = true;
+        } else if (state_.has_text()) {
+            state_.start_conversion();
+            handled = true;
         }
     } else if (!handled && key.check(FcitxKey_Right)) {
-        if (state_.is_converting()) {
-            handled = state_.next_clause();
+        if (state_.has_candidate_window()) {
+            if (state_.is_converting()) {
+                state_.next_clause();
+            } else {
+                state_.next_candidate();
+            }
+            handled = true;
         }
     } else if (!handled && key.check(FcitxKey_Left)) {
-        if (state_.is_converting()) {
-            handled = state_.prev_clause();
+        if (state_.has_candidate_window()) {
+            if (state_.is_converting()) {
+                state_.prev_clause();
+            } else {
+                state_.prev_candidate();
+            }
+            handled = true;
         }
     } else if (!handled
                && key.check(FcitxKey_Down)) {
@@ -377,7 +395,9 @@ void KanariaEngine::keyEvent(const InputMethodEntry& entry, KeyEvent& key_event)
 
     if (!handled) {
         const unsigned int ch = ascii_from_key(key);
-        handled = ch != 0 && state_.key_ascii(ch);
+        handled = ch != 0
+            && (is_shifted_ascii_upper(key, ch) ? state_.key_ascii_literal(ch)
+                                                : state_.key_ascii(ch));
     }
 
     if (handled) {

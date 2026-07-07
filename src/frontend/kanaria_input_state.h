@@ -18,6 +18,7 @@ public:
 
     bool ready() const;
     bool key_ascii(unsigned int ch);
+    bool key_ascii_literal(unsigned int ch);
     bool backspace();
     void cancel();
     bool start_conversion();
