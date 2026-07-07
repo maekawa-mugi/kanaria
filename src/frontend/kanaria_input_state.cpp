@@ -48,7 +48,7 @@ const std::vector<std::string>& romaji_keys()
         "pa", "pi", "pu", "pe", "po",
         "kya", "kyu", "kyo",
         "sha", "shu", "sho",
-        "cha", "chu", "cho",
+        "cha", "chu", "cho", "tya", "tyu", "tyo",
         "nya", "nyu", "nyo",
         "hya", "hyu", "hyo",
         "mya", "myu", "myo",

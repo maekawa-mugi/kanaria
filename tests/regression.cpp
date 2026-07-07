@@ -116,6 +116,10 @@ int main()
     ok &= expect(kanaria::romaji_to_hiragana("zhzjzkzl") == "←↓↑→",
                  "Z+H/J/K/L romaji arrows were not generated");
 
+    ok &= expect(kanaria::romaji_to_hiragana("TYA-TYU-TYO")
+                     == kanaria::romaji_to_hiragana("cha-chu-cho"),
+                 "tya/tyu/tyo romaji entries were not converted");
+
     const auto resized = kanaria::engine_resize_clause(*engine, sentence, 0, 3);
     ok &= expect(resized && !resized->elements.empty()
                      && resized->elements.front().value.stroke == "きょう",

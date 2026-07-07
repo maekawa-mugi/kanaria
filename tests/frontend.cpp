@@ -54,6 +54,11 @@ int main()
     ok &= expect(pending_roman_state.preedit() == kanaria::romaji_to_hiragana("na"),
                  "frontend did not preserve pending n for na composition");
 
+    kanaria_frontend::InputState tya_state;
+    type_ascii(tya_state, "TYA-TYU-TYO");
+    ok &= expect(tya_state.preedit() == kanaria::romaji_to_hiragana("tya-tyu-tyo"),
+                 "frontend did not compose tya/tyu/tyo input");
+
     kanaria_frontend::InputState sentence_state;
     type_ascii(sentence_state, "watashinonamaehanakanodesu");
     ok &= expect(sentence_state.start_conversion(), "frontend conversion did not start");
