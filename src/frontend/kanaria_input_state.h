@@ -25,6 +25,7 @@ public:
     bool prev_candidate();
     bool next_page();
     bool prev_page();
+    bool set_candidate_page(int page);
     bool next_clause();
     bool prev_clause();
     bool select_candidate(int index);
@@ -37,6 +38,7 @@ public:
     int candidate_index() const;
     int candidate_page_start() const;
     int candidate_page_index() const;
+    int candidate_page_count() const;
     int visible_candidate_count() const;
     bool is_converting() const;
     bool is_predicting() const;

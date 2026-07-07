@@ -75,6 +75,7 @@ private:
 };
 
 class KanariaCandidateList : public CandidateList,
+                             public PageableCandidateList,
                              public CursorMovableCandidateList,
                              public CursorModifiableCandidateList {
 public:
@@ -85,6 +86,14 @@ public:
     int size() const override;
     int cursorIndex() const override;
     CandidateLayoutHint layoutHint() const override;
+    bool hasPrev() const override;
+    bool hasNext() const override;
+    void prev() override;
+    void next() override;
+    bool usedNextBefore() const override;
+    int totalPages() const override;
+    int currentPage() const override;
+    void setPage(int page) override;
     void prevCandidate() override;
     void nextCandidate() override;
     void setCursorIndex(int cursor) override;
@@ -116,6 +125,7 @@ private:
 
 KanariaCandidateList::KanariaCandidateList(KanariaEngine* engine) : engine_(engine)
 {
+    setPageable(this);
     setCursorMovable(this);
     setCursorModifiable(this);
 
@@ -153,6 +163,50 @@ int KanariaCandidateList::cursorIndex() const
 CandidateLayoutHint KanariaCandidateList::layoutHint() const
 {
     return CandidateLayoutHint::Vertical;
+}
+
+bool KanariaCandidateList::hasPrev() const
+{
+    return engine_->state().candidate_page_start() > 0;
+}
+
+bool KanariaCandidateList::hasNext() const
+{
+    const int next_start = engine_->state().candidate_page_start() + lookup_page_size;
+    return next_start < engine_->state().candidate_count();
+}
+
+void KanariaCandidateList::prev()
+{
+    engine_->state().prev_page();
+}
+
+void KanariaCandidateList::next()
+{
+    engine_->state().next_page();
+}
+
+bool KanariaCandidateList::usedNextBefore() const
+{
+    return hasPrev();
+}
+
+int KanariaCandidateList::totalPages() const
+{
+    return engine_->state().candidate_page_count();
+}
+
+int KanariaCandidateList::currentPage() const
+{
+    if (totalPages() == 0) {
+        return -1;
+    }
+    return engine_->state().candidate_page_start() / lookup_page_size;
+}
+
+void KanariaCandidateList::setPage(int page)
+{
+    engine_->state().set_candidate_page(page);
 }
 
 void KanariaCandidateList::prevCandidate()

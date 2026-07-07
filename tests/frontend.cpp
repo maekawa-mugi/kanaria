@@ -91,11 +91,16 @@ int main()
         ok &= expect(version_state.next_page(), "frontend did not move to the next candidate page");
         ok &= expect(version_state.candidate_page_start() == 9,
                      "frontend candidate page did not advance by one page");
+        ok &= expect(version_state.candidate_page_count() >= 2,
+                     "frontend did not expose a multi-page candidate count");
         ok &= expect(version_state.visible_candidate(0) != first_page_candidate,
                      "frontend candidate page did not refresh visible candidates");
         ok &= expect(version_state.prev_page(), "frontend did not move back to the previous page");
         ok &= expect(version_state.candidate_page_start() == 0,
                      "frontend candidate page did not return to the first page");
+        ok &= expect(version_state.set_candidate_page(1), "frontend did not jump to a candidate page");
+        ok &= expect(version_state.candidate_page_start() == 9,
+                     "frontend candidate page jump did not select the requested page");
     }
 
     return ok ? 0 : 1;

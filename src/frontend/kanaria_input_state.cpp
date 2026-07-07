@@ -377,6 +377,20 @@ bool InputState::prev_page()
     return true;
 }
 
+bool InputState::set_candidate_page(int page)
+{
+    const int page_count = candidate_page_count();
+    if (page < 0 || page >= page_count) {
+        return false;
+    }
+    page_start_ = page * candidate_page_size;
+    candidate_index_ = page_start_;
+    if (!predicting_) {
+        converting_ = true;
+    }
+    return true;
+}
+
 bool InputState::select_candidate(int index)
 {
     if (index < 0 || index >= static_cast<int>(candidates_.size())) {
@@ -459,6 +473,11 @@ int InputState::candidate_count() const { return static_cast<int>(candidates_.si
 int InputState::candidate_index() const { return candidate_index_; }
 int InputState::candidate_page_start() const { return page_start_; }
 int InputState::candidate_page_index() const { return candidate_index_ - page_start_; }
+int InputState::candidate_page_count() const
+{
+    const int count = candidate_count();
+    return count == 0 ? 0 : (count + candidate_page_size - 1) / candidate_page_size;
+}
 int InputState::visible_candidate_count() const
 {
     if (page_start_ < 0 || page_start_ >= candidate_count()) {
