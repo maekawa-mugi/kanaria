@@ -103,6 +103,11 @@ int main()
                      "today date candidate was not generated: " + value);
     }
 
+    const std::string abiko = kanaria::romaji_to_hiragana("abiko");
+    const auto abiko_clauses = kanaria::engine_get_clause_candidates(*engine, abiko, 0, 3, 100);
+    ok &= expect(has_candidate(abiko_clauses, "我孫子"),
+                 "prediction dictionary entry was not merged into conversion candidates");
+
     const auto tomorrow_clauses = kanaria::engine_get_clause_candidates(*engine, "あした", 0, 3, 100);
     for (const auto& value : expected_date_candidates(1)) {
         ok &= expect(has_candidate(tomorrow_clauses, value),

@@ -138,6 +138,22 @@ def read_grouped_entries(dict_dir: Path) -> dict[str, list[Entry]]:
     return grouped
 
 
+def merge_prediction_entries_for_conversion(grouped: dict[str, list[Entry]]) -> None:
+    conversion_keys: set[tuple[str, str]] = set()
+    for name, entries in grouped.items():
+        if name == "prediction":
+            continue
+        conversion_keys.update((entry.yomi, entry.candidate) for entry in entries)
+
+    independent_entries = grouped.setdefault("independent_words", [])
+    for entry in grouped.get("prediction", []):
+        key = (entry.yomi, entry.candidate)
+        if key in conversion_keys:
+            continue
+        independent_entries.append(entry)
+        conversion_keys.add(key)
+
+
 def dedupe_entries(entries: list[Entry]) -> list[Entry]:
     best: dict[tuple[str, str, int, int], Entry] = {}
     for entry in entries:
@@ -306,6 +322,7 @@ def main() -> int:
     args = parser.parse_args()
 
     grouped_entries = read_grouped_entries(args.dict_dir)
+    merge_prediction_entries_for_conversion(grouped_entries)
     dictionaries: list[bytes] = []
     for name, que_type in DICTIONARY_SLOTS:
         entries = grouped_entries.get(name, [])
