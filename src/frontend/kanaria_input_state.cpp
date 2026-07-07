@@ -19,6 +19,72 @@ void append_candidate_unique(std::vector<kanaria::candidate>& candidates,
     }
 }
 
+bool is_doubled_consonant(const std::string& text)
+{
+    if (text.size() < 2 || text[0] != text[1] || text[0] == 'n') {
+        return false;
+    }
+    return std::string("bcdfghjklmpqrstvwxyz").find(text[0]) != std::string::npos;
+}
+
+const std::vector<std::string>& romaji_keys()
+{
+    static const std::vector<std::string> keys = {
+        "zh", "zj", "zk", "zl",
+        "a", "i", "u", "e", "o",
+        "ka", "ki", "ku", "ke", "ko",
+        "sa", "shi", "si", "su", "se", "so",
+        "ta", "chi", "ti", "tsu", "tu", "te", "to",
+        "na", "ni", "nu", "ne", "no",
+        "ha", "hi", "fu", "hu", "he", "ho",
+        "ma", "mi", "mu", "me", "mo",
+        "ya", "yu", "yo",
+        "ra", "ri", "ru", "re", "ro",
+        "wa", "wo", "nn", "n",
+        "ga", "gi", "gu", "ge", "go",
+        "za", "ji", "zi", "zu", "ze", "zo",
+        "da", "di", "du", "de", "do",
+        "ba", "bi", "bu", "be", "bo",
+        "pa", "pi", "pu", "pe", "po",
+        "kya", "kyu", "kyo",
+        "sha", "shu", "sho",
+        "cha", "chu", "cho",
+        "nya", "nyu", "nyo",
+        "hya", "hyu", "hyo",
+        "mya", "myu", "myo",
+        "rya", "ryu", "ryo",
+        "gya", "gyu", "gyo",
+        "ja", "ju", "jo", "jya", "jyu", "jyo",
+        "bya", "byu", "byo",
+        "pya", "pyu", "pyo",
+        "la", "li", "lu", "le", "lo",
+        "xa", "xi", "xu", "xe", "xo",
+        "ltu", "xtu", "lya", "lyu", "lyo",
+        "xya", "xyu", "xyo",
+        "-"
+    };
+    return keys;
+}
+
+bool has_romaji_prefix(const std::string& text)
+{
+    return std::any_of(romaji_keys().begin(), romaji_keys().end(), [&](const auto& key) {
+        return key.starts_with(text);
+    });
+}
+
+bool has_longer_romaji_prefix(const std::string& text)
+{
+    return std::any_of(romaji_keys().begin(), romaji_keys().end(), [&](const auto& key) {
+        return key.size() > text.size() && key.starts_with(text);
+    });
+}
+
+bool has_romaji_key(const std::string& text)
+{
+    return std::find(romaji_keys().begin(), romaji_keys().end(), text) != romaji_keys().end();
+}
+
 void append_utf8(std::string& out, char32_t codepoint)
 {
     if (codepoint <= 0x7f) {
@@ -262,13 +328,69 @@ bool InputState::ensure_engine()
     return engine_ != nullptr;
 }
 
+void InputState::flush_pending_roman(bool force)
+{
+    while (!pending_roman_.empty()) {
+        if (is_doubled_consonant(pending_roman_)) {
+            kana_utf8_ += kanaria::romaji_to_hiragana("ltu");
+            pending_roman_.erase(0, 1);
+            continue;
+        }
+
+        if (has_romaji_key(pending_roman_)) {
+            if (!force && has_longer_romaji_prefix(pending_roman_)) {
+                return;
+            }
+            kana_utf8_ += kanaria::romaji_to_hiragana(pending_roman_);
+            pending_roman_.clear();
+            continue;
+        }
+
+        if (has_romaji_prefix(pending_roman_)) {
+            return;
+        }
+
+        bool consumed = false;
+        for (std::size_t len = pending_roman_.size(); len > 0; --len) {
+            const std::string prefix = pending_roman_.substr(0, len);
+            if (!has_romaji_key(prefix)) {
+                continue;
+            }
+            kana_utf8_ += kanaria::romaji_to_hiragana(prefix);
+            pending_roman_.erase(0, len);
+            consumed = true;
+            break;
+        }
+        if (consumed) {
+            continue;
+        }
+
+        if (!force) {
+            return;
+        }
+        kana_utf8_.push_back(pending_roman_.front());
+        pending_roman_.erase(0, 1);
+    }
+}
+
+std::string InputState::composing_kana() const
+{
+    if (pending_roman_.empty()) {
+        return kana_utf8_;
+    }
+    return kana_utf8_ + kanaria::romaji_to_hiragana(pending_roman_);
+}
+
 bool InputState::key_ascii(unsigned int ch)
 {
-    if (ch < 0x20 || ch > 0x7e) {
+    if (ch <= 0x20 || ch > 0x7e) {
         return false;
     }
-    roman_.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
+    const char value = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    roman_.push_back(value);
+    pending_roman_.push_back(value);
     clear_conversion();
+    flush_pending_roman(false);
     refresh_predictions();
     return true;
 }
@@ -280,17 +402,17 @@ bool InputState::backspace()
         refresh_predictions();
         return true;
     }
-    if (!kana_utf8_.empty() && roman_.empty()) {
-        pop_utf8_char(kana_utf8_);
-        clear_conversion();
-        refresh_predictions();
-        return true;
-    }
-    if (roman_.empty()) {
+    if (pending_roman_.empty() && kana_utf8_.empty()) {
         return false;
     }
-    roman_.pop_back();
-    kana_utf8_.clear();
+    if (!pending_roman_.empty()) {
+        pending_roman_.pop_back();
+    } else {
+        pop_utf8_char(kana_utf8_);
+    }
+    if (!roman_.empty()) {
+        roman_.pop_back();
+    }
     clear_conversion();
     refresh_predictions();
     return true;
@@ -299,6 +421,7 @@ bool InputState::backspace()
 void InputState::cancel()
 {
     roman_.clear();
+    pending_roman_.clear();
     kana_utf8_.clear();
     clear_conversion();
 }
@@ -306,6 +429,7 @@ void InputState::cancel()
 bool InputState::start_conversion()
 {
     clear_conversion();
+    flush_pending_roman(true);
     if (!make_kana()) {
         return false;
     }
@@ -441,10 +565,7 @@ std::string InputState::preedit()
     if (converting_ && !candidates_.empty()) {
         return composed_candidate();
     }
-    if (!make_kana()) {
-        return {};
-    }
-    return kana_utf8_;
+    return composing_kana();
 }
 
 std::string InputState::commit()
@@ -462,7 +583,8 @@ std::string InputState::commit()
         if (ensure_engine()) {
             kanaria::engine_learn_candidate(*engine_, selected);
         }
-    } else if (make_kana()) {
+    } else {
+        flush_pending_roman(true);
         text = kana_utf8_;
     }
     cancel();
@@ -488,7 +610,10 @@ int InputState::visible_candidate_count() const
 bool InputState::is_converting() const { return converting_; }
 bool InputState::is_predicting() const { return predicting_; }
 bool InputState::has_candidate_window() const { return converting_ || predicting_; }
-bool InputState::has_text() const { return !roman_.empty() || !kana_utf8_.empty() || converting_; }
+bool InputState::has_text() const
+{
+    return !pending_roman_.empty() || !kana_utf8_.empty() || converting_;
+}
 
 std::string InputState::candidate(int index) const
 {
@@ -603,17 +728,18 @@ bool InputState::refresh_predictions()
     page_start_ = 0;
     predicting_ = false;
 
-    if (converting_ || !make_kana() || kana_utf8_.empty()) {
+    const std::string kana = composing_kana();
+    if (converting_ || kana.empty()) {
         return false;
     }
-    if (!roman_.empty() && kana_utf8_ == roman_) {
+    if (!roman_.empty() && kana == roman_) {
         return false;
     }
     if (!ensure_engine()) {
         return false;
     }
 
-    candidates_ = kanaria::engine_predict(*engine_, kana_utf8_, 64);
+    candidates_ = kanaria::engine_predict(*engine_, kana, 64);
     predicting_ = !candidates_.empty();
     ensure_candidate_visible();
     return predicting_;
@@ -698,9 +824,7 @@ void InputState::clear_conversion()
 
 bool InputState::make_kana()
 {
-    if (!roman_.empty()) {
-        kana_utf8_ = kanaria::romaji_to_hiragana(roman_);
-    }
+    flush_pending_roman(true);
     return !kana_utf8_.empty();
 }
 

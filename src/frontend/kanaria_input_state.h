@@ -51,6 +51,8 @@ public:
 
 private:
     bool ensure_engine();
+    void flush_pending_roman(bool force);
+    std::string composing_kana() const;
     void apply_current_candidate_to_clause();
     std::string composed_candidate() const;
     bool refresh_predictions();
@@ -63,6 +65,7 @@ private:
 
     kanaria::engine_ptr engine_;
     std::string roman_;
+    std::string pending_roman_;
     std::string kana_utf8_;
     std::vector<kanaria::clause> clauses_;
     std::vector<kanaria::candidate> candidates_;

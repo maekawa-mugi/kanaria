@@ -36,6 +36,24 @@ int main()
 {
     bool ok = true;
 
+    kanaria_frontend::InputState space_state;
+    ok &= expect(!space_state.key_ascii(' '), "frontend accepted space as composing text");
+    ok &= expect(!space_state.has_text(), "frontend treated standalone space as composing text");
+    ok &= expect(!space_state.start_conversion(), "frontend converted standalone space");
+
+    kanaria_frontend::InputState kana_backspace_state;
+    type_ascii(kana_backspace_state, "ariga");
+    ok &= expect(kana_backspace_state.preedit() == kanaria::romaji_to_hiragana("ariga"),
+                 "frontend did not compose ariga as kana");
+    ok &= expect(kana_backspace_state.backspace(), "frontend did not backspace composed kana");
+    ok &= expect(kana_backspace_state.preedit() == kanaria::romaji_to_hiragana("ari"),
+                 "frontend backspace reverted to raw romaji instead of kana");
+
+    kanaria_frontend::InputState pending_roman_state;
+    type_ascii(pending_roman_state, "na");
+    ok &= expect(pending_roman_state.preedit() == kanaria::romaji_to_hiragana("na"),
+                 "frontend did not preserve pending n for na composition");
+
     kanaria_frontend::InputState sentence_state;
     type_ascii(sentence_state, "watashinonamaehanakanodesu");
     ok &= expect(sentence_state.start_conversion(), "frontend conversion did not start");
