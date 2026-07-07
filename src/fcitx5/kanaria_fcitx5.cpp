@@ -233,7 +233,7 @@ void KanariaEngine::update_ui(InputContext* input_context)
         }
     }
 
-    if (state_.is_converting() && state_.candidate_count() > 0) {
+    if (state_.has_candidate_window() && state_.candidate_count() > 0) {
         input_context->inputPanel().setCandidateList(std::make_unique<KanariaCandidateList>(this));
     }
 
@@ -282,7 +282,7 @@ void KanariaEngine::keyEvent(const InputMethodEntry& entry, KeyEvent& key_event)
             handled = true;
         }
     } else if (!handled && (key.check(FcitxKey_Tab) || key.check(FcitxKey_ISO_Left_Tab))) {
-        if (state_.is_converting()) {
+        if (state_.has_candidate_window()) {
             if (key.states().test(KeyState::Shift) || key.check(FcitxKey_ISO_Left_Tab)) {
                 state_.prev_candidate();
             } else {

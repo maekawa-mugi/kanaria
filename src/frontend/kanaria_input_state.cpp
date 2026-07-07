@@ -269,6 +269,7 @@ bool InputState::key_ascii(unsigned int ch)
     }
     roman_.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
     clear_conversion();
+    refresh_predictions();
     return true;
 }
 
@@ -276,10 +277,13 @@ bool InputState::backspace()
 {
     if (converting_) {
         clear_conversion();
+        refresh_predictions();
         return true;
     }
     if (!kana_utf8_.empty() && roman_.empty()) {
         pop_utf8_char(kana_utf8_);
+        clear_conversion();
+        refresh_predictions();
         return true;
     }
     if (roman_.empty()) {
@@ -288,6 +292,7 @@ bool InputState::backspace()
     roman_.pop_back();
     kana_utf8_.clear();
     clear_conversion();
+    refresh_predictions();
     return true;
 }
 
@@ -326,7 +331,9 @@ bool InputState::next_candidate()
     }
     candidate_index_ = (candidate_index_ + 1) % static_cast<int>(candidates_.size());
     ensure_candidate_visible();
-    converting_ = true;
+    if (!predicting_) {
+        converting_ = true;
+    }
     return true;
 }
 
@@ -338,7 +345,9 @@ bool InputState::prev_candidate()
     candidate_index_ = (candidate_index_ + static_cast<int>(candidates_.size()) - 1)
         % static_cast<int>(candidates_.size());
     ensure_candidate_visible();
-    converting_ = true;
+    if (!predicting_) {
+        converting_ = true;
+    }
     return true;
 }
 
@@ -349,7 +358,9 @@ bool InputState::next_page()
     }
     page_start_ += candidate_page_size;
     candidate_index_ = page_start_;
-    converting_ = true;
+    if (!predicting_) {
+        converting_ = true;
+    }
     return true;
 }
 
@@ -360,7 +371,9 @@ bool InputState::prev_page()
     }
     page_start_ = std::max(0, page_start_ - candidate_page_size);
     candidate_index_ = page_start_;
-    converting_ = true;
+    if (!predicting_) {
+        converting_ = true;
+    }
     return true;
 }
 
@@ -371,7 +384,9 @@ bool InputState::select_candidate(int index)
     }
     candidate_index_ = index;
     ensure_candidate_visible();
-    converting_ = true;
+    if (!predicting_) {
+        converting_ = true;
+    }
     return true;
 }
 
@@ -381,7 +396,9 @@ bool InputState::select_visible_candidate(int index)
         return false;
     }
     candidate_index_ = page_start_ + index;
-    converting_ = true;
+    if (!predicting_) {
+        converting_ = true;
+    }
     return true;
 }
 
@@ -425,6 +442,12 @@ std::string InputState::commit()
         if (ensure_engine()) {
             kanaria::engine_learn_candidate(*engine_, selected);
         }
+    } else if (predicting_ && !candidates_.empty()) {
+        const kanaria::candidate& selected = candidates_[static_cast<std::size_t>(candidate_index_)];
+        text = selected.candidate;
+        if (ensure_engine()) {
+            kanaria::engine_learn_candidate(*engine_, selected);
+        }
     } else if (make_kana()) {
         text = kana_utf8_;
     }
@@ -444,6 +467,8 @@ int InputState::visible_candidate_count() const
     return std::min(candidate_page_size, candidate_count() - page_start_);
 }
 bool InputState::is_converting() const { return converting_; }
+bool InputState::is_predicting() const { return predicting_; }
+bool InputState::has_candidate_window() const { return converting_ || predicting_; }
 bool InputState::has_text() const { return !roman_.empty() || !kana_utf8_.empty() || converting_; }
 
 std::string InputState::candidate(int index) const
@@ -552,11 +577,35 @@ std::size_t InputState::clause_length() const
     return utf8_codepoint_count(clauses_[clause_index_].value.stroke);
 }
 
+bool InputState::refresh_predictions()
+{
+    candidates_.clear();
+    candidate_index_ = 0;
+    page_start_ = 0;
+    predicting_ = false;
+
+    if (converting_ || !make_kana() || kana_utf8_.empty()) {
+        return false;
+    }
+    if (!roman_.empty() && kana_utf8_ == roman_) {
+        return false;
+    }
+    if (!ensure_engine()) {
+        return false;
+    }
+
+    candidates_ = kanaria::engine_predict(*engine_, kana_utf8_, 64);
+    predicting_ = !candidates_.empty();
+    ensure_candidate_visible();
+    return predicting_;
+}
+
 bool InputState::refresh_clause_candidates()
 {
     candidates_.clear();
     candidate_index_ = 0;
     page_start_ = 0;
+    predicting_ = false;
 
     if (!ensure_engine()) {
         return false;
@@ -625,6 +674,7 @@ void InputState::clear_conversion()
     page_start_ = 0;
     clause_index_ = 0;
     converting_ = false;
+    predicting_ = false;
 }
 
 bool InputState::make_kana()

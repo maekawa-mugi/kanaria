@@ -57,6 +57,20 @@ int main()
     ok &= expect(sentence_state.commit() != first_clause_candidate,
                  "frontend committed a clause candidate instead of the full sentence");
 
+    kanaria_frontend::InputState prediction_state;
+    type_ascii(prediction_state, "kyou");
+    ok &= expect(prediction_state.is_predicting(), "frontend did not expose predictions while composing");
+    ok &= expect(prediction_state.has_candidate_window(), "frontend did not expose a prediction window");
+    ok &= expect(!prediction_state.is_converting(), "frontend mixed prediction with conversion state");
+    ok &= expect(prediction_state.candidate_count() > 0, "frontend prediction returned no candidates");
+    const int prediction_index = prediction_state.candidate_index();
+    ok &= expect(prediction_state.next_candidate(), "frontend prediction did not advance by candidate navigation");
+    ok &= expect(prediction_state.candidate_index() != prediction_index,
+                 "frontend prediction candidate index did not change");
+    ok &= expect(prediction_state.start_conversion(), "frontend did not switch from prediction to conversion");
+    ok &= expect(prediction_state.is_converting() && !prediction_state.is_predicting(),
+                 "frontend did not leave prediction state after conversion started");
+
     kanaria_frontend::InputState variant_state;
     type_ascii(variant_state, "kyou");
     ok &= expect(variant_state.start_conversion(), "variant conversion did not start");

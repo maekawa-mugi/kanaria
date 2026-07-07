@@ -39,6 +39,8 @@ public:
     int candidate_page_index() const;
     int visible_candidate_count() const;
     bool is_converting() const;
+    bool is_predicting() const;
+    bool has_candidate_window() const;
     bool has_text() const;
     std::string candidate(int index) const;
     std::string visible_candidate(int index) const;
@@ -49,6 +51,7 @@ private:
     bool ensure_engine();
     void apply_current_candidate_to_clause();
     std::string composed_candidate() const;
+    bool refresh_predictions();
     bool refresh_clause_candidates();
     std::size_t clause_position() const;
     std::size_t clause_length() const;
@@ -65,6 +68,7 @@ private:
     int page_start_ = 0;
     std::size_t clause_index_ = 0;
     bool converting_ = false;
+    bool predicting_ = false;
 };
 
 } // namespace kanaria_frontend

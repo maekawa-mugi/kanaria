@@ -72,7 +72,7 @@ static void update_lookup_table(KanariaIBusEngine* self)
 
     ibus_engine_update_lookup_table(IBUS_ENGINE(self),
                                     table,
-                                    self->state->is_converting() && count > 0);
+                                    self->state->has_candidate_window() && count > 0);
 }
 
 static void update_user_interface(KanariaIBusEngine* self)
@@ -172,7 +172,7 @@ static gboolean kanaria_ibus_engine_process_key_event(IBusEngine* engine,
 
     case IBUS_KEY_Tab:
     case IBUS_KEY_ISO_Left_Tab:
-        if (self->state->is_converting()) {
+        if (self->state->has_candidate_window()) {
             if ((modifiers & IBUS_SHIFT_MASK) != 0 || keyval == IBUS_KEY_ISO_Left_Tab) {
                 self->state->prev_candidate();
             } else {
