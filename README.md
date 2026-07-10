@@ -84,4 +84,33 @@ ibus restart
 development package. The installed IBus component registers the `kanaria`
 engine for Japanese input.
 
+Fcitx5 frontend on Linux:
+
+```sh
+cmake -S . -B build -DKANARIA_BUILD_FCITX5=ON
+cmake --build build --target fcitx5-kanaria
+cmake --install build
+fcitx5 -r
+```
+
+`fcitx5-kanaria` is built only when CMake can find the `Fcitx5Core`
+development package. The installed Fcitx5 addon registers the `kanaria`
+Japanese input method.
+
+Icons:
+
+Kanaria installs hicolor icon-theme assets named `kanaria`. The Fcitx5 and
+IBus metadata refer to that icon by name, so desktops can resolve it from
+`share/icons/hicolor/*/apps/kanaria.png` or the scalable SVG.
+
+The source artwork lives at `artwork/kanaria-logo.svg`. To regenerate the PNG
+icon sizes from the SVG with ImageMagick:
+
+```powershell
+foreach ($s in 16,22,24,32,48,64,128,256,512) {
+    magick -background none artwork\kanaria-logo.svg -resize "${s}x${s}" `
+        "artwork\icons\hicolor\${s}x${s}\apps\kanaria.png"
+}
+```
+
 The API accepts and returns UTF-8 strings.
