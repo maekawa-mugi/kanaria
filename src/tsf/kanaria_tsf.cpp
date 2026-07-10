@@ -16,6 +16,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 static const CLSID CLSID_KanariaTextService = {
@@ -129,12 +130,109 @@ static std::size_t utf8_codepoint_count(const std::string& s)
     return n;
 }
 
+static void append_candidate_unique(std::vector<kanaria::candidate>& candidates,
+                                    const kanaria::candidate& value)
+{
+    const auto same = std::find_if(candidates.begin(), candidates.end(), [&](const auto& known) {
+        return known.candidate == value.candidate;
+    });
+    if (same == candidates.end()) {
+        candidates.push_back(value);
+    }
+}
+
 static void pop_utf8_char(std::string& s)
 {
     if (s.empty()) return;
     std::size_t pos = s.size() - 1;
     while (pos > 0 && ((unsigned char)s[pos] & 0xc0) == 0x80) --pos;
     s.erase(pos);
+}
+
+static const std::vector<std::string>& romaji_keys()
+{
+    static const std::vector<std::string> keys = {
+        "zh", "zj", "zk", "zl",
+        "a", "i", "u", "e", "o",
+        "ka", "ki", "ku", "ke", "ko",
+        "sa", "shi", "si", "su", "se", "so",
+        "ta", "chi", "ti", "tsu", "tu", "te", "to",
+        "na", "ni", "nu", "ne", "no",
+        "ha", "hi", "fu", "hu", "he", "ho",
+        "ma", "mi", "mu", "me", "mo",
+        "ya", "yu", "yo",
+        "ra", "ri", "ru", "re", "ro",
+        "wa", "wo", "nn", "n",
+        "ga", "gi", "gu", "ge", "go",
+        "za", "ji", "zi", "zu", "ze", "zo",
+        "da", "di", "du", "de", "do",
+        "ba", "bi", "bu", "be", "bo",
+        "pa", "pi", "pu", "pe", "po",
+        "kya", "kyu", "kyo",
+        "sha", "shu", "sho",
+        "cha", "chu", "cho", "tya", "tyu", "tyo",
+        "nya", "nyu", "nyo",
+        "hya", "hyu", "hyo",
+        "mya", "myu", "myo",
+        "rya", "ryu", "ryo",
+        "gya", "gyu", "gyo",
+        "ja", "ju", "jo", "jya", "jyu", "jyo",
+        "bya", "byu", "byo",
+        "pya", "pyu", "pyo",
+        "la", "li", "lu", "le", "lo",
+        "xa", "xi", "xu", "xe", "xo",
+        "ltu", "xtu", "lya", "lyu", "lyo",
+        "xya", "xyu", "xyo",
+        "-"
+    };
+    return keys;
+}
+
+static const std::vector<std::pair<std::string, std::string>>& hiragana_romaji_entries()
+{
+    static const std::vector<std::pair<std::string, std::string>> entries = [] {
+        std::vector<std::pair<std::string, std::string>> values;
+        values.reserve(romaji_keys().size());
+        for (const auto& key : romaji_keys()) {
+            values.emplace_back(kanaria::romaji_to_hiragana(key), key);
+        }
+        std::stable_sort(values.begin(), values.end(), [](const auto& lhs, const auto& rhs) {
+            return lhs.first.size() > rhs.first.size();
+        });
+        return values;
+    }();
+    return entries;
+}
+
+static std::size_t utf8_char_size(unsigned char c)
+{
+    if (c <= 0x7f) return 1;
+    if ((c & 0xe0) == 0xc0) return 2;
+    if ((c & 0xf0) == 0xe0) return 3;
+    if ((c & 0xf8) == 0xf0) return 4;
+    return 1;
+}
+
+static std::string romaji_from_hiragana(const std::string& text)
+{
+    std::string out;
+    for (std::size_t i = 0; i < text.size();) {
+        bool matched = false;
+        for (const auto& [kana, roman] : hiragana_romaji_entries()) {
+            if (!kana.empty() && text.compare(i, kana.size(), kana) == 0) {
+                out += roman;
+                i += kana.size();
+                matched = true;
+                break;
+            }
+        }
+        if (matched) continue;
+
+        const std::size_t step = std::min(utf8_char_size((unsigned char)text[i]), text.size() - i);
+        out.append(text, i, step);
+        i += step;
+    }
+    return out;
 }
 
 class KanariaEngine {
@@ -163,11 +261,14 @@ public:
         }
         if (kana_preedit_ && !kana_utf8_.empty()) {
             pop_utf8_char(kana_utf8_);
+            roman_ = romaji_from_hiragana(kana_utf8_);
             if (kana_utf8_.empty()) kana_preedit_ = false;
             return true;
         }
-        if (roman_.empty()) return false;
-        roman_.pop_back();
+        if (!make_kana()) return false;
+        pop_utf8_char(kana_utf8_);
+        roman_ = romaji_from_hiragana(kana_utf8_);
+        if (kana_utf8_.empty()) kana_preedit_ = false;
         clear_conversion();
         return true;
     }
@@ -185,18 +286,21 @@ public:
         clear_conversion();
         if (!make_kana()) return false;
 
+        auto best = kanaria::engine_convert_best(*engine_, kana_utf8_);
+        if (best) {
+            append_candidate_unique(candidates_,
+                                    kanaria::candidate{best->value.candidate,
+                                                       best->value.stroke,
+                                                       best->value.frequency,
+                                                       best->value.connection,
+                                                       best->value.attribute});
+        }
+
         const std::size_t len = utf8_codepoint_count(kana_utf8_);
         if (len > 0) {
-            candidates_ = kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, 0, len, 64);
-        }
-        if (candidates_.empty()) {
-            auto best = kanaria::engine_convert_best(*engine_, kana_utf8_);
-            if (best) {
-                candidates_.push_back(kanaria::candidate{best->value.candidate,
-                                                         best->value.stroke,
-                                                         best->value.frequency,
-                                                         best->value.connection,
-                                                         best->value.attribute});
+            auto clause_candidates = kanaria::engine_get_clause_candidates(*engine_, kana_utf8_, 0, len, 64);
+            for (const auto& value : clause_candidates) {
+                append_candidate_unique(candidates_, value);
             }
         }
         if (candidates_.empty()) {
