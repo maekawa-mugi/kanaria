@@ -71,6 +71,21 @@ int main()
     ok &= expect(!has_candidate(yoon_backspace_state, "pikatttyuu"),
                  "frontend accumulated stale romaji after repeated yoon backspace");
 
+    kanaria_frontend::InputState uppercase_yoon_backspace_state;
+    type_ascii(uppercase_yoon_backspace_state, "PIKATYUU");
+    ok &= expect(uppercase_yoon_backspace_state.backspace(),
+                 "frontend did not backspace uppercase yoon trailing kana");
+    ok &= expect(uppercase_yoon_backspace_state.backspace(),
+                 "frontend did not backspace uppercase yoon small kana");
+    ok &= expect(uppercase_yoon_backspace_state.preedit() == kanaria::romaji_to_hiragana("pikachi"),
+                 "frontend uppercase yoon backspace did not leave the base kana");
+    ok &= expect(uppercase_yoon_backspace_state.start_conversion(),
+                 "frontend did not convert uppercase yoon backspace state");
+    ok &= expect(has_candidate(uppercase_yoon_backspace_state, "PIKAち"),
+                 "frontend did not preserve typed romaji case for a partially deleted yoon");
+    ok &= expect(!has_candidate(uppercase_yoon_backspace_state, "pikachi"),
+                 "frontend restored romaji from kana after uppercase yoon backspace");
+
     kanaria_frontend::InputState pending_roman_state;
     type_ascii(pending_roman_state, "na");
     ok &= expect(pending_roman_state.preedit() == kanaria::romaji_to_hiragana("na"),
